@@ -32,12 +32,12 @@ THEMES = {
     ),
     # ex "Los Santas" -> noir urbano (tema predefinito)
     "noir": dict(
-        land="#2b2b2b", wood="#2c302b", grass="#2d312c", sand="#333230", ice="#4a4f53",
-        park="#2e352d", water="#3b4a55", waterway="#3b4a55", building="#1f1f1f",
-        building_top="#262626", minor="#a3a3a3", major="#bdbdbd", motor="#d0d0d0",
-        path="#6e6e6e", rail="#5c5c5c", boundary="#8a8a8a", label="#ffffff",
-        halo="#000000", road_label="#ffffff", road_halo="#000000", house="#9a9a9a",
-        water_label="#9fb2bf", shield="#2f47c9", oneway=0.75, transform="uppercase",
+        land="#303030", wood="#2e302e", grass="#2f312f", sand="#343332", ice="#4a4f53",
+        park="#2d2f2d", water="#36414a", waterway="#36414a", building="#1b1b1b",
+        building_top="#202020", minor="#a9a9a9", major="#ababab", motor="#b4b4b4",
+        path="#6e6e6e", rail="#5c5c5c", boundary="#8a8a8a", label="#fcfcfc",
+        halo="#000000", road_label="#fcfcfc", road_halo="#000000", house="#a0a0a0",
+        water_label="#9fb2bf", shield="#2f47c9", oneway=0.8, transform="uppercase",
     ),
     # ex "PipBoy" -> terminale verde
     "bunker": dict(
@@ -330,6 +330,8 @@ def globe_style(tid, p):
                     "text-transform": p["transform"], "text-max-width": 6},
          "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.2}},
     ]
+    # le etichette del globo sono disegnate in 3D dall'app (sempre rivolte verso lo schermo)
+    layers = [l for l in layers if l["type"] != "symbol"]
     return {"version": 8, "name": "GassMaps globe " + tid, "sources": {"openmaptiles": SOURCE},
             "glyphs": GLYPHS, "layers": layers}
 

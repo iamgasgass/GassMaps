@@ -94,7 +94,7 @@ struct SettingsScreen: View {
                                     title: "Ripristina acquisti")
                     }
                 }
-                .buttonStyle(PressableStyle())
+                .buttonStyle(.plain)
                 .padding(.horizontal, 16)
                 .padding(.bottom, 40)
             }
@@ -103,7 +103,7 @@ struct SettingsScreen: View {
         .sheet(isPresented: $showIconPicker) {
             AppIconPicker()
                 .presentationDetents([.medium])
-                .presentationBackground(Color(white: 0.06))
+
         }
         .sheet(item: Binding(get: { safariURL.map(IdentifiableURL.init) },
                              set: { safariURL = $0?.url })) { item in
@@ -159,15 +159,7 @@ struct SettingsRow<Trailing: View>: View {
         .foregroundStyle(destructive ? Color(hex: 0xFF3B4E) : .white)
         .padding(.horizontal, 18)
         .frame(height: 60)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(destructive ? Color(hex: 0x3A0A10) : Color(white: 0.07))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(destructive ? Color(hex: 0xFF3B4E).opacity(0.25) : Color.white.opacity(0.05))
-        )
-        .contentShape(Rectangle())
+        .glassRow(cornerRadius: 30, tint: destructive ? Color(hex: 0xFF3B4E).opacity(0.22) : nil)
     }
 }
 
@@ -258,7 +250,7 @@ struct AppIconPicker: View {
                                 .foregroundStyle(.white)
                         }
                     }
-                    .buttonStyle(PressableStyle())
+                    .buttonStyle(.plain)
                 }
             }
             .frame(maxWidth: .infinity)

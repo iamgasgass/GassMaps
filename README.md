@@ -1,6 +1,6 @@
 # GassMaps
 
-Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre).
+Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfaccia interamente in **Liquid Glass nativo** (iOS 26).
 
 ## Funzioni
 
@@ -60,4 +60,4 @@ open GassMaps.xcodeproj
 Tile vettoriali gratuiti di [OpenFreeMap](https://openfreemap.org) (nessuna API key), dati © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, rendering con [MapLibre Native](https://maplibre.org). Ricerca e percorsi tramite Apple MapKit.
 L'attribuzione OSM resta visibile (pulsante ⓘ in basso a sinistra) come richiesto dalla licenza ODbL.
 
-Requisiti: iOS 17+, iPhone.
+Requisiti: iOS 26+ (Liquid Glass nativo), iPhone. La build richiede Xcode 26 (il workflow usa il runner macos-26).

@@ -10,7 +10,7 @@ final class GlobeTextureProvider {
     private var memory: [String: UIImage] = [:]
     private var pending: [String: [(UIImage?) -> Void]] = [:]
     private var snapshotters: [String: MLNMapSnapshotter] = [:]
-    private let version = "v3"
+    private let version = "v4"
 
     private var cacheDir: URL {
         let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -40,11 +40,11 @@ final class GlobeTextureProvider {
         }
         pending[theme.id] = [completion]
 
-        let size = CGSize(width: 2048, height: 2048)
+        let size = CGSize(width: 4096, height: 4096)
         let camera = MLNMapCamera(lookingAtCenter: CLLocationCoordinate2D(latitude: 0, longitude: 0),
                                   altitude: 20_000_000, pitch: 0, heading: 0)
         let options = MLNMapSnapshotOptions(styleURL: theme.globeStyleURL, camera: camera, size: size)
-        options.zoomLevel = 2
+        options.zoomLevel = 3
         options.scale = 1
         let snapshotter = MLNMapSnapshotter(options: options)
         snapshotters[theme.id] = snapshotter
@@ -56,19 +56,22 @@ final class GlobeTextureProvider {
         snapshotter.start { [weak self] snapshot, _ in
             guard let self = self else { return }
             self.snapshotters[themeID] = nil
-            var result: UIImage?
-            if let img = snapshot?.image {
-                result = GlobeTextureProvider.equirectangular(fromMercator: img, polar: polar)
-                if let r = result {
-                    self.memory[themeID] = r
-                    if let data = r.jpegData(compressionQuality: 0.88) {
+            let image = snapshot?.image
+            DispatchQueue.global(qos: .userInitiated).async {
+                var result: UIImage?
+                if let img = image {
+                    result = GlobeTextureProvider.equirectangular(fromMercator: img, polar: polar)
+                    if let r = result, let data = r.jpegData(compressionQuality: 0.9) {
                         try? data.write(to: fileURL)
                     }
                 }
+                DispatchQueue.main.async {
+                    if let r = result { self.memory[themeID] = r }
+                    let callbacks = self.pending[themeID] ?? []
+                    self.pending[themeID] = nil
+                    callbacks.forEach { $0(result) }
+                }
             }
-            let callbacks = self.pending[themeID] ?? []
-            self.pending[themeID] = nil
-            callbacks.forEach { $0(result) }
         }
     }
 

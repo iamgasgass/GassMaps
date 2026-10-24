@@ -38,7 +38,7 @@ struct SplashScreen: View {
         GeometryReader { geo in
             ZStack {
                 Color.black
-                RadialGradient(colors: [Color(hex: 0x1E4BFF).opacity(0.85), Color(hex: 0x0A1A6B).opacity(0.5), .clear],
+                RadialGradient(colors: [Color(hex: 0x0052B8), Color(hex: 0x00295E), Color(hex: 0x010E22), .black],
                                center: UnitPoint(x: 0.5, y: 0.47), startRadius: 10, endRadius: geo.size.width * 0.95)
 
                 ForEach(icons) { icon in
@@ -60,18 +60,14 @@ struct SplashScreen: View {
                 LogoView()
                     .position(x: geo.size.width / 2, y: geo.size.height * 0.46)
 
+                // barra di caricamento — misure prese dal video (393×852 pt):
+                // traccia x 24…369, alta 21 pt, #181818, a 51 pt dal fondo; riempimento lucido alto 15 pt
                 VStack {
                     Spacer()
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(Color(white: 0.12))
-                        Capsule()
-                            .fill(LinearGradient(colors: [Color(hex: 0x2457FF), Color(hex: 0x3D7BFF)],
-                                                 startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(14, (geo.size.width - 40) * progress))
-                    }
-                    .frame(height: 13)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, geo.safeAreaInsets.bottom + 34)
+                    LoadingBar(progress: progress)
+                        .frame(height: 21)
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 51)
                 }
             }
             .ignoresSafeArea()
@@ -79,7 +75,10 @@ struct SplashScreen: View {
         .onAppear {
             location.start()
             withAnimation(.easeInOut(duration: 2.4)) { appeared = true }
-            withAnimation(.easeInOut(duration: 2.6)) { progress = 1 }
+            withAnimation(.easeOut(duration: 1.1)) { progress = 0.62 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.9) {
+                withAnimation(.easeInOut(duration: 0.7)) { progress = 1 }
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
                 state.finishSplash()
                 GlobeTextureProvider.shared.preloadAll(Themes.all)
@@ -123,5 +122,34 @@ struct RouteSquiggle: Shape {
                    control1: CGPoint(x: rect.width * 0.6, y: rect.maxY + 4),
                    control2: CGPoint(x: rect.width * 0.7, y: rect.maxY))
         return p
+    }
+}
+
+/// Barra di caricamento identica al video: traccia scura e riempimento blu "a tubo" lucido.
+struct LoadingBar: View {
+    var progress: CGFloat
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color(hex: 0x181818))
+                Capsule()
+                    .fill(
+                        LinearGradient(stops: [
+                            .init(color: Color(hex: 0x68BBFE), location: 0.0),
+                            .init(color: Color(hex: 0x359CFF), location: 0.18),
+                            .init(color: Color(hex: 0x1784FF), location: 0.34),
+                            .init(color: Color(hex: 0x0970FF), location: 0.5),
+                            .init(color: Color(hex: 0x0B64FF), location: 0.64),
+                            .init(color: Color(hex: 0x1A5DFF), location: 0.76),
+                            .init(color: Color(hex: 0x3564FE), location: 0.88),
+                            .init(color: Color(hex: 0x6983ED), location: 1.0)
+                        ], startPoint: .top, endPoint: .bottom)
+                    )
+                    .frame(width: max(15, (geo.size.width - 6) * progress), height: geo.size.height - 6)
+                    .padding(.leading, 3)
+                    .shadow(color: Color(hex: 0x0970FF).opacity(0.55), radius: 5)
+            }
+        }
     }
 }

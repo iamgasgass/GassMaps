@@ -1,19 +1,18 @@
 import SwiftUI
 
-/// Pulsante circolare "vetro scuro" usato su mappa e intestazioni.
+// MARK: - Liquid Glass (iOS 26, API native SwiftUI)
+
+/// Pulsante/contenitore circolare in Liquid Glass nativo.
 struct GlassCircle<Content: View>: View {
     var size: CGFloat = 44
+    var tint: Color? = nil
     @ViewBuilder var content: Content
 
     var body: some View {
-        ZStack {
-            Circle().fill(.ultraThinMaterial)
-            Circle().fill(Color.black.opacity(0.45))
-            Circle().strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
-            content
-        }
-        .frame(width: size, height: size)
-        .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
+        content
+            .frame(width: size, height: size)
+            .contentShape(Circle())
+            .glassEffect(.regular.tint(tint).interactive(), in: Circle())
     }
 }
 
@@ -27,18 +26,46 @@ struct BackCircleButton: View {
                     .foregroundStyle(.white)
             }
         }
-        .buttonStyle(PressableStyle())
+        .buttonStyle(.plain)
     }
 }
 
+/// Stile "nessun effetto": la reazione al tocco la fa il Liquid Glass interattivo.
 struct PressableStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.93 : 1)
-            .opacity(configuration.isPressed ? 0.85 : 1)
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }
+
+/// Pulsante capsula in Liquid Glass (Continua / Ottieni indicazioni / Inizia ora / Termina percorso)
+struct GlassCapsuleButton: View {
+    var title: String
+    var icon: String? = nil
+    var height: CGFloat = 54
+    var tint: Color = Color.white.opacity(0.9)
+    var foreground: Color = .black
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text(title).font(.system(size: 16, weight: .semibold))
+                if let icon = icon {
+                    Image(systemName: icon).font(.system(size: 15, weight: .bold))
+                }
+            }
+            .foregroundStyle(foreground)
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
+            .contentShape(Capsule())
+            .glassEffect(.regular.tint(tint).interactive(), in: Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Compatibilità con il codice precedente
+typealias WhiteCapsuleButton = GlassCapsuleButton
 
 /// Icona "impostazioni" a ciambella (come nell'originale).
 struct DonutIcon: View {
@@ -51,27 +78,28 @@ struct DonutIcon: View {
 
 /// Segnaposto blu a goccia del pulsante centrale.
 struct BluePinIcon: View {
+    var size: CGFloat = 26
     var body: some View {
         ZStack {
             Image(systemName: "drop.fill")
-                .font(.system(size: 26, weight: .regular))
+                .font(.system(size: size, weight: .regular))
                 .rotationEffect(.degrees(180))
                 .foregroundStyle(
-                    LinearGradient(colors: [Color(hex: 0x4FA3FF), Color(hex: 0x1D6BFF)],
+                    LinearGradient(colors: [Color(hex: 0x5BB0FF), Color(hex: 0x0A6CFF)],
                                    startPoint: .top, endPoint: .bottom)
                 )
-                .shadow(color: Color(hex: 0x1D6BFF).opacity(0.8), radius: 6)
+                .shadow(color: Color(hex: 0x0A6CFF).opacity(0.9), radius: 7)
             Circle()
                 .fill(Color(hex: 0x0A1E3D))
-                .frame(width: 8, height: 8)
-                .offset(y: -3)
+                .frame(width: size * 0.3, height: size * 0.3)
+                .offset(y: -size * 0.11)
         }
     }
 }
 
 /// Quadrifoglio in SwiftUI (stesso disegno dell'icona mappa)
 struct CloverIcon: View {
-    var color: Color = Color(hex: 0x7B2CF0)
+    var color: Color = Color(hex: 0x8840D8)
     var size: CGFloat = 22
 
     var body: some View {
@@ -90,7 +118,7 @@ struct CloverIcon: View {
     }
 }
 
-/// Pannello inferiore nero con maniglia, trascinabile per chiudere.
+/// Pannello inferiore flottante in Liquid Glass, con maniglia, trascinabile per chiudere.
 struct BottomPanel<Content: View>: View {
     var onDismiss: (() -> Void)?
     @ViewBuilder var content: Content
@@ -99,21 +127,20 @@ struct BottomPanel<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Capsule()
-                .fill(Color.white.opacity(0.28))
-                .frame(width: 42, height: 5)
+                .fill(Color.white.opacity(0.35))
+                .frame(width: 40, height: 5)
                 .frame(maxWidth: .infinity)
-                .padding(.top, 10)
+                .padding(.top, 9)
                 .padding(.bottom, 16)
             content
         }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 12)
+        .padding(.horizontal, 18)
+        .padding(.bottom, 26)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            UnevenRoundedRectangle(topLeadingRadius: 34, topTrailingRadius: 34, style: .continuous)
-                .fill(Color.black)
-                .ignoresSafeArea(edges: .bottom)
-        )
+        .glassEffect(.regular.tint(Color.black.opacity(0.35)),
+                     in: RoundedRectangle(cornerRadius: 44, style: .continuous))
+        .padding(.horizontal, 8)
+        .padding(.bottom, 8)
         .offset(y: max(drag, 0))
         .gesture(
             DragGesture()
@@ -136,13 +163,12 @@ struct DashedEmptyCard: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            ZStack {
-                Circle().fill(Color(white: 0.11)).frame(width: 46, height: 46)
-                Image(systemName: icon)
-                    .font(.system(size: 19, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
-            .padding(.bottom, 10)
+            Image(systemName: icon)
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 46, height: 46)
+                .glassEffect(.regular, in: Circle())
+                .padding(.bottom, 10)
             Text(title)
                 .font(.system(size: 17, weight: .bold))
                 .multilineTextAlignment(.center)
@@ -150,47 +176,36 @@ struct DashedEmptyCard: View {
             Text(subtitle)
                 .font(.system(size: 12))
                 .multilineTextAlignment(.center)
-                .foregroundStyle(Color.white.opacity(0.4))
+                .foregroundStyle(Color.white.opacity(0.45))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 26)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color(white: 0.05))
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.black.opacity(0.28))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.13), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.16), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
         )
     }
 }
 
-/// Pulsante capsula bianco (Continua / Ottieni indicazioni / Inizia ora)
-struct WhiteCapsuleButton: View {
-    var title: String
-    var icon: String?
-    var height: CGFloat = 54
-    var action: () -> Void
+/// Riga/riquadro in Liquid Glass (ricerca, impostazioni, salvati)
+struct GlassRowBackground: ViewModifier {
+    var cornerRadius: CGFloat = 24
+    var tint: Color? = nil
+    func body(content: Content) -> some View {
+        content
+            .contentShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .glassEffect(.regular.tint(tint).interactive(),
+                         in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+    }
+}
 
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Text(title).font(.system(size: 16, weight: .semibold))
-                if let icon = icon {
-                    Image(systemName: icon).font(.system(size: 15, weight: .bold))
-                }
-            }
-            .foregroundStyle(.black)
-            .frame(maxWidth: .infinity)
-            .frame(height: height)
-            .background(
-                Capsule().fill(
-                    LinearGradient(colors: [.white, Color(white: 0.86)], startPoint: .top, endPoint: .bottom)
-                )
-            )
-            .shadow(color: .white.opacity(0.12), radius: 8)
-        }
-        .buttonStyle(PressableStyle())
+extension View {
+    func glassRow(cornerRadius: CGFloat = 24, tint: Color? = nil) -> some View {
+        modifier(GlassRowBackground(cornerRadius: cornerRadius, tint: tint))
     }
 }

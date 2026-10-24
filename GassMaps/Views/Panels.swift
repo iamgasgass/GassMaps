@@ -35,6 +35,7 @@ struct PinnedPlacePanel: View {
                             .frame(height: 54)
                             .padding(.top, 18)
                     } else {
+                        GlassEffectContainer(spacing: 10) {
                         HStack(spacing: 10) {
                             Button { state.toggleSave(place) } label: {
                                 HStack(spacing: 8) {
@@ -46,14 +47,16 @@ struct PinnedPlacePanel: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 20)
                                 .frame(height: 54)
-                                .background(Capsule().fill(Color(white: 0.1)))
-                                .overlay(Capsule().strokeBorder(Color.white.opacity(state.isSaved(place) ? 0.4 : 0.1)))
+                                .contentShape(Capsule())
+                                .glassEffect(.regular.tint(state.isSaved(place) ? Color(state.theme.accent).opacity(0.5) : nil)
+                                                .interactive(), in: Capsule())
                             }
-                            .buttonStyle(PressableStyle())
+                            .buttonStyle(.plain)
 
-                            WhiteCapsuleButton(title: "Ottieni indicazioni", icon: "location.fill") {
+                            GlassCapsuleButton(title: "Ottieni indicazioni", icon: "location.fill") {
                                 state.requestDirections()
                             }
+                        }
                         }
                         .padding(.top, 18)
                     }
@@ -100,8 +103,7 @@ struct DirectionsPanel: View {
                 }
                 .padding(18)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Color(white: 0.06)))
-                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.white.opacity(0.06)))
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
 
                 if let route = state.route {
                     HStack {
@@ -114,7 +116,7 @@ struct DirectionsPanel: View {
                                 .foregroundStyle(Color.white.opacity(0.45))
                         }
                         Spacer()
-                        WhiteCapsuleButton(title: "Inizia ora", icon: nil, height: 50) {
+                        GlassCapsuleButton(title: "Inizia ora", icon: nil, height: 50) {
                             state.startNavigation()
                         }
                         .frame(width: 130)
@@ -138,7 +140,7 @@ struct NavigationPanel: View {
                         .foregroundStyle(.white)
                 }
             }
-            .buttonStyle(PressableStyle())
+            .buttonStyle(.plain)
             .padding(.trailing, 16)
 
             BottomPanel(onDismiss: nil) {
@@ -150,19 +152,11 @@ struct NavigationPanel: View {
                             stat(state.units.value(route.distance), state.units.shortLabel)
                         }
                     }
-                    Button { state.endNavigation() } label: {
-                        Text("Termina percorso")
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 54)
-                            .background(
-                                Capsule().fill(LinearGradient(colors: [Color(hex: 0xFF4D5E), Color(hex: 0xE8283C)],
-                                                              startPoint: .top, endPoint: .bottom))
-                            )
-                            .shadow(color: Color(hex: 0xFF2E45).opacity(0.55), radius: 14)
+                    GlassCapsuleButton(title: "Termina percorso", icon: nil, height: 54,
+                                       tint: Color(hex: 0xFF3B4E).opacity(0.92), foreground: .white) {
+                        state.endNavigation()
                     }
-                    .buttonStyle(PressableStyle())
+                    .shadow(color: Color(hex: 0xFF2E45).opacity(0.45), radius: 14)
                 }
             }
         }
@@ -229,7 +223,7 @@ struct SavedPlacesPanel: View {
                                 }
                                 .padding(.horizontal, 16)
                                 .frame(height: 64)
-                                .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color(white: 0.07)))
+                                .glassRow(cornerRadius: 22)
                             }
                         }
                     }

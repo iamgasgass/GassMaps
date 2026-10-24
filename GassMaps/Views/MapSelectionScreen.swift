@@ -12,93 +12,82 @@ struct MapSelectionScreen: View {
 
     var body: some View {
         GeometryReader { geo in
-            let w = geo.size.width
-            let fullH = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom
-            ZStack(alignment: .top) {
-                LinearGradient(colors: [theme.backgroundTop, theme.backgroundBottom],
-                               startPoint: .top, endPoint: .bottom)
-                    .ignoresSafeArea()
-                    .animation(.easeInOut(duration: 0.5), value: index)
+            let fullHeight = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom
 
-                StarField()
-                    .ignoresSafeArea()
-                    .opacity(theme.id == "pixel" ? 0.35 : 1)
-
-                GlobeView(theme: globeTheme,
-                          size: CGSize(width: w, height: fullH),
-                          radius: w * 1.5,
-                          top: geo.safeAreaInsets.top + 112)
-                    .frame(width: w, height: fullH)
-                    .offset(y: globeOffset)
-                    .ignoresSafeArea()
-                    .opacity(didAppear ? 1 : 0)
-                    .allowsHitTesting(false)
-
-                // sfumatura inferiore dietro ai controlli
-                VStack {
+            VStack(spacing: 0) {
+                // intestazione
+                HStack(spacing: 14) {
+                    BackCircleButton { state.showMapSelection = false }
+                    Text("Selezione mappa 🎨")
+                        .font(.system(size: 22, weight: .heavy))
+                        .foregroundStyle(.white)
                     Spacer()
-                    LinearGradient(colors: [.clear, theme.backgroundBottom.opacity(0.55), theme.backgroundBottom.opacity(0.9)],
-                                   startPoint: .top, endPoint: .bottom)
-                        .frame(height: 300)
-                        .blur(radius: 8)
                 }
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
 
-                VStack(spacing: 0) {
-                    HStack(spacing: 14) {
-                        BackCircleButton { state.showMapSelection = false }
-                        Text("Selezione mappa 🎨")
-                            .font(.system(size: 24, weight: .heavy))
-                            .foregroundStyle(.white)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                Spacer(minLength: 0)
 
-                    Spacer()
-
+                // nome tema + frecce
+                GlassEffectContainer(spacing: 20) {
                     HStack {
                         arrowButton("arrow.left") { move(-1) }
                         Spacer()
                         Text(theme.name)
-                            .font(.system(size: 26, weight: .heavy))
+                            .font(.system(size: 24, weight: .heavy))
                             .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.4), radius: 6)
+                            .shadow(color: .black.opacity(0.45), radius: 6)
                             .id(theme.id)
                             .transition(.opacity)
                         Spacer()
                         arrowButton("arrow.right") { move(1) }
                     }
-                    .padding(.horizontal, 16)
-
-                    PageDots(count: Themes.all.count, index: index)
-                        .padding(.top, 22)
-                        .padding(.bottom, 22)
-
-                    Button {
-                        state.themeIndex = index
-                        state.showMapSelection = false
-                    } label: {
-                        HStack(spacing: 8) {
-                            Text("Continua").font(.system(size: 17, weight: .semibold))
-                            Image(systemName: "arrow.right.circle.fill").font(.system(size: 16, weight: .bold))
-                        }
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 58)
-                        .background(
-                            Capsule().fill(LinearGradient(colors: [.white, Color(white: 0.85)],
-                                                          startPoint: .top, endPoint: .bottom))
-                        )
-                        .colorMultiply(theme.buttonTint)
-                    }
-                    .buttonStyle(PressableStyle())
-                    .opacity(transitioning ? 0.45 : 1)
-                    .disabled(transitioning)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, max(geo.safeAreaInsets.bottom, 12) + 4)
                 }
+                .padding(.horizontal, 20)
+
+                PageDots(count: Themes.all.count, index: index)
+                    .padding(.top, 26)
+                    .padding(.bottom, 26)
+
+                // Continua (Liquid Glass) — 17 pt sopra la home bar, come nel video
+                GlassCapsuleButton(title: "Continua", icon: "arrow.right.circle.fill", height: 54,
+                                   tint: Color.white.opacity(transitioning ? 0.35 : 0.88),
+                                   foreground: .black) {
+                    state.themeIndex = index
+                    state.showMapSelection = false
+                }
+                .disabled(transitioning)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 17)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .background {
+                ZStack {
+                    LinearGradient(colors: [theme.backgroundTop, theme.backgroundBottom],
+                                   startPoint: .top, endPoint: .bottom)
+                    StarField()
+                        .opacity(theme.id == "pixel" ? 0.35 : 1)
+                    GlobeView(theme: globeTheme, height: fullHeight)
+                        .frame(width: geo.size.width, height: fullHeight)
+                        .offset(y: globeOffset)
+                        .opacity(didAppear ? 1 : 0)
+                    // sfocatura progressiva della parte bassa del globo (profondità di campo)
+                    VStack {
+                        Spacer()
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .mask(LinearGradient(colors: [.clear, .black.opacity(0.85), .black],
+                                                 startPoint: .top, endPoint: .bottom))
+                            .overlay(
+                                LinearGradient(colors: [.clear, theme.backgroundBottom.opacity(0.5)],
+                                               startPoint: .top, endPoint: .bottom)
+                            )
+                            .frame(height: 300)
+                    }
+                }
+                .animation(.easeInOut(duration: 0.5), value: index)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
             }
             .contentShape(Rectangle())
             .gesture(
@@ -124,8 +113,8 @@ struct MapSelectionScreen: View {
                     .foregroundStyle(.white)
             }
         }
-        .buttonStyle(PressableStyle())
-        .opacity(transitioning ? 0.4 : 1)
+        .buttonStyle(.plain)
+        .opacity(transitioning ? 0.45 : 1)
         .disabled(transitioning)
     }
 
@@ -142,10 +131,10 @@ struct MapSelectionScreen: View {
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.34) {
             globeTheme = Themes.all[next]
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.86)) {
+            withAnimation(.spring(response: 0.7, dampingFraction: 0.86)) {
                 globeOffset = 0
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 transitioning = false
             }
         }

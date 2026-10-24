@@ -10,6 +10,7 @@ struct SearchScreen: View {
     var body: some View {
         VStack(spacing: 0) {
             // barra di ricerca
+            GlassEffectContainer(spacing: 12) {
             HStack(spacing: 12) {
                 HStack(spacing: 8) {
                     TextField("", text: $search.query, prompt: Text("Cerca").foregroundColor(Color.white.opacity(0.4)))
@@ -35,23 +36,20 @@ struct SearchScreen: View {
                 }
                 .padding(.horizontal, 18)
                 .frame(height: 50)
-                .background(Capsule().fill(Color(white: 0.04)))
-                .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
+                .glassEffect(.regular.interactive(), in: Capsule())
 
                 Button {
                     focused = false
                     state.showSearch = false
                 } label: {
-                    ZStack {
-                        Circle().fill(Color(white: 0.04))
-                        Circle().strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+                    GlassCircle(size: 50) {
                         Image(systemName: "xmark")
                             .font(.system(size: 17, weight: .bold))
                             .foregroundStyle(.white)
                     }
-                    .frame(width: 50, height: 50)
                 }
-                .buttonStyle(PressableStyle())
+                .buttonStyle(.plain)
+            }
             }
             .padding(.horizontal, 16)
             .padding(.top, 10)
@@ -138,7 +136,7 @@ struct SearchScreen: View {
                     .buttonStyle(.plain)
                 }
             }
-            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Color(white: 0.06)))
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
         }
     }
 
@@ -230,7 +228,6 @@ struct ResultRow: View {
         }
         .padding(.horizontal, 16)
         .frame(height: 64)
-        .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Color(white: 0.07)))
-        .contentShape(Rectangle())
+        .glassRow(cornerRadius: 26)
     }
 }

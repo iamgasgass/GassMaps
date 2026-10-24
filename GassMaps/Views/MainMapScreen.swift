@@ -113,48 +113,44 @@ struct TopBar: View {
     @EnvironmentObject var location: LocationManager
 
     var body: some View {
-        HStack(spacing: 10) {
-            Button { state.showMapSelection = true } label: {
-                GlassCircle(size: 44) {
-                    Image(systemName: "globe.europe.africa.fill")
-                        .font(.system(size: 19, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
-            }
-            .buttonStyle(PressableStyle())
-
-            Spacer(minLength: 0)
-
-            Button { state.showSearch = true } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(.white)
-                    Text(location.placeName)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.75))
-                        .lineLimit(1)
-                }
-                .padding(.horizontal, 16)
-                .frame(height: 44)
-                .frame(maxWidth: 250)
-                .background(
-                    ZStack {
-                        Capsule().fill(.ultraThinMaterial)
-                        Capsule().fill(Color.black.opacity(0.45))
-                        Capsule().strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+        GlassEffectContainer(spacing: 12) {
+            HStack(spacing: 10) {
+                Button { state.showMapSelection = true } label: {
+                    GlassCircle(size: 44) {
+                        Image(systemName: "globe.europe.africa.fill")
+                            .font(.system(size: 19, weight: .semibold))
+                            .foregroundStyle(.white)
                     }
-                )
-                .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
-            }
-            .buttonStyle(PressableStyle())
+                }
+                .buttonStyle(.plain)
 
-            Spacer(minLength: 0)
+                Spacer(minLength: 0)
 
-            Button { state.showSettings = true } label: {
-                GlassCircle(size: 44) { DonutIcon() }
+                Button { state.showSearch = true } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(.white)
+                        Text(location.placeName)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(Color.white.opacity(0.75))
+                            .lineLimit(1)
+                    }
+                    .padding(.horizontal, 16)
+                    .frame(height: 44)
+                    .frame(maxWidth: 250)
+                    .contentShape(Capsule())
+                    .glassEffect(.regular.interactive(), in: Capsule())
+                }
+                .buttonStyle(.plain)
+
+                Spacer(minLength: 0)
+
+                Button { state.showSettings = true } label: {
+                    GlassCircle(size: 44) { DonutIcon() }
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(PressableStyle())
         }
         .padding(.horizontal, 18)
     }
@@ -164,29 +160,32 @@ struct BottomControls: View {
     @EnvironmentObject var state: AppState
 
     var body: some View {
-        HStack(spacing: 18) {
-            Button { state.panel = .saved } label: {
-                GlassCircle(size: 46) {
-                    Image(systemName: "bookmark.fill")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.white)
+        GlassEffectContainer(spacing: 18) {
+            HStack(spacing: 18) {
+                Button { state.panel = .saved } label: {
+                    GlassCircle(size: 46) {
+                        Image(systemName: "bookmark.fill")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
                 }
-            }
-            .buttonStyle(PressableStyle())
+                .buttonStyle(.plain)
 
-            Button { state.pinCurrentPosition() } label: {
-                GlassCircle(size: 58) { BluePinIcon() }
-            }
-            .buttonStyle(PressableStyle())
-
-            Button { state.cycleTracking() } label: {
-                GlassCircle(size: 46) {
-                    Image(systemName: state.tracking == .heading ? "safari.fill" : "location.fill")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.white)
+                Button { state.pinCurrentPosition() } label: {
+                    GlassCircle(size: 58, tint: Color(hex: 0x0A6CFF).opacity(0.18)) { BluePinIcon() }
                 }
+                .buttonStyle(.plain)
+
+                Button { state.cycleTracking() } label: {
+                    GlassCircle(size: 46) {
+                        Image(systemName: state.tracking == .heading ? "safari.fill" : "location.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .contentTransition(.symbolEffect(.replace))
+                    }
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(PressableStyle())
         }
     }
 }

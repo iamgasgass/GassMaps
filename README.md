@@ -74,6 +74,8 @@ open GassMaps.xcodeproj
 
 ## Dati mappa
 
+Il tema Street Heat usa le immagini satellitari Esri World Imagery (© Esri, Maxar, Earthstar Geographics),
+gratuite con attribuzione: per un uso commerciale verifica i termini Esri.
 Tile vettoriali gratuiti di [OpenFreeMap](https://openfreemap.org) (nessuna API key), dati © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, rendering con [MapLibre Native](https://maplibre.org). Ricerca e percorsi tramite Apple MapKit.
 L'attribuzione OSM resta visibile (pulsante ⓘ in basso a sinistra) come richiesto dalla licenza ODbL.
 

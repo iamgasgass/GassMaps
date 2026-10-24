@@ -116,7 +116,6 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
         scene.background.contents = UIColor.clear
         setupCamera()
         setupEarth()
-        setupAtmosphere()
         applyOrientation()
     }
 
@@ -136,14 +135,14 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
         let dist = simd_length(camPos)
         let limb = sqrt(max(dist * dist - 1, 0.01))
         let ptPerUnit = focal / limb
-        let halo = scene.rootNode.childNode(withName: "halo", recursively: false)?.geometry?.firstMaterial
-        halo?.setValue(NSNumber(value: ptPerUnit), forKey: "ptPerUnit")
+        _ = ptPerUnit
     }
     private var haloScaleSet = false
 
     // MARK: Camera prospettica
 
-    private func setupCamera() {
+    /// Posizione e orientamento della camera (in raggi terrestri), identici al video.
+    static func cameraBasis() -> (pos: SIMD3<Double>, forward: SIMD3<Double>, up: SIMD3<Double>) {
         let fov = GlobeCoordinator.fovDeg * .pi / 180
         let focalPt = (GlobeCoordinator.screenRefHeight / 2) / tan(fov / 2)
         let radiusPt = 512 * pow(2, GlobeCoordinator.zoom) / (2 * .pi)
@@ -155,13 +154,46 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
         let north = SIMD3<Double>(0, cos(la), -sin(la))
         let target = n
         let pos = target + dist * (n * cos(p) - north * sin(p))
-        var f = simd_normalize(target - pos)
-        var up = n * sin(p) + north * cos(p)
+        let f = simd_normalize(target - pos)
+        let up = n * sin(p) + north * cos(p)
         // il punto guardato appare 150 pt sotto il centro: ruoto la camera verso l'alto
         let delta = atan(GlobeCoordinator.targetOffsetPt / focalPt)
-        let f2 = f * cos(delta) + up * sin(delta)
-        let up2 = up * cos(delta) - f * sin(delta)
-        f = f2; up = up2
+        return (pos, f * cos(delta) + up * sin(delta), up * cos(delta) - f * sin(delta))
+    }
+
+    /// Linea dell'orizzonte (bordo del globo) in coordinate schermo, per una vista di dimensione `size`.
+    static func limbPoints(size: CGSize, samples: Int = 240) -> [CGPoint] {
+        guard size.width > 0, size.height > 0 else { return [] }
+        let cam = cameraBasis()
+        let fov = GlobeCoordinator.fovDeg * .pi / 180
+        let focal = Double(size.height) / 2 / tan(fov / 2)
+        let right = simd_cross(cam.forward, cam.up)
+        let d = simd_length(cam.pos)
+        let cn = cam.pos / d
+        let center = cn / d
+        let rho = sqrt(max(1 - 1 / (d * d), 0))
+        var a = simd_cross(cn, SIMD3<Double>(1, 0, 0))
+        if simd_length(a) < 1e-6 { a = simd_cross(cn, SIMD3<Double>(0, 1, 0)) }
+        a = simd_normalize(a)
+        let b = simd_cross(cn, a)
+        var pts: [CGPoint] = []
+        for i in 0...samples {
+            let t = Double(i) / Double(samples) * 2 * .pi
+            let pnt = center + rho * (cos(t) * a + sin(t) * b)
+            let q = pnt - cam.pos
+            let z = simd_dot(q, cam.forward)
+            guard z > 0.001 else { continue }
+            pts.append(CGPoint(x: Double(size.width) / 2 + focal * simd_dot(q, right) / z,
+                               y: Double(size.height) / 2 - focal * simd_dot(q, cam.up) / z))
+        }
+        return pts
+    }
+
+    private func setupCamera() {
+        let basis = GlobeCoordinator.cameraBasis()
+        let pos = basis.pos
+        let f = basis.forward
+        let up = basis.up
 
         let camera = SCNCamera()
         camera.projectionDirection = .vertical
@@ -256,9 +288,7 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
 
         let material = earth.geometry?.firstMaterial
         material?.setValue(GlobeCoordinator.vec(theme.haze), forKey: "hazeColor")
-        let haloMat = scene.rootNode.childNode(withName: "halo", recursively: false)?.geometry?.firstMaterial
-        haloMat?.setValue(GlobeCoordinator.vec(theme.glow), forKey: "glowColor")
-        haloMat?.setValue(GlobeCoordinator.vec(theme.glowCore), forKey: "coreColor")
+
 
         if let cached = GlobeTextureProvider.shared.cached(theme) {
             material?.diffuse.contents = cached

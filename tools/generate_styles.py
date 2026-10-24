@@ -125,7 +125,10 @@ def road_line(lid, p, classes, color, widths, minzoom=0, dash=None, opacity=1.0)
 
 POI_ICON_EXPR = [
                     "match", ["get", "class"],
-                    ["park", "garden", "playground"], "gm-poi-park",
+                    ["garden"], "gm-poi-garden",
+                    ["playground"], "gm-poi-playground",
+                    ["post"], "gm-poi-post",
+                    ["park"], "gm-poi-park",
                     ["cinema", "theatre", "music"], "gm-poi-cinema",
                     ["railway", "bus", "ferry_terminal", "aerialway"], "gm-poi-rail",
                     ["library", "books"], "gm-poi-library",
@@ -160,11 +163,6 @@ EXTRA = {
     "noir": dict(road_mode="casing", casing="#b8b8b8", inner="#6a6a6a", minor_solid="#a8a8a8",
                  land="#161616", building="#353535", building_mode="flat", water="#34495a",
                  park="#1c1f1c", wood="#1b1d1b", grass="#1b1e1b", labels=True),
-    # rif. schermata 1 — grigio lavanda, strade nere, parchi verdi, fiume blu, sentieri marroni
-    "palm": dict(road_mode="solid", minor="#0c0c0c", major="#050505", motor="#000000",
-                 land="#a69ca0", building="#b2a9ad", building_mode="flat", water="#6f84ad",
-                 water_outline="#a9c4e6", park="#356a2b", wood="#356a2b", grass="#8ea24a",
-                 path="#86705a", path_solid=True, rail="#6e1f1f", labels=True),
     # rif. schermata 2 — pergamena, inchiostro, edifici contornati, sentieri tratteggiati
     "dust": dict(road_mode="solid", minor="#33312b", major="#2c2a25", motor="#24221e",
                  land="#d4c09a", bg_pattern="gm-paper", building="#c3ad89", building_mode="ink",
@@ -177,12 +175,30 @@ EXTRA = {
                   building="#a8784a", building_mode="pattern", building_pattern="gm-planks",
                   building_pattern_big="gm-stone", park="#6e9050", wood="#4f7a33", grass="#6e9050",
                   label="#ffffff", halo="#2a2a2a", road_label="#ffffff", road_halo="#2a2a2a",
-                  transform="none", labels=True),
+                  transform="none", labels=True, poi_size=0.95),
+    # rif. mappa di San Andreas allegata — campagna verde, città grigie, strade chiare, acqua blu-grigia
+    "palm": dict(road_mode="solid", minor="#d4d4d4", major="#e4e4e4", motor="#f0f0f0",
+                 land="#5e9e48", urban="#8b8b8b", building="#a2a2a2", building_mode="flat",
+                 water="#6e8db4", park="#8cc965", wood="#3f7d32", grass="#7bbd57", sand="#b39a73",
+                 path="#c9b892", rail="#5a5a5a", label="#ffffff", halo="#000000",
+                 road_label="#ffffff", road_halo="#000000", labels=True, poi_size=0.62),
     # rif. schermata 4 — nero, strade ciano a doppia linea, edifici 3D cremisi, etichette arancioni
     "neon": dict(road_mode="casing", casing="#4b9fb0", inner="#070707", minor_solid=None,
                  land="#070707", building="#b3204a", building_mode="extrude", water="#0f2347",
                  park="#080a08", wood="#080a08", grass="#080a08", label="#ffb02e", halo="#3a1600",
-                 road_label="#ffb02e", road_halo="#2a1000", labels=True),
+                 road_label="#ffb02e", road_halo="#2a1000", labels=True, poi_size=0.62),
+    # rif. schermata Street Heat — satellite viola, strade grigio-azzurre, icone bianche
+    "heat": dict(road_mode="solid", minor="#a4b2bc", major="#aab7c0", motor="#b2bec6",
+                 land="#4a3f8a", satellite=True, building="#b8a8ff", building_mode="flat", building_opacity=0.18,
+                 water="#3a3280", park="#4a3f8a", wood="#4a3f8a", grass="#4a3f8a",
+                 path="#8f9aaa", rail="#8f9aaa", label="#ffffff", halo="#2a1e5a",
+                 road_label="#ffffff", road_halo="#2a1e5a", labels=True, poi_size=0.62),
+    # rif. schermata Old Kingdom — terra kaki, tetti di coppi in 3D, strade chiare, etichette crema
+    "kingdom": dict(road_mode="solid", minor="#c4c6b6", major="#cacbbc", motor="#d0d0c2",
+                    land="#97957f", building="#a06e5e", building_mode="extrude", extrude_scale=0.45,
+                    extrude_pattern="gm-roof", water="#7d8a86", park="#8f9078", wood="#8a8b72", grass="#929179",
+                    path="#b0ae9c", rail="#6a604e", label="#f3ecd6", halo="#4a4232",
+                    road_label="#f3ecd6", road_halo="#4a4232", transform="none", labels=True, poi_size=0.62),
 }
 
 
@@ -221,17 +237,35 @@ def map_style(tid, p):
     if x.get("bg_pattern"):
         bg["paint"] = {"background-pattern": x["bg_pattern"]}
     layers.append(bg)
+    sources = {"openmaptiles": SOURCE}
+    if x.get("satellite"):
+        sources["satellite"] = {
+            "type": "raster", "tileSize": 256, "maxzoom": 19,
+            "tiles": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+            "attribution": "Imagery © Esri, Maxar, Earthstar Geographics",
+        }
+        # satellite in scala di grigi sopra lo sfondo viola = tinta viola come nella schermata
+        layers.append({"id": "satellite", "type": "raster", "source": "satellite",
+                       "paint": {"raster-saturation": -1, "raster-contrast": 0.15, "raster-opacity": 0.62}})
+
+    if x.get("urban"):
+        layers.append({"id": "landuse-urban", "type": "fill", "source": "openmaptiles", "source-layer": "landuse",
+                       "filter": cls("residential", "commercial", "industrial", "retail", "railway", "suburb",
+                                     "neighbourhood", "quarter"),
+                       "paint": {"fill-color": x["urban"]}})
 
     for lid, classes, key, op in [("landcover-ice", ["ice"], "ice", 1), ("landcover-sand", ["sand"], "sand", 1),
                                   ("landcover-wood", ["wood", "forest"], "wood", 0.95),
                                   ("landcover-grass", ["grass", "farmland", "scrub"], "grass", 0.9)]:
         layers.append({"id": lid, "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
                        "filter": cls(*classes), "paint": {"fill-color": p[key], "fill-opacity": op}})
+    if x.get("satellite"):
+        layers = [l for l in layers if not l["id"].startswith("landcover")]
     layers.append({"id": "park", "type": "fill", "source": "openmaptiles", "source-layer": "park",
-                   "paint": {"fill-color": p["park"], "fill-opacity": 0.95}})
+                   "paint": {"fill-color": p["park"], "fill-opacity": 0 if x.get("satellite") else 0.95}})
     layers.append({"id": "landuse-grass", "type": "fill", "source": "openmaptiles", "source-layer": "landuse",
                    "filter": cls("grass", "cemetery", "pitch", "playground"),
-                   "paint": {"fill-color": p["park"], "fill-opacity": 0.9}})
+                   "paint": {"fill-color": p["park"], "fill-opacity": 0 if x.get("satellite") else 0.9}})
 
     water = {"id": "water", "type": "fill", "source": "openmaptiles", "source-layer": "water",
              "paint": {"fill-color": p["water"], "fill-antialias": True}}
@@ -257,7 +291,8 @@ def map_style(tid, p):
     mode = x.get("building_mode", "extrude")
     if mode in ("flat", "ink", "pattern"):
         b = {"id": "building", "type": "fill", "source": "openmaptiles", "source-layer": "building",
-             "minzoom": 13, "paint": {"fill-color": p["building"]}}
+             "minzoom": 13, "paint": dict({"fill-color": p["building"]},
+                                          **({"fill-opacity": x["building_opacity"]} if "building_opacity" in x else {}))}
         if mode == "pattern":
             b["paint"] = {"fill-pattern": ["case",
                                            [">", ["to-number", ["get", "render_height"], 0], 14],
@@ -295,18 +330,23 @@ def map_style(tid, p):
             layers.append(road_line(f"road-{kind}", p, classes, colors[kind], road_widths(kind), minzoom=mz))
 
     if mode == "extrude":
-        layers.append({
+        ext = {
             "id": "building-3d", "type": "fill-extrusion", "source": "openmaptiles", "source-layer": "building",
             "minzoom": 14,
             "paint": {
                 "fill-extrusion-color": p["building"],
                 "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14, 0, 15.5,
-                                          ["to-number", ["get", "render_height"], 8]],
+                                          (["*", ["to-number", ["get", "render_height"], 8], x["extrude_scale"]]
+                                           if "extrude_scale" in x else ["to-number", ["get", "render_height"], 8])],
                 "fill-extrusion-base": ["to-number", ["get", "render_min_height"], 0],
                 "fill-extrusion-opacity": 0.95,
                 "fill-extrusion-vertical-gradient": True,
             },
-        })
+        }
+        if x.get("extrude_pattern"):
+            ext["paint"]["fill-extrusion-pattern"] = x["extrude_pattern"]
+            del ext["paint"]["fill-extrusion-color"]
+        layers.append(ext)
 
     layers.append({
         "id": "road-oneway", "type": "symbol", "source": "openmaptiles", "source-layer": "transportation",
@@ -346,18 +386,18 @@ def map_style(tid, p):
                                   "text-transform": p["transform"], "text-letter-spacing": 0.04,
                                   "text-rotation-alignment": "map", "text-pitch-alignment": "viewport"},
                        "paint": {"text-color": p["road_label"], "text-halo-color": p["road_halo"],
-                                 "text-halo-width": 1.6, "text-halo-blur": 0.4 if tid == "neon" else 0}})
+                                 "text-halo-width": x.get("halo_width", 1.6), "text-halo-blur": 0.4 if tid == "neon" else 0}})
 
     layers.append({
         "id": "poi", "type": "symbol", "source": "openmaptiles", "source-layer": "poi",
         "minzoom": 15, "filter": ["<=", ["to-number", ["get", "rank"], 30], 22],
         "layout": {
-            "icon-image": POI_ICON_EXPR, "icon-size": 0.55, "icon-allow-overlap": False,
+            "icon-image": POI_ICON_EXPR, "icon-size": x.get("poi_size", 0.55), "icon-allow-overlap": False,
             "text-field": NAME if labels else "", "text-font": BOLD, "text-size": 10.5,
             "text-transform": p["transform"], "text-anchor": "top", "text-offset": [0, 1.2],
             "text-max-width": 8, "text-optional": True,
         },
-        "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.2},
+        "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": x.get("halo_width", 1.3)},
     })
 
     if labels:
@@ -375,7 +415,7 @@ def map_style(tid, p):
                               "text-size": interp([(2, 10), (6, 16)]), "text-max-width": 7},
                    "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.6}})
 
-    return {"version": 8, "name": "GassMaps " + tid, "sources": {"openmaptiles": SOURCE},
+    return {"version": 8, "name": "GassMaps " + tid, "sources": sources,
             "glyphs": GLYPHS, "layers": layers}
 
 

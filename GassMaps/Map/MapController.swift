@@ -120,10 +120,12 @@ final class MapController {
         m.setUserTrackingMode(.none, animated: false, completionHandler: nil)
         state?.tracking = .none
         m.contentInset = .zero
-        let cam = m.cameraThatFitsCoordinateBounds(bounds, edgePadding: UIEdgeInsets(top: 120, left: 50, bottom: 360, right: 70))
+        // Come nel video: vista dall'alto, nord in su, percorso intero nella parte alta sopra il pannello,
+        // movimento rapido (~0,5 s) senza "volo".
+        let cam = m.cameraThatFitsCoordinateBounds(bounds, edgePadding: UIEdgeInsets(top: 150, left: 34, bottom: 380, right: 34))
         cam.pitch = 0
         cam.heading = 0
-        m.setCamera(cam, withDuration: 1.0, animationTimingFunction: CAMediaTimingFunction(name: .easeInEaseOut))
+        m.setCamera(cam, withDuration: 0.5, animationTimingFunction: CAMediaTimingFunction(name: .easeOut))
     }
 
     func installRoute(in style: MLNStyle) {
@@ -171,13 +173,27 @@ final class MapController {
 
     // MARK: - Navigazione
 
+    static func bearing(from a: CLLocationCoordinate2D, to b: CLLocationCoordinate2D) -> CLLocationDirection {
+        let la1 = a.latitude * .pi / 180, la2 = b.latitude * .pi / 180
+        let dl = (b.longitude - a.longitude) * .pi / 180
+        let y = sin(dl) * cos(la2)
+        let x = cos(la1) * sin(la2) - sin(la1) * cos(la2) * cos(dl)
+        let deg = atan2(y, x) * 180 / .pi
+        return deg < 0 ? deg + 360 : deg
+    }
+
     func startNavigation() {
         guard let m = mapView else { return }
-        setBottomInset(170)
+        setBottomInset(230)
         if let loc = m.userLocation?.location ?? state?.location.location {
-            let course = loc.course >= 0 ? loc.course : m.direction
-            let cam = MLNMapCamera(lookingAtCenter: loc.coordinate, altitude: 320, pitch: 60, heading: course)
-            m.fly(to: cam, withDuration: 1.0) { [weak self] in
+            // Come nel video: passaggio quasi immediato a una vista molto ravvicinata che segue la marcia
+            var course = loc.course >= 0 ? loc.course : m.direction
+            if loc.course < 0, routeCoordinates.count > 1 {
+                course = MapController.bearing(from: routeCoordinates[0], to: routeCoordinates[min(5, routeCoordinates.count - 1)])
+            }
+            let cam = MLNMapCamera(lookingAtCenter: loc.coordinate, altitude: 230, pitch: 38, heading: course)
+            m.setCamera(cam, withDuration: 0.35, animationTimingFunction: CAMediaTimingFunction(name: .easeOut))
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
                 self?.mapView?.setUserTrackingMode(.followWithCourse, animated: true, completionHandler: nil)
             }
         } else {

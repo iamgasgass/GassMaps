@@ -3,7 +3,7 @@ import UIKit
 /// Texture ripetibili usate come "background-pattern" / "fill-pattern" negli stili mappa.
 /// Disegnate interamente dall'app (nessuna immagine esterna).
 enum Textures {
-    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone"]
+    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof"]
 
     private static var cache: [String: UIImage] = [:]
 
@@ -16,6 +16,7 @@ enum Textures {
         case "gm-water": img = blocks(colors: [0x5A5ABE, 0x5454B6, 0x6060C6, 0x5050B0, 0x5C5CC2], block: 8, count: 8)
         case "gm-planks": img = planks()
         case "gm-stone": img = stone()
+        case "gm-roof": img = roof()
         default: img = nil
         }
         if let img = img { cache[name] = img }
@@ -116,6 +117,28 @@ enum Textures {
         }
     }
 
+    /// Tetti di coppi (Old Kingdom): file di tegole sfalsate color terracotta
+    private static func roof() -> UIImage {
+        let side: CGFloat = 32
+        return renderer(side).image { ctx in
+            let c = ctx.cgContext
+            c.setFillColor(UIColor(hex: 0xA26F5F).cgColor)
+            c.fill(CGRect(x: 0, y: 0, width: side, height: side))
+            for row in 0..<4 {
+                let y = CGFloat(row) * 8
+                let offset: CGFloat = row % 2 == 0 ? 0 : 4
+                for col in -1..<5 {
+                    let x = CGFloat(col) * 8 + offset
+                    let tile = UIBezierPath(roundedRect: CGRect(x: x + 0.5, y: y + 0.5, width: 7, height: 7.5), cornerRadius: 2.5)
+                    UIColor(hex: 0xAD7967).setFill(); tile.fill()
+                    UIColor(hex: 0x7E5246).setStroke(); tile.lineWidth = 0.8; tile.stroke()
+                    UIColor(hex: 0xC08A76).withAlphaComponent(0.7).setFill()
+                    UIBezierPath(rect: CGRect(x: x + 1.5, y: y + 1.2, width: 5, height: 1.2)).fill()
+                }
+            }
+        }
+    }
+
     /// Blocchi di pietra (edifici alti)
     private static func stone() -> UIImage {
         var rng = SeededGenerator(seed: 23)
@@ -140,55 +163,63 @@ enum Textures {
     }
 }
 
-/// Piccoli sprite in pixel art disegnati per il tema a blocchi.
+/// Sprite in pixel art (16×16) disegnati per il tema a blocchi, come nella schermata di riferimento.
 enum PixelArt {
     private static let palette: [Character: UInt32] = [
-        "k": 0x2A1A0E, "b": 0x8A4E24, "m": 0xC77A3E, "l": 0xE3A56A, "w": 0xF2EEE6, "g": 0xBDB6AA,
-        "c": 0x2BB5B0, "C": 0x64E8E0, "d": 0x167A78, "D": 0x0E4F4E
+        // pollo arrosto
+        "k": 0x3B1F0E, "b": 0x8A4A22, "m": 0xB8692F, "l": 0xE09A55, "y": 0xF2C27A, "w": 0xF2EEE6, "g": 0xBDB6AA,
+        // corazza
+        "D": 0x0E4F4E, "d": 0x167A78, "c": 0x2BB5B0, "C": 0x64E8E0, "W": 0xCFFFFB
     ]
 
-    // coscia di pollo arrosto (cibo)
     private static let food = [
-        "....kkkk....",
-        "...kmmmmk...",
-        "..kmllmmmk..",
-        ".kmlmmmmbk..",
-        ".kmmmmmbbk..",
-        ".kmmmmbbk...",
-        "..kbbbbk....",
-        "...kkkwk....",
-        "......kwk...",
-        ".....kwgwk..",
-        ".....kgwgk..",
-        "......kkk..."
+        "......kkkk......",
+        "....kkmmmmkk....",
+        "...kmmllllmmk...",
+        "..kmllyylllmbk..",
+        "..kmlyyllllmbk..",
+        ".kmmllllllmmbbk.",
+        ".kmlllllllmmbbk.",
+        ".kmmlllllmmmbbk.",
+        ".kbmmmmmmmmbbbk.",
+        "..kbbmmmmmbbbk..",
+        "..kbbbbbbbbbk...",
+        "...kkbbbbbkk....",
+        "....kkkkkkwwk...",
+        "..........kwwk..",
+        "...........kgk..",
+        "............k..."
     ]
 
-    // corazza/maglia (abbigliamento)
     private static let clothes = [
-        "..DDD..DDD..",
-        ".DcCcDDcCcD.",
-        "DcCCcccCCcD.",
-        "DccDcccDccD.",
-        ".DDdcCcdDD..",
-        "..DcCCCcD...",
-        "..DcCccdD...",
-        "..DccccdD...",
-        "..DdcccdD...",
-        "..DDddddD...",
-        "...DDDDD....",
-        "............"
+        "................",
+        "..DDD......DDD..",
+        ".DcCcD....DcCcD.",
+        ".DcCCcDDDDcCCcD.",
+        ".DccCccccccCccD.",
+        ".DDdcccCCcccdDD.",
+        "...DdccCCccdD...",
+        "...DdcCWWCcdD...",
+        "...DdccCCccdD...",
+        "...DdccccccdD...",
+        "...DddccccddD...",
+        "...DddddddddD...",
+        "....DDDDDDDD....",
+        "................",
+        "................",
+        "................"
     ]
 
     static func sprite(for cat: POICategory) -> UIImage? {
         switch cat {
-        case .food, .cafe: return render(food, pixel: 3.4)
-        case .clothes, .shop: return render(clothes, pixel: 3.4)
+        case .food, .cafe, .bar: return render(food, pixel: 3)
+        case .clothes, .shop: return render(clothes, pixel: 3)
         default: return nil
         }
     }
 
     private static func render(_ rows: [String], pixel: CGFloat) -> UIImage {
-        let h = CGFloat(rows.count), w = CGFloat(rows.first?.count ?? 0)
+        let h = CGFloat(rows.count), w = CGFloat(rows.map { $0.count }.max() ?? 0)
         let fmt = UIGraphicsImageRendererFormat()
         fmt.scale = 2
         return UIGraphicsImageRenderer(size: CGSize(width: w * pixel, height: h * pixel), format: fmt).image { ctx in

@@ -979,9 +979,19 @@
       "class"
      ],
      [
-      "park",
-      "garden",
+      "garden"
+     ],
+     "gm-poi-garden",
+     [
       "playground"
+     ],
+     "gm-poi-playground",
+     [
+      "post"
+     ],
+     "gm-poi-post",
+     [
+      "park"
      ],
      "gm-poi-park",
      [
@@ -1149,7 +1159,7 @@
    "paint": {
     "text-color": "#2b2924",
     "text-halo-color": "#d4c09a",
-    "text-halo-width": 1.2
+    "text-halo-width": 1.3
    }
   },
   {

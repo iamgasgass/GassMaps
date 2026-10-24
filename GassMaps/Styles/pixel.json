@@ -943,9 +943,19 @@
       "class"
      ],
      [
-      "park",
-      "garden",
+      "garden"
+     ],
+     "gm-poi-garden",
+     [
       "playground"
+     ],
+     "gm-poi-playground",
+     [
+      "post"
+     ],
+     "gm-poi-post",
+     [
+      "park"
      ],
      "gm-poi-park",
      [
@@ -1080,7 +1090,7 @@
      "gm-poi-car",
      "gm-poi-default"
     ],
-    "icon-size": 0.55,
+    "icon-size": 0.95,
     "icon-allow-overlap": false,
     "text-field": [
      "coalesce",
@@ -1113,7 +1123,7 @@
    "paint": {
     "text-color": "#ffffff",
     "text-halo-color": "#2a2a2a",
-    "text-halo-width": 1.2
+    "text-halo-width": 1.3
    }
   },
   {

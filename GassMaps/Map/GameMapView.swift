@@ -56,6 +56,7 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         MapIcons.install(in: style, theme: state.theme)
         state.map.installRoute(in: style)
         UserArrowView.tint = state.theme.arrowColor
+        UserArrowView.marker = state.theme.userMarker
         // inclinazione propria del tema (es. pergamena vista dall'alto, neon in 3D)
         let cam = mapView.camera
         cam.pitch = state.theme.mapPitch

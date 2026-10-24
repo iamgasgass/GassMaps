@@ -31,6 +31,8 @@ final class AppState: ObservableObject {
     // MARK: Pannelli / mappa
     @Published var panel: BottomPanelKind = .none
     @Published var pinnedPlace: Place?
+    /// luogo esatto restituito dalla ricerca (usato per un percorso preciso verso l'ingresso)
+    var destinationItem: MKMapItem?
     @Published var route: RouteInfo?
     @Published var isLoadingRoute = false
     @Published var tracking: TrackingState = .follow
@@ -107,8 +109,9 @@ final class AppState: ObservableObject {
         }
     }
 
-    func pin(_ place: Place, fly: Bool = true) {
+    func pin(_ place: Place, fly: Bool = true, item: MKMapItem? = nil) {
         clearRoute()
+        destinationItem = item
         pinnedPlace = place
         panel = .pinned
         map.showPin(place)
@@ -119,7 +122,7 @@ final class AppState: ObservableObject {
         let place = Place(mapItem: mapItem)
         addToHistory(place)
         showSearch = false
-        pin(place)
+        pin(place, item: mapItem)
     }
 
     func addToHistory(_ place: Place) {
@@ -144,12 +147,9 @@ final class AppState: ObservableObject {
 
     func requestDirections() {
         guard let dest = pinnedPlace else { return }
-        guard let from = location.location?.coordinate else {
-            routeError = "Posizione non disponibile"
-            return
-        }
+        let from = location.location?.coordinate
         isLoadingRoute = true
-        DirectionsService.route(from: from, to: dest.coordinate) { [weak self] info in
+        DirectionsService.route(from: from, to: dest.coordinate, destinationItem: destinationItem) { [weak self] info in
             guard let self = self else { return }
             self.isLoadingRoute = false
             guard let info = info else {
@@ -206,7 +206,7 @@ final class AppState: ObservableObject {
         if moved > 150 || Date().timeIntervalSince(lastRerouteDate) > 30 {
             lastRerouteLocation = loc
             lastRerouteDate = Date()
-            DirectionsService.route(from: loc.coordinate, to: dest.coordinate) { [weak self] info in
+            DirectionsService.route(from: loc.coordinate, to: dest.coordinate, destinationItem: destinationItem) { [weak self] info in
                 guard let self = self, self.panel == .navigating, let info = info else { return }
                 self.route = info
                 self.map.showRoute(info.coordinates, overview: false)

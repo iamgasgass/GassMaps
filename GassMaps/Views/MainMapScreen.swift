@@ -31,8 +31,19 @@ struct MainMapScreen: View {
                         )
                         .frame(height: geo.safeAreaInsets.top + 150)
                     Spacer()
-                    LinearGradient(colors: [.clear, .black.opacity(0.45)], startPoint: .top, endPoint: .bottom)
-                        .frame(height: 180)
+                    // sfocatura progressiva in basso (profondità di campo, come nelle schermate)
+                    if state.theme.id == "neon" || state.theme.id == "palm" {
+                        LinearGradient(colors: [.clear, .black.opacity(0.45)], startPoint: .top, endPoint: .bottom)
+                            .frame(height: 180)
+                    } else {
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+                        .mask(LinearGradient(colors: [.clear, .black.opacity(0.75), .black],
+                                             startPoint: .top, endPoint: .bottom))
+                        .overlay(LinearGradient(colors: [.clear, .black.opacity(0.25)],
+                                                startPoint: .top, endPoint: .bottom))
+                        .frame(height: 200)
+                    }
                 }
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
@@ -42,7 +53,7 @@ struct MainMapScreen: View {
                         if state.showHeader {
                             HeaderView()
                                 .transition(.opacity.combined(with: .move(edge: .top)))
-                        } else if state.panel != .navigating {
+                        } else if state.panel != .navigating && state.panel != .directions {
                             TopBar()
                                 .transition(.opacity)
                         }

@@ -73,8 +73,10 @@ struct SearchScreen: View {
         }
         .background(Color.black.ignoresSafeArea())
         .onAppear {
-            if let loc = location.location {
-                search.region = MKCoordinateRegion(center: loc.coordinate, latitudinalMeters: 30_000, longitudinalMeters: 30_000)
+            // zona di ricerca: posizione attuale, altrimenti il centro della mappa
+            search.userLocation = location.location
+            if let c = location.location?.coordinate ?? state.map.centerCoordinate {
+                search.region = MKCoordinateRegion(center: c, latitudinalMeters: 40_000, longitudinalMeters: 40_000)
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { focused = true }
         }

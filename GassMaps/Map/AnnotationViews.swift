@@ -11,10 +11,24 @@ final class UserArrowView: MLNUserLocationAnnotationView {
     private var configured = false
     /// colore della freccia per il tema attivo
     static var tint: UIColor = .white
+    /// tipo di indicatore per il tema attivo (0 freccia, 1 ingranaggio, 2 anello)
+    static var marker: Int = 0
     private var appliedTint: UIColor?
+    private var appliedMarker: Int = -1
+    private let markerLayer = CALayer()
 
     override func update() {
         if !configured { configure() }
+        if appliedMarker != UserArrowView.marker {
+            appliedMarker = UserArrowView.marker
+            let arrow = appliedMarker == 0
+            arrowLeft.isHidden = !arrow
+            arrowRight.isHidden = !arrow
+            hLine.isHidden = !arrow
+            vLine.isHidden = !arrow
+            markerLayer.isHidden = arrow
+            markerLayer.contents = UserArrowView.markerImage(appliedMarker)?.cgImage
+        }
         if appliedTint != UserArrowView.tint {
             appliedTint = UserArrowView.tint
             var h: CGFloat = 0, sat: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
@@ -69,6 +83,10 @@ final class UserArrowView: MLNUserLocationAnnotationView {
 
         container.frame = bounds
         layer.addSublayer(container)
+        markerLayer.frame = bounds.insetBy(dx: -14, dy: -14)
+        markerLayer.contentsGravity = .resizeAspect
+        markerLayer.isHidden = true
+        layer.addSublayer(markerLayer)
 
         let w: CGFloat = 44
         let left = UIBezierPath()
@@ -93,6 +111,46 @@ final class UserArrowView: MLNUserLocationAnnotationView {
             l.shadowRadius = 4
             l.shadowOffset = CGSize(width: 0, height: 2)
             container.addSublayer(l)
+        }
+    }
+}
+
+extension UserArrowView {
+    /// 1 = ingranaggio (Street Heat), 2 = anello-bussola marrone (Old Kingdom)
+    static func markerImage(_ kind: Int) -> UIImage? {
+        let size = CGSize(width: 72, height: 72)
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 3
+        return UIGraphicsImageRenderer(size: size, format: fmt).image { ctx in
+            let c = ctx.cgContext
+            if kind == 1 {
+                let cfg = UIImage.SymbolConfiguration(pointSize: 54, weight: .regular)
+                if let gear = UIImage(systemName: "gearshape", withConfiguration: cfg) {
+                    let r = CGRect(x: (72 - gear.size.width) / 2, y: (72 - gear.size.height) / 2,
+                                   width: gear.size.width, height: gear.size.height)
+                    c.setShadow(offset: .zero, blur: 3, color: UIColor.black.withAlphaComponent(0.4).cgColor)
+                    gear.withTintColor(UIColor.white.withAlphaComponent(0.85), renderingMode: .alwaysOriginal).draw(in: r)
+                }
+            } else {
+                let brown = UIColor(hex: 0x4A2C1A)
+                let center = CGPoint(x: 36, y: 36)
+                c.setStrokeColor(brown.cgColor)
+                c.setLineWidth(5)
+                c.strokeEllipse(in: CGRect(x: 14, y: 14, width: 44, height: 44))
+                c.setStrokeColor(UIColor(hex: 0xC9A27A).cgColor)
+                c.setLineWidth(1.2)
+                c.strokeEllipse(in: CGRect(x: 17.5, y: 17.5, width: 37, height: 37))
+                c.setFillColor(brown.cgColor)
+                for i in 0..<8 {
+                    let a = CGFloat(i) * .pi / 4
+                    let long: CGFloat = i % 2 == 0 ? 33 : 28
+                    let tip = CGPoint(x: center.x + cos(a) * long, y: center.y + sin(a) * long)
+                    let l = CGPoint(x: center.x + cos(a - 0.12) * 21, y: center.y + sin(a - 0.12) * 21)
+                    let r = CGPoint(x: center.x + cos(a + 0.12) * 21, y: center.y + sin(a + 0.12) * 21)
+                    c.move(to: l); c.addLine(to: tip); c.addLine(to: r); c.closePath()
+                }
+                c.fillPath()
+            }
         }
     }
 }

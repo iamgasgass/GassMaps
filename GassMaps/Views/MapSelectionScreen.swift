@@ -68,10 +68,14 @@ struct MapSelectionScreen: View {
                     theme.backgroundTop
                     StarField()
                         .opacity(theme.id == "pixel" ? 0.35 : 1)
-                    GlobeView(theme: globeTheme, height: fullHeight, interaction: globeInteraction)
-                        .frame(width: geo.size.width, height: fullHeight)
-                        .offset(y: globeOffset)
-                        .opacity(didAppear ? 1 : 0)
+                    ZStack {
+                        GlobeView(theme: globeTheme, height: fullHeight, interaction: globeInteraction)
+                        GlobeGlow(size: CGSize(width: geo.size.width, height: fullHeight),
+                                  glow: Color(globeTheme.glow), core: Color(globeTheme.glowCore))
+                    }
+                    .frame(width: geo.size.width, height: fullHeight)
+                    .offset(y: globeOffset)
+                    .opacity(didAppear ? 1 : 0)
                     // sfocatura progressiva della parte bassa del globo (profondità di campo)
                     VStack {
                         Spacer()

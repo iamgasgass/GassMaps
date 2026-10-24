@@ -41,6 +41,8 @@ struct MapTheme: Identifiable, Equatable {
     var vignette: Double = 0
     /// colore della freccia utente
     var arrowColor: UIColor = .white
+    /// indicatore della posizione: 0 freccia con mirino, 1 ingranaggio, 2 anello-bussola
+    var userMarker: Int = 0
 
     static func == (lhs: MapTheme, rhs: MapTheme) -> Bool { lhs.id == rhs.id }
 
@@ -161,7 +163,7 @@ enum Themes {
                 GlobeMarker(lat: 40, lon: 50, symbol: "car.side.fill", color: UIColor(hex: 0x2E6BF2)),
                 GlobeMarker(lat: 27, lon: 75, symbol: "die.face.5.fill", color: .white)
             ],
-            globeFont: "Futura-CondensedExtraBold", globeUppercase: false, globeLabel: .white, globeLabelHalo: .black, haze: UIColor(hex: 0xA5ABB8), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 22, vignette: 0.55),
+            globeFont: "Futura-CondensedExtraBold", globeUppercase: false, globeLabel: .white, globeLabelHalo: .black, haze: UIColor(hex: 0xA5ABB8), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 15, vignette: 0.2),
         MapTheme(
             id: "heat", name: "Street Heat",
             backgroundTop: Color(hex: 0x0B0E20), backgroundBottom: Color(hex: 0x0B0E20),
@@ -172,7 +174,7 @@ enum Themes {
                 GlobeMarker(lat: 35, lon: 105, symbol: "house.fill"),
                 GlobeMarker(lat: 45, lon: 125, symbol: "building.columns.fill")
             ],
-            globeFont: "AvenirNextCondensed-HeavyItalic", globeUppercase: true, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x22003F), haze: UIColor(hex: 0x3A1660), glow: UIColor(hex: 0x9A4DFF), glowCore: UIColor(hex: 0xE6D9F2)),
+            globeFont: "AvenirNextCondensed-HeavyItalic", globeUppercase: true, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x22003F), haze: UIColor(hex: 0x3A1660), glow: UIColor(hex: 0x9A4DFF), glowCore: UIColor(hex: 0xE6D9F2), mapPitch: 0, vignette: 0.25, userMarker: 1),
         MapTheme(
             id: "kingdom", name: "Old Kingdom",
             backgroundTop: Color(hex: 0x2A2E29), backgroundBottom: Color(hex: 0x2A2E29),
@@ -183,6 +185,6 @@ enum Themes {
                 GlobeMarker(lat: 33, lon: 98, symbol: "house.fill"),
                 GlobeMarker(lat: 27, lon: 130, symbol: "bag.fill")
             ],
-            globeFont: "Georgia", globeUppercase: false, globeLabel: UIColor(hex: 0x2B1B0B), globeLabelHalo: UIColor(hex: 0xD9BB85), haze: UIColor(hex: 0x6E7258), glow: UIColor(hex: 0xE6CC8C), glowCore: UIColor(hex: 0xF5EBD2))
+            globeFont: "Georgia", globeUppercase: false, globeLabel: UIColor(hex: 0x2B1B0B), globeLabelHalo: UIColor(hex: 0xD9BB85), haze: UIColor(hex: 0x6E7258), glow: UIColor(hex: 0xE6CC8C), glowCore: UIColor(hex: 0xF5EBD2), mapPitch: 35, vignette: 0.25, userMarker: 2)
     ]
 }

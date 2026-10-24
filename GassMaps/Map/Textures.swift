@@ -302,6 +302,127 @@ enum PixelArt {
         "..kbBBBBBBBBbk..", "..kbbbbbbbbbbk..", "..kbbbbbbbbbbk..", "..kkkkkkkkkkkk..",
         "................", "................", "................", "................"])
 
+    // --- sprite aggiuntivi ---
+    private static let cup = Sprite(palette: ["k": 0x3A3A3A, "c": 0x6B3E1E, "w": 0xF4F1E8, "g": 0xC9C4B8], rows: [
+        "................", "....g...g.......", ".....g...g......", "....g...g.......",
+        "..kkkkkkkkk.....", "..kccccccck.....", "..kwwwwwwwkkk...", "..kwwwwwwwk.k...",
+        "..kwwwwwwwk.k...", "..kwwwwwwwkkk...", "...kwwwwwk......", "..kkkkkkkkk.....",
+        "..kgggggggk.....", "...kkkkkkk......", "................", "................"])
+
+    private static let burger = Sprite(palette: ["k": 0x4A2A10, "b": 0xD89A48, "y": 0xF8EED0, "g": 0x4FAE2F, "r": 0xD83A2A, "m": 0x6B3A1E, "c": 0xF2C230], rows: [
+        "................", "................", ".....kkkkkk.....", "...kkbbbbbbkk...",
+        "..kbbybbbybbbk..", "..kbbbbbybbbbk..", "..kggggggggggk..", "..krrrrrrrrrrk..",
+        "..kmmmmmmmmmmk..", "..kcccccccccck..", "..kbbbbbbbbbbk..", "...kkkkkkkkkk...",
+        "................", "................", "................", "................"])
+
+    private static let lava = Sprite(palette: ["k": 0x2A2A2A, "o": 0xFF7A1A, "y": 0xFFD23A, "g": 0xBDBDBD, "G": 0x7E7E7E], rows: [
+        "................", "................", "..kkkkkkkkkkkk..", "..kooyoooyoook..",
+        "..kgggggggggGk..", "..kgggggggggGk..", "...kgggggggGk...", "...kgggggggGk...",
+        "....kgggggGk....", "....kkkkkkkk....", "................", "................",
+        "................", "................", "................", "................"])
+
+    private static let water = Sprite(palette: ["k": 0x2A2A2A, "o": 0x3A6AE0, "y": 0x7AB0FF, "g": 0xBDBDBD, "G": 0x7E7E7E], rows: [
+        "................", "................", "..kkkkkkkkkkkk..", "..kooyoooyoook..",
+        "..kgggggggggGk..", "..kgggggggggGk..", "...kgggggggGk...", "...kgggggggGk...",
+        "....kgggggGk....", "....kkkkkkkk....", "................", "................",
+        "................", "................", "................", "................"])
+
+    private static let minecart = Sprite(palette: ["k": 0x2A2A2A, "g": 0x9E9E9E, "G": 0x6E6E6E, "d": 0x4A4A4A], rows: [
+        "................", "................", "................", "................",
+        "................", "..kkkkkkkkkkkk..", "..kgGGGGGGGGgk..", "..kgggggggggGk..",
+        "..kgggggggggGk..", "...kgggggggGk...", "..kkkkkkkkkkkk..", "...kdk....kdk...",
+        "....k......k....", "................", "................", "................"])
+
+    private static let cartcar = Sprite(palette: ["k": 0x3A2410, "g": 0xC08040, "G": 0x8A5A2A, "d": 0x4A4A4A], rows: [
+        "................", "................", "................", "................",
+        "................", "..kkkkkkkkkkkk..", "..kgGGGGGGGGgk..", "..kgggggggggGk..",
+        "..kgggggggggGk..", "...kgggggggGk...", "..kkkkkkkkkkkk..", "...kdk....kdk...",
+        "....k......k....", "................", "................", "................"])
+
+    private static let bed = Sprite(palette: ["k": 0x3A2410, "w": 0xF4F1E8, "r": 0xC8282E, "b": 0x8A5A2A], rows: [
+        "................", "................", "................", "................",
+        "................", "................", "................", ".kkkkkkkkkkkkkk.",
+        ".kwwwkrrrrrrrrk.", ".kwwwkrrrrrrrrk.", ".kbbbbbbbbbbbbk.", ".kbkkkkkkkkkkbk.",
+        ".kbk........kbk.", ".kkk........kkk.", "................", "................"])
+
+    private static let church = Sprite(palette: ["y": 0xF2C230, "k": 0x3A3A3A, "r": 0x8A4A3A, "s": 0xC8C4B8], rows: [
+        ".......y........", "......yyy.......", ".......y........", "......kkk.......",
+        ".....krrrk......", "....krrrrrk.....", "...krrrrrrrk....", "..krrrrrrrrrk...",
+        ".kkkkkkkkkkkkk..", "..ksssssssssk...", "..ksksssssksk...", "..ksksssssksk...",
+        "..kssskkksssk...", "..kssskkksssk...", "..kkkkkkkkkkk...", "................"])
+
+    private static let painting = Sprite(palette: ["k": 0x3A2410, "b": 0xA8743A, "c": 0x7AB8F0, "y": 0xF2E23A, "g": 0x4FAE2F], rows: [
+        "................", "................", "..kkkkkkkkkkkk..", "..kbbbbbbbbbbk..",
+        "..kbccccccccbk..", "..kbccycccccbk..", "..kbcccccgccbk..", "..kbcccgggggbk..",
+        "..kbggggggggbk..", "..kbbbbbbbbbbk..", "..kkkkkkkkkkkk..", "................",
+        "................", "................", "................", "................"])
+
+    private static let ball = Sprite(palette: ["k": 0x2A2A2A, "w": 0xF4F4F4], rows: [
+        "................", "................", "................", ".....kkkkkk.....",
+        "....kwwwwwwk....", "...kwwkkwwwwk...", "...kwkkkkwwwk...", "...kwwkkwwkwk...",
+        "...kwwwwwkkkk...", "...kwkwwwwkwk...", "....kwwwwwwk....", ".....kkkkkk.....",
+        "................", "................", "................", "................"])
+
+    private static let anvil = Sprite(palette: ["k": 0x1A1A1A, "g": 0x5A5A5A], rows: [
+        "................", "................", "................", "................",
+        "................", "................", "..kkkkkkkkkkkk..", "..kggggggggggk..",
+        "...kkkggggkkk...", ".....kggggk.....", "....kggggggk....", "...kkkkkkkkkk...",
+        "................", "................", "................", "................"])
+
+    private static let campfire = Sprite(palette: ["o": 0xFF6A1A, "y": 0xFFD23A, "b": 0x7A5A30, "k": 0x3A2410], rows: [
+        "................", "................", "................", "................",
+        ".......o........", "......oyo.......", ".....oyyyo......", ".....oyyyo......",
+        "....ooyyyoo.....", "....oyyyyyo.....", "...kbbbbbbbbk...", "..kbbkbbbbkbbk..",
+        "..kkkkkkkkkkkk..", "................", "................", "................"])
+
+    private static let heart = Sprite(palette: ["k": 0x5A0A0A, "r": 0xE02424, "l": 0xFF8A8A], rows: [
+        "................", "................", "................", "...kkk...kkk....",
+        "..krrrk.krrrk...", ".krrlrrkrrrrrk..", ".krlrrrrrrrrrk..", ".krrrrrrrrrrrk..",
+        "..krrrrrrrrrk...", "...krrrrrrrk....", "....krrrrrk.....", ".....krrrk......",
+        "......krk.......", ".......k........", "................", "................"])
+
+    private static let diamond = Sprite(palette: ["k": 0x0E4F4E, "C": 0xCFFFFB, "c": 0x4AE8E0, "d": 0x1CA8A0], rows: [
+        "................", "................", "................", ".....kkkkkk.....",
+        "....kCCcccck....", "...kCCcccccck...", "..kCccccccccck..", "..kccccccccddk..",
+        "...kcccccddk....", "....kcccddk.....", ".....kcddk......", "......kdk.......",
+        ".......k........", "................", "................", "................"])
+
+    private static let boots = Sprite(palette: ["k": 0x3A2410, "b": 0x8A5A2A], rows: [
+        "................", "................", "................", "................",
+        "..kkkk...kkkk...", "..kbbk...kbbk...", "..kbbk...kbbk...", "..kbbk...kbbk...",
+        "..kbbbkk.kbbbkk.", "..kbbbbbkkbbbbbk", "..kkkkkkkkkkkkkk", "................",
+        "................", "................", "................", "................"])
+
+    private static let bookshelf = Sprite(palette: ["k": 0x3A2410, "b": 0xA8743A, "r": 0xC8282E, "g": 0x3F8F2E, "u": 0x3A5AD0, "y": 0xE0C040], rows: [
+        "................", "................", "..kkkkkkkkkkkk..", "..kbbbbbbbbbbk..",
+        "..kbrguyrguybk..", "..kbrguyrguybk..", "..kbbbbbbbbbbk..", "..kbyurgyurgbk..",
+        "..kbyurgyurgbk..", "..kbbbbbbbbbbk..", "..kkkkkkkkkkkk..", "................",
+        "................", "................", "................", "................"])
+
+    private static let emerald = Sprite(palette: ["k": 0x0A4A1A, "g": 0x2ED36B, "G": 0x9BFFB8, "d": 0x149A44], rows: [
+        "................", "................", "................", "......kkkk......",
+        ".....kgGGgk.....", "....kgGGggGk....", "....kgGgggGk....", "....kggggggk....",
+        "....kgggggdk....", "....kggggddk....", ".....kgddk......", "......kkkk......",
+        "................", "................", "................", "................"])
+
+    private static let icecream = Sprite(palette: ["k": 0x5A3A1A, "p": 0xF5A3C8, "l": 0xFFE0EE, "c": 0xE0A050], rows: [
+        "................", "......kkkk......", ".....kppppk.....", "....kpplpppk....",
+        "....kppppppk....", "....kkkkkkkk....", "....kcccccck....", ".....kcccck.....",
+        ".....kcccck.....", "......kcck......", "......kcck......", ".......kk.......",
+        "................", "................", "................", "................"])
+
+    private static let star = Sprite(palette: ["k": 0x6A4A10, "y": 0xF2C230], rows: [
+        "................", "................", ".......kk.......", "......kyyk......",
+        "......kyyk......", ".kkkkkkyykkkkkk.", "..kyyyyyyyyyyk..", "...kyyyyyyyyk...",
+        "....kyyyyyyk....", "....kyyyyyyk....", "...kyyykkyyyk...", "..kyyk....kyyk..",
+        "..kkk......kkk..", "................", "................", "................"])
+
+    private static let pillar = Sprite(palette: ["k": 0x3A3A3A, "s": 0xC8C4B8, "S": 0x9A968A], rows: [
+        "................", ".....kkkkkk.....", "....kssssssk....", ".....kssssk.....",
+        ".....ksSssk.....", ".....ksSssk.....", ".....ksSssk.....", ".....ksSssk.....",
+        ".....ksSssk.....", ".....ksSssk.....", ".....ksSssk.....", ".....ksSssk.....",
+        "....kssssssk....", "...kkkkkkkkkk...", "................", "................"])
+
     static func sprite(for cat: POICategory) -> UIImage? {
         let s: Sprite
         switch cat {
@@ -323,6 +444,26 @@ enum PixelArt {
         case .school: s = book
         case .post: s = envelope
         case .default: s = pin
+        case .cafe: s = cup
+        case .fastfood: s = burger
+        case .fuel: s = lava
+        case .swimming: s = water
+        case .rail: s = minecart
+        case .car: s = cartcar
+        case .lodging: s = bed
+        case .worship: s = church
+        case .museum: s = painting
+        case .sport: s = ball
+        case .fitness: s = anvil
+        case .camping: s = campfire
+        case .clinic: s = heart
+        case .jewelry: s = diamond
+        case .shoes: s = boots
+        case .library: s = bookshelf
+        case .atm: s = emerald
+        case .icecream: s = icecream
+        case .attraction: s = star
+        case .monument: s = pillar
         default: return nil
         }
         return render(s, pixel: 3)

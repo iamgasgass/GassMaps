@@ -1411,8 +1411,7 @@
       "gm-poi-default"
      ]
     ],
-    "icon-size": 0.62,
-    "icon-allow-overlap": false,
+    "icon-size": 0.55,
     "text-field": [
      "coalesce",
      [

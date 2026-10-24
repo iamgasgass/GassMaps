@@ -1439,7 +1439,6 @@
      ]
     ],
     "icon-size": 0.55,
-    "icon-allow-overlap": false,
     "text-field": [
      "coalesce",
      [

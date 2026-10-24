@@ -82,6 +82,9 @@ struct SplashScreen: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
                 state.finishSplash()
                 GlobeTextureProvider.shared.preloadAll(Themes.all)
+                // icone di tutti i temi pronte in anticipo: cambio tema immediato
+                MapIcons.prewarm(state.theme)
+                Themes.all.forEach { MapIcons.prewarm($0) }
             }
         }
     }

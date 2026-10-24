@@ -275,23 +275,44 @@
    "source-layer": "building",
    "minzoom": 13,
    "paint": {
-    "fill-pattern": [
-     "case",
+    "fill-pattern": "gm-planks"
+   },
+   "filter": [
+    "!",
+    [
+     ">",
      [
-      ">",
+      "to-number",
       [
-       "to-number",
-       [
-        "get",
-        "render_height"
-       ],
-       0
+       "get",
+       "render_height"
       ],
-      14
+      0
      ],
-     "gm-stone",
-     "gm-planks"
+     14
     ]
+   ]
+  },
+  {
+   "id": "building-tall",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "building",
+   "minzoom": 13,
+   "filter": [
+    ">",
+    [
+     "to-number",
+     [
+      "get",
+      "render_height"
+     ],
+     0
+    ],
+    14
+   ],
+   "paint": {
+    "fill-pattern": "gm-stone"
    }
   },
   {
@@ -1402,8 +1423,7 @@
       "gm-poi-default"
      ]
     ],
-    "icon-size": 0.8,
-    "icon-allow-overlap": false,
+    "icon-size": 0.55,
     "text-field": [
      "coalesce",
      [

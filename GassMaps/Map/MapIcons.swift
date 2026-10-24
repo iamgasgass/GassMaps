@@ -54,7 +54,7 @@ enum POICategory: String, CaseIterable {
         case .sport: return "sportscourt.fill"
         case .swimming: return "figure.pool.swim"
         case .fitness: return "dumbbell.fill"
-        case .worship: return "cross.fill"
+        case .worship: return MapIcons.churchGlyph   // edificio di culto, non la croce (sembrava un ospedale)
         case .museum: return "building.columns.fill"
         case .attraction: return "star.fill"
         case .monument: return "flag.fill"
@@ -129,7 +129,7 @@ enum MapIcons {
         case "dust": // dischi scuri western
             return ThemeIconSet(frame: .badge(fill: UIColor(hex: 0x1A120A), ring: UIColor(hex: 0xEADBB8)), tint: w,
                                 glyphs: [.rail: "train.side.front.car", .bar: "mug.fill", .parking: "figure.equestrian.sports",
-                                         .car: "figure.equestrian.sports", .bank: "dollarsign", .worship: "cross",
+                                         .car: "figure.equestrian.sports", .bank: "dollarsign",
                                          .police: "star.fill", .default: "dollarsign"])
 
         case "bunker": // esagoni verdi
@@ -187,7 +187,30 @@ enum MapIcons {
             + Textures.names
     }
 
+    // cache delle icone già disegnate: cambiare tema non le ridisegna
+    private static var cache: [String: UIImage] = [:]
+    private static let cacheLock = NSLock()
+
     static func image(named name: String, theme: MapTheme) -> UIImage? {
+        let key = theme.id + "|" + name
+        cacheLock.lock()
+        if let hit = cache[key] { cacheLock.unlock(); return hit }
+        cacheLock.unlock()
+        let img = makeImage(named: name, theme: theme)
+        if let img = img {
+            cacheLock.lock(); cache[key] = img; cacheLock.unlock()
+        }
+        return img
+    }
+
+    /// Prepara in anticipo tutte le icone di un tema (in background)
+    static func prewarm(_ theme: MapTheme) {
+        DispatchQueue.global(qos: .utility).async {
+            for name in allNames { _ = image(named: name, theme: theme) }
+        }
+    }
+
+    private static func makeImage(named name: String, theme: MapTheme) -> UIImage? {
         switch name {
         case "gm-oneway": return oneway(color: theme.iconColor)
         case "gm-shield": return shield(theme: theme)
@@ -196,12 +219,25 @@ enum MapIcons {
         default:
             guard name.hasPrefix("gm-poi-"),
                   let cat = POICategory(rawValue: String(name.dropFirst("gm-poi-".count))) else { return nil }
-            return poiIcon(cat, theme: theme, pointSize: 30)
+            return rawPoiIcon(cat, theme: theme).map { normalized($0, pixel: theme.id == "pixel") }
         }
     }
 
     /// Icona di una categoria nello stile del tema (usata sia sulla mappa sia sul globo).
+    /// Tutte le icone POI, di ogni tema, escono nello stesso quadrato da 48 pt
+    /// con il contenuto alto/largo esattamente 42 pt: dimensioni identiche ovunque.
+    static let poiCanvas: CGFloat = 48
+    static let poiContent: CGFloat = 42
+
     static func poiIcon(_ cat: POICategory, theme: MapTheme, pointSize: CGFloat) -> UIImage? {
+        if pointSize == 30 {   // richiesta standard: passa dalla cache
+            return image(named: cat.imageName, theme: theme)
+        }
+        return rawPoiIcon(cat, theme: theme).map { normalized($0, pixel: theme.id == "pixel") }
+    }
+
+    private static func rawPoiIcon(_ cat: POICategory, theme: MapTheme) -> UIImage? {
+        let pointSize: CGFloat = 30
         let set = iconSet(for: theme)
         if cat == .default && set.cloverDefault { return clover(color: theme.accent, size: pointSize * 1.45) }
         if cat == .default && set.redPinDefault { return redPin(size: pointSize * 1.5) }
@@ -210,6 +246,93 @@ enum MapIcons {
         return framedSymbol(set.glyph(cat), color: color, frame: set.frame, pointSize: pointSize)
             ?? framedSymbol(cat.baseGlyph, color: color, frame: set.frame, pointSize: pointSize)
             ?? framedSymbol("mappin", color: color, frame: set.frame, pointSize: pointSize)
+    }
+
+    /// Ritaglia i margini trasparenti e adatta l'icona al quadrato standard.
+    static func normalized(_ image: UIImage, pixel: Bool) -> UIImage {
+        guard let cg = image.cgImage else { return image }
+        let w = cg.width, h = cg.height
+        var data = [UInt8](repeating: 0, count: w * h * 4)
+        var box = CGRect(x: 0, y: 0, width: w, height: h)
+        data.withUnsafeMutableBytes { buf in
+            guard let ctx = CGContext(data: buf.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return }
+            ctx.draw(cg, in: CGRect(x: 0, y: 0, width: w, height: h))
+            let px = buf.bindMemory(to: UInt8.self)
+            var minX = w, minY = h, maxX = -1, maxY = -1
+            for y in 0..<h {
+                for x in 0..<w where px[(y * w + x) * 4 + 3] > 8 {
+                    if x < minX { minX = x }; if x > maxX { maxX = x }
+                    if y < minY { minY = y }; if y > maxY { maxY = y }
+                }
+            }
+            if maxX >= minX && maxY >= minY {
+                box = CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
+            }
+        }
+        guard let cropped = cg.cropping(to: box) else { return image }
+        let k = poiContent / max(box.width, box.height)
+        let size = CGSize(width: box.width * k, height: box.height * k)
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 3
+        return UIGraphicsImageRenderer(size: CGSize(width: poiCanvas, height: poiCanvas), format: fmt).image { ctx in
+            let c = ctx.cgContext
+            c.interpolationQuality = pixel ? .none : .high
+            let r = CGRect(x: (poiCanvas - size.width) / 2, y: (poiCanvas - size.height) / 2,
+                           width: size.width, height: size.height)
+            UIImage(cgImage: cropped).draw(in: r)
+        }
+    }
+
+    // MARK: Glifi personalizzati
+
+    static let churchGlyph = "gm.church"
+
+    /// Glifo SF oppure glifo disegnato dall'app (es. chiesa).
+    static func glyphImage(_ name: String, pointSize: CGFloat, weight: UIImage.SymbolWeight) -> UIImage? {
+        if name == churchGlyph { return church(height: pointSize * 1.15) }
+        return UIImage(systemName: name, withConfiguration: UIImage.SymbolConfiguration(pointSize: pointSize, weight: weight))
+    }
+
+    /// Chiesa: navata con tetto, campanile con croce, porta e finestre (immagine "template" da colorare).
+    static func church(height: CGFloat) -> UIImage {
+        let w = height * 0.9
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 3
+        let img = UIGraphicsImageRenderer(size: CGSize(width: w, height: height), format: fmt).image { ctx in
+            let c = ctx.cgContext
+            let u = height / 24
+            c.setFillColor(UIColor.black.cgColor)
+            // croce sul campanile
+            c.fill(CGRect(x: w / 2 - u * 0.6, y: 0, width: u * 1.2, height: u * 4.2))
+            c.fill(CGRect(x: w / 2 - u * 1.8, y: u * 1.2, width: u * 3.6, height: u * 1.1))
+            // guglia del campanile
+            let spire = UIBezierPath()
+            spire.move(to: CGPoint(x: w / 2, y: u * 4))
+            spire.addLine(to: CGPoint(x: w / 2 + u * 3, y: u * 8))
+            spire.addLine(to: CGPoint(x: w / 2 - u * 3, y: u * 8))
+            spire.close(); spire.fill()
+            // torre
+            c.fill(CGRect(x: w / 2 - u * 2.6, y: u * 8, width: u * 5.2, height: u * 6))
+            // tetto della navata
+            let roof = UIBezierPath()
+            roof.move(to: CGPoint(x: 0, y: u * 15.5))
+            roof.addLine(to: CGPoint(x: w / 2, y: u * 10.5))
+            roof.addLine(to: CGPoint(x: w, y: u * 15.5))
+            roof.close(); roof.fill()
+            // navata
+            c.fill(CGRect(x: u * 1.2, y: u * 15, width: w - u * 2.4, height: u * 9))
+            // porta e finestre (trasparenti)
+            c.setBlendMode(.clear)
+            let door = UIBezierPath(roundedRect: CGRect(x: w / 2 - u * 1.7, y: u * 18.5, width: u * 3.4, height: u * 5.5),
+                                    byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: u * 1.7, height: u * 1.7))
+            door.fill()
+            c.fill(CGRect(x: u * 3.4, y: u * 17.5, width: u * 1.6, height: u * 2.6))
+            c.fill(CGRect(x: w - u * 5, y: u * 17.5, width: u * 1.6, height: u * 2.6))
+            c.fill(CGRect(x: w / 2 - u * 0.8, y: u * 9.5, width: u * 1.6, height: u * 2.4))
+        }
+        return img.withRenderingMode(.alwaysTemplate)
     }
 
     // MARK: Disegno
@@ -257,8 +380,7 @@ enum MapIcons {
 
     private static func enclosed(_ name: String, color: UIColor, pointSize: CGFloat,
                                  background: (CGContext, CGRect) -> Void) -> UIImage? {
-        let config = UIImage.SymbolConfiguration(pointSize: pointSize * 0.62, weight: .bold)
-        guard let base = UIImage(systemName: name, withConfiguration: config) else { return nil }
+        guard let base = glyphImage(name, pointSize: pointSize * 0.62, weight: .bold) else { return nil }
         let side = pointSize * 1.45
         let fmt = UIGraphicsImageRendererFormat()
         fmt.scale = 2
@@ -274,8 +396,7 @@ enum MapIcons {
     /// Glifo SF ridotto a una griglia 16×16 con contorno di 1 pixel e ingrandito ×3 senza sfumature:
     /// risultato 48×48 pt, identico per dimensioni agli sprite disegnati a mano.
     static func pixelSymbol(_ name: String, color: UIColor, halo: UIColor) -> UIImage? {
-        let config = UIImage.SymbolConfiguration(pointSize: 11, weight: .heavy)
-        guard let base = UIImage(systemName: name, withConfiguration: config) else { return nil }
+        guard let base = glyphImage(name, pointSize: 11, weight: .heavy) else { return nil }
         let grid: CGFloat = 16
         let fmt1 = UIGraphicsImageRendererFormat()
         fmt1.scale = 1
@@ -322,8 +443,7 @@ enum MapIcons {
     /// Simbolo SF con contorno
     static func outlinedSymbol(_ name: String, color: UIColor, halo: UIColor, pointSize: CGFloat,
                                scale: CGFloat = 2) -> UIImage? {
-        let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .black)
-        guard let base = UIImage(systemName: name, withConfiguration: config) else { return nil }
+        guard let base = glyphImage(name, pointSize: pointSize, weight: .black) else { return nil }
         let o: CGFloat = max(1, pointSize * 0.085)
         let pad = o * 2.4
         let size = CGSize(width: base.size.width + pad * 2, height: base.size.height + pad * 2)

@@ -1249,16 +1249,13 @@
      "match",
      [
       "get",
-      "class"
+      "subclass"
      ],
      [
-      "town_hall"
+      "park",
+      "nature_reserve"
      ],
-     "gm-poi-townhall",
-     [
-      "dog_park"
-     ],
-     "gm-poi-dog",
+     "gm-poi-park",
      [
       "garden"
      ],
@@ -1268,143 +1265,451 @@
      ],
      "gm-poi-playground",
      [
-      "post"
+      "dog_park"
      ],
-     "gm-poi-post",
+     "gm-poi-dog",
      [
-      "park"
-     ],
-     "gm-poi-park",
-     [
-      "cinema",
-      "theatre",
-      "music"
+      "cinema"
      ],
      "gm-poi-cinema",
      [
-      "railway",
-      "bus",
-      "ferry_terminal",
-      "aerialway"
+      "theatre",
+      "arts_centre"
+     ],
+     "gm-poi-theatre",
+     [
+      "station",
+      "halt",
+      "tram_stop",
+      "subway_entrance",
+      "train_station"
      ],
      "gm-poi-rail",
+     [
+      "bus_station",
+      "bus_stop"
+     ],
+     "gm-poi-bus",
      [
       "library",
       "books"
      ],
      "gm-poi-library",
      [
-      "fuel",
-      "charging_station"
+      "fuel"
      ],
      "gm-poi-fuel",
      [
+      "charging_station"
+     ],
+     "gm-poi-charging",
+     [
       "restaurant",
-      "fast_food",
       "food_court"
      ],
-     "gm-poi-food",
+     "gm-poi-restaurant",
      [
-      "cafe",
-      "ice_cream",
-      "bakery"
+      "fast_food"
+     ],
+     "gm-poi-fastfood",
+     [
+      "cafe"
      ],
      "gm-poi-cafe",
      [
+      "bakery",
+      "pastry",
+      "confectionery"
+     ],
+     "gm-poi-bakery",
+     [
+      "ice_cream"
+     ],
+     "gm-poi-icecream",
+     [
       "bar",
       "pub",
-      "beer",
-      "nightclub",
-      "alcohol_shop"
+      "biergarten"
      ],
      "gm-poi-bar",
      [
-      "shop",
-      "grocery",
-      "convenience",
-      "supermarket",
-      "jewelry",
-      "gift",
-      "mall"
+      "nightclub"
      ],
-     "gm-poi-shop",
+     "gm-poi-nightclub",
      [
-      "clothing_store",
-      "shoes",
-      "fashion"
+      "supermarket",
+      "convenience",
+      "greengrocer",
+      "butcher",
+      "deli"
+     ],
+     "gm-poi-supermarket",
+     [
+      "clothes",
+      "fashion",
+      "boutique"
      ],
      "gm-poi-clothes",
      [
-      "hospital",
+      "shoes"
+     ],
+     "gm-poi-shoes",
+     [
+      "jewelry"
+     ],
+     "gm-poi-jewelry",
+     [
       "pharmacy",
+      "chemist"
+     ],
+     "gm-poi-pharmacy",
+     [
+      "hospital"
+     ],
+     "gm-poi-hospital",
+     [
+      "clinic",
       "doctors",
       "dentist",
       "veterinary"
      ],
-     "gm-poi-health",
+     "gm-poi-clinic",
      [
-      "police",
-      "fire_station",
-      "prison"
+      "police"
      ],
      "gm-poi-police",
      [
-      "bank",
-      "atm",
-      "money_transfer"
+      "fire_station"
+     ],
+     "gm-poi-fire",
+     [
+      "bank"
      ],
      "gm-poi-bank",
      [
-      "lodging",
+      "atm"
+     ],
+     "gm-poi-atm",
+     [
       "hotel",
       "motel",
+      "guest_house",
       "hostel",
-      "campsite"
+      "apartment"
      ],
      "gm-poi-lodging",
      [
+      "camp_site",
+      "caravan_site"
+     ],
+     "gm-poi-camping",
+     [
       "school",
-      "college",
-      "university",
       "kindergarten"
      ],
      "gm-poi-school",
      [
+      "university",
+      "college"
+     ],
+     "gm-poi-university",
+     [
       "parking",
-      "bicycle_parking",
-      "motorcycle_parking"
+      "parking_entrance"
      ],
      "gm-poi-parking",
      [
+      "bicycle_parking",
+      "bicycle_rental",
+      "bicycle"
+     ],
+     "gm-poi-bicycle",
+     [
+      "sports_centre",
       "stadium",
-      "sports",
-      "pitch",
-      "swimming",
-      "golf",
-      "fitness"
+      "pitch"
      ],
      "gm-poi-sport",
      [
-      "place_of_worship",
-      "religion"
+      "swimming_pool",
+      "water_park"
+     ],
+     "gm-poi-swimming",
+     [
+      "fitness_centre"
+     ],
+     "gm-poi-fitness",
+     [
+      "place_of_worship"
      ],
      "gm-poi-worship",
      [
       "museum",
-      "art_gallery",
-      "attraction",
-      "monument",
-      "castle"
+      "gallery"
      ],
      "gm-poi-museum",
      [
+      "attraction",
+      "viewpoint",
+      "zoo",
+      "theme_park"
+     ],
+     "gm-poi-attraction",
+     [
+      "monument",
+      "memorial",
+      "castle",
+      "ruins"
+     ],
+     "gm-poi-monument",
+     [
+      "townhall"
+     ],
+     "gm-poi-townhall",
+     [
+      "post_office"
+     ],
+     "gm-poi-post",
+     [
       "car",
-      "car_repair",
       "car_rental",
-      "bicycle"
+      "car_wash"
      ],
      "gm-poi-car",
-     "gm-poi-default"
+     [
+      "car_repair",
+      "tyres"
+     ],
+     "gm-poi-carrepair",
+     [
+      "hairdresser",
+      "beauty"
+     ],
+     "gm-poi-hairdresser",
+     [
+      "toilets"
+     ],
+     "gm-poi-toilets",
+     [
+      "match",
+      [
+       "get",
+       "class"
+      ],
+      [
+       "park"
+      ],
+      "gm-poi-park",
+      [
+       "garden"
+      ],
+      "gm-poi-garden",
+      [
+       "playground"
+      ],
+      "gm-poi-playground",
+      [
+       "dog_park"
+      ],
+      "gm-poi-dog",
+      [
+       "cinema"
+      ],
+      "gm-poi-cinema",
+      [
+       "theatre"
+      ],
+      "gm-poi-theatre",
+      [
+       "railway"
+      ],
+      "gm-poi-rail",
+      [
+       "bus"
+      ],
+      "gm-poi-bus",
+      [
+       "library"
+      ],
+      "gm-poi-library",
+      [
+       "fuel"
+      ],
+      "gm-poi-fuel",
+      [
+       "charging_station"
+      ],
+      "gm-poi-charging",
+      [
+       "restaurant"
+      ],
+      "gm-poi-restaurant",
+      [
+       "fast_food"
+      ],
+      "gm-poi-fastfood",
+      [
+       "cafe"
+      ],
+      "gm-poi-cafe",
+      [
+       "bakery"
+      ],
+      "gm-poi-bakery",
+      [
+       "ice_cream"
+      ],
+      "gm-poi-icecream",
+      [
+       "bar",
+       "beer"
+      ],
+      "gm-poi-bar",
+      [
+       "music"
+      ],
+      "gm-poi-nightclub",
+      [
+       "grocery"
+      ],
+      "gm-poi-supermarket",
+      [
+       "clothing_store"
+      ],
+      "gm-poi-clothes",
+      [
+       "shoes"
+      ],
+      "gm-poi-shoes",
+      [
+       "jewelry"
+      ],
+      "gm-poi-jewelry",
+      [
+       "pharmacy"
+      ],
+      "gm-poi-pharmacy",
+      [
+       "hospital"
+      ],
+      "gm-poi-hospital",
+      [
+       "doctors",
+       "dentist",
+       "veterinary"
+      ],
+      "gm-poi-clinic",
+      [
+       "police"
+      ],
+      "gm-poi-police",
+      [
+       "fire_station"
+      ],
+      "gm-poi-fire",
+      [
+       "bank"
+      ],
+      "gm-poi-bank",
+      [
+       "atm"
+      ],
+      "gm-poi-atm",
+      [
+       "lodging"
+      ],
+      "gm-poi-lodging",
+      [
+       "campsite"
+      ],
+      "gm-poi-camping",
+      [
+       "school",
+       "kindergarten"
+      ],
+      "gm-poi-school",
+      [
+       "college",
+       "university"
+      ],
+      "gm-poi-university",
+      [
+       "parking"
+      ],
+      "gm-poi-parking",
+      [
+       "bicycle",
+       "bicycle_rental",
+       "bicycle_parking"
+      ],
+      "gm-poi-bicycle",
+      [
+       "stadium",
+       "sports",
+       "pitch"
+      ],
+      "gm-poi-sport",
+      [
+       "swimming"
+      ],
+      "gm-poi-swimming",
+      [
+       "fitness"
+      ],
+      "gm-poi-fitness",
+      [
+       "place_of_worship",
+       "religion"
+      ],
+      "gm-poi-worship",
+      [
+       "museum",
+       "art_gallery"
+      ],
+      "gm-poi-museum",
+      [
+       "attraction",
+       "zoo"
+      ],
+      "gm-poi-attraction",
+      [
+       "monument",
+       "castle"
+      ],
+      "gm-poi-monument",
+      [
+       "town_hall"
+      ],
+      "gm-poi-townhall",
+      [
+       "post"
+      ],
+      "gm-poi-post",
+      [
+       "car"
+      ],
+      "gm-poi-car",
+      [
+       "car_repair"
+      ],
+      "gm-poi-carrepair",
+      [
+       "hairdresser"
+      ],
+      "gm-poi-hairdresser",
+      [
+       "toilets"
+      ],
+      "gm-poi-toilets",
+      [
+       "shop",
+       "gift",
+       "mall",
+       "department_store"
+      ],
+      "gm-poi-shop",
+      "gm-poi-default"
+     ]
     ],
     "icon-size": 0.62,
     "icon-allow-overlap": false,

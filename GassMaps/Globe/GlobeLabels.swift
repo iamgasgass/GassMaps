@@ -74,3 +74,34 @@ enum GlobeLabels {
             + cities.map { GlobeLabel(name: $0.0, lat: $0.1, lon: $0.2, isCity: true) }
     }
 }
+
+/// Luoghi mostrati sul globo: le stesse icone dei POI della vista mappa del tema.
+enum GlobeMarkers {
+    /// posizioni sparse su tutti i continenti
+    private static let spots: [(Double, Double)] = [
+        (51.5, -0.1), (48.9, 2.4), (41.9, 12.5), (40.4, -3.7), (52.5, 13.4), (59.3, 18.1), (55.8, 37.6),
+        (41.0, 29.0), (30.0, 31.2), (24.7, 46.7), (25.2, 55.3), (28.6, 77.2), (19.1, 72.9), (13.8, 100.5),
+        (39.9, 116.4), (31.2, 121.5), (37.6, 127.0), (35.7, 139.7), (1.35, 103.8), (-6.2, 106.8),
+        (-33.9, 151.2), (-37.8, 145.0), (-26.2, 28.0), (6.5, 3.4), (-1.3, 36.8), (33.6, -7.6),
+        (40.7, -74.0), (41.9, -87.6), (34.1, -118.2), (37.8, -122.4), (49.3, -123.1), (43.7, -79.4),
+        (29.8, -95.4), (25.8, -80.2), (19.4, -99.1), (4.7, -74.1), (-12.0, -77.0), (-23.5, -46.6),
+        (-34.6, -58.4), (64.1, -21.9), (60.2, 24.9), (50.1, 14.4), (47.5, 19.0), (38.0, 23.7),
+        (35.7, 51.4), (43.2, 76.9), (55.0, 82.9), (62.0, 129.7), (64.8, -147.7), (61.2, -149.9)
+    ]
+
+    /// categorie in ordine di apparizione (variate per ogni tema)
+    private static let categories: [POICategory] = [
+        .restaurant, .clothes, .police, .lodging, .bar, .park, .hospital, .supermarket, .bank, .cinema,
+        .fuel, .school, .museum, .cafe, .car, .parking, .theatre, .shop, .pharmacy, .worship,
+        .rail, .sport, .post, .townhall, .garden, .attraction, .bakery, .fastfood, .swimming, .fitness,
+        .default, .monument, .nightclub, .jewelry, .dog, .playground, .fire, .camping, .library, .atm,
+        .bus, .clinic, .shoes, .carrepair, .icecream, .university, .bicycle, .charging, .hairdresser, .default
+    ]
+
+    static func list(for theme: MapTheme) -> [(lat: Double, lon: Double, category: POICategory)] {
+        let shift = (Themes.all.firstIndex(of: theme) ?? 0) * 7
+        return spots.enumerated().map { i, spot in
+            (spot.0, spot.1, categories[(i + shift) % categories.count])
+        }
+    }
+}

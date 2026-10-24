@@ -320,9 +320,8 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
         billboards.removeAll()
 
         // icone del tema (priorità massima)
-        for marker in theme.markers {
-            guard let image = MapIcons.themedSymbol(marker.symbol, color: marker.color,
-                                                    theme: theme, pointSize: 40) else { continue }
+        for marker in GlobeMarkers.list(for: theme) {
+            guard let image = MapIcons.poiIcon(marker.category, theme: theme, pointSize: 40) else { continue }
             let node = makeBillboardNode(image: image)
             node.simdPosition = GlobeCoordinator.position(lat: marker.lat, lon: marker.lon, radius: 1.01)
             markersNode.addChildNode(node)

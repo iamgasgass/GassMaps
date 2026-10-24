@@ -123,35 +123,82 @@ def road_line(lid, p, classes, color, widths, minzoom=0, dash=None, opacity=1.0)
     return layer
 
 
-POI_ICON_EXPR = [
-                    "match", ["get", "class"],
-                    ["town_hall"], "gm-poi-townhall",
-                    ["dog_park"], "gm-poi-dog",
-                    ["garden"], "gm-poi-garden",
-                    ["playground"], "gm-poi-playground",
-                    ["post"], "gm-poi-post",
-                    ["park"], "gm-poi-park",
-                    ["cinema", "theatre", "music"], "gm-poi-cinema",
-                    ["railway", "bus", "ferry_terminal", "aerialway"], "gm-poi-rail",
-                    ["library", "books"], "gm-poi-library",
-                    ["fuel", "charging_station"], "gm-poi-fuel",
-                    ["restaurant", "fast_food", "food_court"], "gm-poi-food",
-                    ["cafe", "ice_cream", "bakery"], "gm-poi-cafe",
-                    ["bar", "pub", "beer", "nightclub", "alcohol_shop"], "gm-poi-bar",
-                    ["shop", "grocery", "convenience", "supermarket", "jewelry", "gift", "mall"], "gm-poi-shop",
-                    ["clothing_store", "shoes", "fashion"], "gm-poi-clothes",
-                    ["hospital", "pharmacy", "doctors", "dentist", "veterinary"], "gm-poi-health",
-                    ["police", "fire_station", "prison"], "gm-poi-police",
-                    ["bank", "atm", "money_transfer"], "gm-poi-bank",
-                    ["lodging", "hotel", "motel", "hostel", "campsite"], "gm-poi-lodging",
-                    ["school", "college", "university", "kindergarten"], "gm-poi-school",
-                    ["parking", "bicycle_parking", "motorcycle_parking"], "gm-poi-parking",
-                    ["stadium", "sports", "pitch", "swimming", "golf", "fitness"], "gm-poi-sport",
-                    ["place_of_worship", "religion"], "gm-poi-worship",
-                    ["museum", "art_gallery", "attraction", "monument", "castle"], "gm-poi-museum",
-                    ["car", "car_repair", "car_rental", "bicycle"], "gm-poi-car",
-                    "gm-poi-default",
-                ]
+# Categorie dei luoghi: (categoria, valori OSM "subclass", valori OpenMapTiles "class").
+# Si confronta prima il tag OSM preciso (subclass), poi la classe generale.
+POI_CATEGORIES = [
+    ("park", ["park", "nature_reserve"], ["park"]),
+    ("garden", ["garden"], ["garden"]),
+    ("playground", ["playground"], ["playground"]),
+    ("dog", ["dog_park"], ["dog_park"]),
+    ("cinema", ["cinema"], ["cinema"]),
+    ("theatre", ["theatre", "arts_centre"], ["theatre"]),
+    ("rail", ["station", "halt", "tram_stop", "subway_entrance", "train_station"], ["railway"]),
+    ("bus", ["bus_station", "bus_stop"], ["bus"]),
+    ("library", ["library", "books"], ["library"]),
+    ("fuel", ["fuel"], ["fuel"]),
+    ("charging", ["charging_station"], ["charging_station"]),
+    ("restaurant", ["restaurant", "food_court"], ["restaurant"]),
+    ("fastfood", ["fast_food"], ["fast_food"]),
+    ("cafe", ["cafe"], ["cafe"]),
+    ("bakery", ["bakery", "pastry", "confectionery"], ["bakery"]),
+    ("icecream", ["ice_cream"], ["ice_cream"]),
+    ("bar", ["bar", "pub", "biergarten"], ["bar", "beer"]),
+    ("nightclub", ["nightclub"], ["music"]),
+    ("supermarket", ["supermarket", "convenience", "greengrocer", "butcher", "deli"], ["grocery"]),
+    ("clothes", ["clothes", "fashion", "boutique"], ["clothing_store"]),
+    ("shoes", ["shoes"], ["shoes"]),
+    ("jewelry", ["jewelry"], ["jewelry"]),
+    ("pharmacy", ["pharmacy", "chemist"], ["pharmacy"]),
+    ("hospital", ["hospital"], ["hospital"]),
+    ("clinic", ["clinic", "doctors", "dentist", "veterinary"], ["doctors", "dentist", "veterinary"]),
+    ("police", ["police"], ["police"]),
+    ("fire", ["fire_station"], ["fire_station"]),
+    ("bank", ["bank"], ["bank"]),
+    ("atm", ["atm"], ["atm"]),
+    ("lodging", ["hotel", "motel", "guest_house", "hostel", "apartment"], ["lodging"]),
+    ("camping", ["camp_site", "caravan_site"], ["campsite"]),
+    ("school", ["school", "kindergarten"], ["school", "kindergarten"]),
+    ("university", ["university", "college"], ["college", "university"]),
+    ("parking", ["parking", "parking_entrance"], ["parking"]),
+    ("bicycle", ["bicycle_parking", "bicycle_rental", "bicycle"], ["bicycle", "bicycle_rental", "bicycle_parking"]),
+    ("sport", ["sports_centre", "stadium", "pitch"], ["stadium", "sports", "pitch"]),
+    ("swimming", ["swimming_pool", "water_park"], ["swimming"]),
+    ("fitness", ["fitness_centre"], ["fitness"]),
+    ("worship", ["place_of_worship"], ["place_of_worship", "religion"]),
+    ("museum", ["museum", "gallery"], ["museum", "art_gallery"]),
+    ("attraction", ["attraction", "viewpoint", "zoo", "theme_park"], ["attraction", "zoo"]),
+    ("monument", ["monument", "memorial", "castle", "ruins"], ["monument", "castle"]),
+    ("townhall", ["townhall"], ["town_hall"]),
+    ("post", ["post_office"], ["post"]),
+    ("car", ["car", "car_rental", "car_wash"], ["car"]),
+    ("carrepair", ["car_repair", "tyres"], ["car_repair"]),
+    ("hairdresser", ["hairdresser", "beauty"], ["hairdresser"]),
+    ("toilets", ["toilets"], ["toilets"]),
+    ("shop", [], ["shop", "gift", "mall", "department_store"]),
+]
+
+
+def _poi_expr():
+    by_class = ["match", ["get", "class"]]
+    seen = set()
+    for cat, _, classes in POI_CATEGORIES:
+        vals = [c for c in classes if c not in seen]
+        seen.update(vals)
+        if vals:
+            by_class += [vals, "gm-poi-" + cat]
+    by_class.append("gm-poi-default")
+    expr = ["match", ["get", "subclass"]]
+    seen = set()
+    for cat, subs, _ in POI_CATEGORIES:
+        vals = [v for v in subs if v not in seen]
+        seen.update(vals)
+        if vals:
+            expr += [vals, "gm-poi-" + cat]
+    expr.append(by_class)
+    return expr
+
+
+POI_ICON_EXPR = _poi_expr()
 
 
 # ---------------------------------------------------------------------------
@@ -177,7 +224,7 @@ EXTRA = {
                   building="#a8784a", building_mode="pattern", building_pattern="gm-planks",
                   building_pattern_big="gm-stone", park="#6e9050", wood="#4f7a33", grass="#6e9050",
                   label="#ffffff", halo="#2a2a2a", road_label="#ffffff", road_halo="#2a2a2a",
-                  transform="none", labels=True, poi_size=0.95),
+                  transform="none", labels=True, poi_size=0.8),
     # rif. mappa di San Andreas allegata — campagna verde, città grigie, strade chiare, acqua blu-grigia
     "palm": dict(road_mode="solid", minor="#151515", major="#0d0d0d", motor="#050505",
                  land="#5e9e48", urban="#8b8b8b", building="#a2a2a2", building_mode="flat",

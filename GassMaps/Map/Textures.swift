@@ -243,17 +243,84 @@ enum PixelArt {
         "....krrrrrRk....", "....krrrrrRk....", ".....krrrRk.....", ".....krrRk......",
         "......krk.......", "......kRk.......", ".......k........", "................"])
 
+    // pozione (farmacie)
+    private static let potion = Sprite(palette: ["k": 0x2A2A3A, "c": 0x8A5A2A, "w": 0xD8F0FF,
+                                                 "r": 0xE0306A, "R": 0xA01A4A, "l": 0xFF9AC0], rows: [
+        "................", "......kkkk......", "......kcck......", "......kwwk......",
+        ".....kwwwwk.....", "....kwwwwwwk....", "...kwrrrrrrwk...", "...krrlrrrrrk...",
+        "...krlrrrrrrk...", "...krrrrrrRrk...", "...krrrrrRRrk...", "....krrrrrrk....",
+        ".....kkkkkk.....", "................", "................", "................"])
+
+    // croce rossa (ospedali)
+    private static let redcross = Sprite(palette: ["k": 0x5A1010, "w": 0xF8F4F0, "r": 0xD82020], rows: [
+        "................", "..kkkkkkkkkkkk..", "..kwwwwwwwwwwk..", "..kwwwwrrwwwwk..",
+        "..kwwwwrrwwwwk..", "..kwwwwrrwwwwk..", "..kwrrrrrrrrwk..", "..kwrrrrrrrrwk..",
+        "..kwwwwrrwwwwk..", "..kwwwwrrwwwwk..", "..kwwwwrrwwwwk..", "..kwwwwwwwwwwk..",
+        "..kkkkkkkkkkkk..", "................", "................", "................"])
+
+    // boccale di birra (bar, pub)
+    private static let beer = Sprite(palette: ["k": 0x6A4010, "w": 0xF8F4E8, "y": 0xF2B233, "l": 0xFFE08A], rows: [
+        "................", "...wwwwwww......", "..wwwwwwwww.....", "..kyyyyyyyk.....",
+        "..kyyyyyyykkk...", "..kyylyyyyk.k...", "..kyylyyyyk.k...", "..kyyyyyyyk.k...",
+        "..kyyyyyyykkk...", "..kyyyyyyyk.....", "..kkkkkkkkk.....", "................",
+        "................", "................", "................", "................"])
+
+    // mela (supermercati)
+    private static let apple = Sprite(palette: ["k": 0x3A0A0A, "r": 0xD82020, "R": 0x901010,
+                                                "l": 0xFF8080, "g": 0x5A3A1A], rows: [
+        "................", "........kk......", ".......kgk......", "....kkkgkkk.....",
+        "...krrrrrrrk....", "..krrlrrrrrRk...", "..krllrrrrrRk...", "..krrrrrrrrRk...",
+        "..krrrrrrrrRk...", "..krrrrrrrRRk...", "...krrrrrRRk....", "....krrkrRk.....",
+        ".....kk.kk......", "................", "................", "................"])
+
+    // torta (panetterie, pasticcerie)
+    private static let cake = Sprite(palette: ["k": 0x4A2A10, "w": 0xF8F4EC, "r": 0xD82020,
+                                               "b": 0xC8864A, "B": 0xA86A3A], rows: [
+        "................", "................", "................", "..kkkkkkkkkkkk..",
+        "..kwwrwwwwrwwk..", "..kwwwwwrwwwwk..", "..kwrwwwwwwrwk..", "..kbbbbbbbbbbk..",
+        "..kBBBBBBBBBBk..", "..kbbbbbbbbbbk..", "..kBBBBBBBBBBk..", "..kkkkkkkkkkkk..",
+        "................", "................", "................", "................"])
+
+    // albero (parchi)
+    private static let tree = Sprite(palette: ["k": 0x1A3A10, "G": 0x3F8F2E, "g": 0x67B347, "b": 0x7A5A30], rows: [
+        "................", "....kkkkkkk.....", "...kGGgGGGGk....", "..kGgGGGgGGGk...",
+        "..kGGGGGGGgGk...", "..kGGgGGGGGGk...", "..kGGGGGgGGGk...", "...kGGGGGGGk....",
+        "....kkbbkkk.....", "......bb........", "......bb........", "......bb........",
+        ".....kbbk.......", "................", "................", "................"])
+
+    // moneta (banche, bancomat)
+    private static let coin = Sprite(palette: ["k": 0x5A4010, "y": 0xF2C230, "Y": 0xB8861A, "l": 0xFFF0A0], rows: [
+        "................", ".....kkkkkk.....", "....kyyyyyyk....", "...kyylyyyyYk...",
+        "..kyylyYYyyyYk..", "..kyyyYyyyyyYk..", "..kyyyyYYyyyYk..", "..kyyyyyyYyyYk..",
+        "..kyyyYYYyyyYk..", "...kyyyyyyyYk...", "....kYYYYYYk....", ".....kkkkkk.....",
+        "................", "................", "................", "................"])
+
+    // forziere (negozi generici)
+    private static let chest = Sprite(palette: ["k": 0x3A2410, "b": 0xA8743A, "B": 0x8A5A2A, "g": 0xC8C8C8], rows: [
+        "................", "................", "..kkkkkkkkkkkk..", "..kbbbbbbbbbbk..",
+        "..kbBBBBBBBBbk..", "..kbbbbbbbbbbk..", "..kkkkkggkkkkk..", "..kbbbbggbbbbk..",
+        "..kbBBBBBBBBbk..", "..kbbbbbbbbbbk..", "..kbbbbbbbbbbk..", "..kkkkkkkkkkkk..",
+        "................", "................", "................", "................"])
+
     static func sprite(for cat: POICategory) -> UIImage? {
         let s: Sprite
         switch cat {
-        case .food, .cafe, .bar: s = chicken
-        case .clothes, .shop: s = chestplate
+        case .restaurant: s = chicken
+        case .clothes: s = chestplate
+        case .shop: s = chest
+        case .supermarket: s = apple
+        case .pharmacy: s = potion
+        case .hospital: s = redcross
+        case .bar: s = beer
+        case .bakery: s = cake
+        case .park: s = tree
+        case .bank: s = coin
         case .dog: s = bone
         case .garden: s = tulip
         case .townhall: s = bell
         case .police: s = shield
         case .parking: s = meter
-        case .school, .library: s = book
+        case .school: s = book
         case .post: s = envelope
         case .default: s = pin
         default: return nil

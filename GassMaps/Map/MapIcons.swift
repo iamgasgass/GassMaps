@@ -1,33 +1,101 @@
 import UIKit
 import MapLibre
 
-/// Categorie dei luoghi mostrate sulla mappa (devono coincidere con tools/generate_styles.py)
+/// Categorie dei luoghi mostrate sulla mappa (devono coincidere con POI_CATEGORIES in tools/generate_styles.py).
+/// Ogni categoria ha la sua icona: niente più raggruppamenti (es. supermercato ≠ abbigliamento).
 enum POICategory: String, CaseIterable {
-    case park, cinema, rail, library, fuel, food, cafe, bar, shop, clothes, health, police,
-         bank, lodging, school, parking, sport, worship, museum, car, garden, playground, post,
-         townhall, dog, `default`
+    case park, garden, playground, dog, cinema, theatre, rail, bus, library, fuel, charging,
+         restaurant, fastfood, cafe, bakery, icecream, bar, nightclub, supermarket, shop, clothes,
+         shoes, jewelry, pharmacy, hospital, clinic, police, fire, bank, atm, lodging, camping,
+         school, university, parking, bicycle, sport, swimming, fitness, worship, museum,
+         attraction, monument, townhall, post, car, carrepair, hairdresser, toilets, `default`
 
     var imageName: String { "gm-poi-\(rawValue)" }
+
+    /// Glifo SF di base della categoria (ogni tema può sostituirlo).
+    var baseGlyph: String {
+        switch self {
+        case .park: return "tree.fill"
+        case .garden: return "camera.macro"
+        case .playground: return "figure.play"
+        case .dog: return "dog.fill"
+        case .cinema: return "film.fill"
+        case .theatre: return "theatermasks.fill"
+        case .rail: return "tram.fill"
+        case .bus: return "bus.fill"
+        case .library: return "books.vertical.fill"
+        case .fuel: return "fuelpump.fill"
+        case .charging: return "bolt.car.fill"
+        case .restaurant: return "fork.knife"
+        case .fastfood: return "takeoutbag.and.cup.and.straw.fill"
+        case .cafe: return "cup.and.saucer.fill"
+        case .bakery: return "birthday.cake.fill"
+        case .icecream: return "snowflake"
+        case .bar: return "wineglass.fill"
+        case .nightclub: return "music.note"
+        case .supermarket: return "cart.fill"
+        case .shop: return "bag.fill"
+        case .clothes: return "tshirt.fill"
+        case .shoes: return "shoe.fill"
+        case .jewelry: return "suit.diamond.fill"
+        case .pharmacy: return "pills.fill"
+        case .hospital: return "cross.case.fill"
+        case .clinic: return "stethoscope"
+        case .police: return "shield.fill"
+        case .fire: return "flame.fill"
+        case .bank: return "banknote.fill"
+        case .atm: return "creditcard.fill"
+        case .lodging: return "bed.double.fill"
+        case .camping: return "tent.fill"
+        case .school: return "graduationcap.fill"
+        case .university: return "studentdesk"
+        case .parking: return "parkingsign"
+        case .bicycle: return "bicycle"
+        case .sport: return "sportscourt.fill"
+        case .swimming: return "figure.pool.swim"
+        case .fitness: return "dumbbell.fill"
+        case .worship: return "cross.fill"
+        case .museum: return "building.columns.fill"
+        case .attraction: return "star.fill"
+        case .monument: return "flag.fill"
+        case .townhall: return "bell.fill"
+        case .post: return "envelope.fill"
+        case .car: return "car.fill"
+        case .carrepair: return "wrench.and.screwdriver.fill"
+        case .hairdresser: return "scissors"
+        case .toilets: return "toilet.fill"
+        case .default: return "mappin"
+        }
+    }
 }
 
 /// Come viene "incorniciata" l'icona, nello stile del gioco a cui si ispira il tema.
 enum IconFrame {
-    /// glifo con contorno (stile radar GTA V)
+    /// glifo con contorno
     case outline(halo: UIColor)
-    /// glifo chiaro su disco scuro con anello (stile RDR)
+    /// glifo chiaro su disco scuro con anello
     case badge(fill: UIColor, ring: UIColor)
-    /// glifo dentro un esagono (stile Cyberpunk / Pip-Boy)
+    /// glifo dentro un esagono
     case hexagon(fill: UIColor, ring: UIColor)
-    /// glifo pixelato con contorno (stile blocchi)
+    /// glifo pixelato su griglia 16×16 (stesse dimensioni degli sprite)
     case pixel(halo: UIColor)
 }
 
 struct ThemeIconSet {
     let frame: IconFrame
-    /// categoria -> (simbolo SF, colore)
-    let glyphs: [POICategory: (String, UIColor)]
-    /// se true l'icona predefinita è il quadrifoglio viola (tema Vice Noir, come nell'originale)
-    let cloverDefault: Bool
+    /// colore predefinito dei glifi
+    let tint: UIColor
+    /// colori specifici per categoria
+    var colors: [POICategory: UIColor] = [:]
+    /// glifi sostitutivi per categoria
+    var glyphs: [POICategory: String] = [:]
+    /// icona predefinita: quadrifoglio viola (Vice Noir)
+    var cloverDefault = false
+    /// icona predefinita: segnaposto rosso (Palm Coast)
+    var redPinDefault = false
+
+    func glyph(_ c: POICategory) -> String { glyphs[c] ?? c.baseGlyph }
+    func color(_ c: POICategory) -> UIColor { colors[c] ?? tint }
 }
 
 enum MapIcons {
@@ -36,114 +104,70 @@ enum MapIcons {
     static func iconSet(for theme: MapTheme) -> ThemeIconSet {
         let w = UIColor.white
         switch theme.id {
-        case "noir": // GTA V — icone nere con contorno bianco (come nelle schermate)
-            let w = UIColor.black
-            return ThemeIconSet(frame: .outline(halo: .white), glyphs: [
-                .park: ("tree.fill", w), .cinema: ("video.fill", w), .rail: ("tram.fill", w),
-                .library: ("book.fill", w), .fuel: ("fuelpump.fill", w),
-                .food: ("takeoutbag.and.cup.and.straw.fill", w), .cafe: ("cup.and.saucer.fill", w),
-                .bar: ("wineglass.fill", w), .shop: ("basket.fill", w), .clothes: ("tshirt.fill", w),
-                .health: ("cross.fill", w), .police: ("star.circle.fill", w), .bank: ("dollarsign", w),
-                .lodging: ("house.fill", w), .school: ("graduationcap.fill", w), .parking: ("parkingsign", w),
-                .sport: ("figure.run", w), .worship: ("building.columns.fill", w),
-                .museum: ("building.columns.fill", w), .car: ("car.side.fill", w)
-            ], cloverDefault: true)
+        case "noir": // icone nere con contorno bianco
+            return ThemeIconSet(frame: .outline(halo: .white), tint: .black,
+                                glyphs: [.shop: "basket.fill", .police: "star.circle.fill"],
+                                cloverDefault: true)
 
-        case "palm": // rif. schermate Palm: icone colorate con contorno blu notte
-            let navy = UIColor(hex: 0x283848)
-            let gold = UIColor(hex: 0xE0B040)
-            return ThemeIconSet(frame: .outline(halo: navy), glyphs: [
-                .park: ("tree.fill", UIColor(hex: 0x4FA45A)), .garden: ("camera.macro", UIColor(hex: 0xE0505A)),
-                .playground: ("figure.play", gold), .cinema: ("theatermasks.fill", UIColor(hex: 0xF2D03A)),
-                .rail: ("tram.fill", gold), .library: ("book.fill", gold), .fuel: ("fuelpump.fill", UIColor(hex: 0xE04A3A)),
-                .food: ("fork.knife", UIColor(hex: 0xE8E8E8)), .cafe: ("cup.and.saucer.fill", UIColor(hex: 0xE8E8E8)),
-                .bar: ("wineglass.fill", UIColor(hex: 0x6EE0F0)), .shop: ("cart.fill", gold),
-                .clothes: ("tshirt.fill", UIColor(hex: 0xF5C9D6)), .health: ("cross.fill", UIColor(hex: 0xE02424)),
-                .police: ("shield.fill", gold), .bank: ("dollarsign.circle.fill", UIColor(hex: 0x4FA45A)),
-                .lodging: ("house.fill", UIColor(hex: 0xE8E8E8)), .school: ("graduationcap.fill", UIColor(hex: 0xD9A93A)),
-                .parking: ("parkingsign", UIColor(hex: 0x2F5FD0)), .sport: ("figure.run", UIColor(hex: 0xE8E8E8)),
-                .worship: ("cross.fill", UIColor(hex: 0xD9B03A)), .museum: ("building.columns.fill", UIColor(hex: 0xE8E8E8)),
-                .car: ("car.fill", UIColor(hex: 0x2F5FD0)), .post: ("envelope.fill", UIColor(hex: 0xF0EAD8))
-            ], cloverDefault: false)
+        case "palm": // icone colorate con contorno blu notte, segnaposto rosso
+            let gold = UIColor(hex: 0xE0B040), red = UIColor(hex: 0xE02424), blue = UIColor(hex: 0x2F5FD0)
+            let green = UIColor(hex: 0x4FA45A), light = UIColor(hex: 0xE8E8E8)
+            return ThemeIconSet(frame: .outline(halo: UIColor(hex: 0x283848)), tint: light, colors: [
+                .park: green, .garden: UIColor(hex: 0xE0505A), .playground: gold, .dog: UIColor(hex: 0xC98A3A),
+                .cinema: light, .theatre: UIColor(hex: 0xF2D03A), .rail: gold, .bus: gold, .library: gold,
+                .fuel: red, .charging: UIColor(hex: 0x3DD06A), .fastfood: UIColor(hex: 0xF29A2E),
+                .bakery: UIColor(hex: 0xF2C88A), .icecream: UIColor(hex: 0xF5A3C8), .bar: UIColor(hex: 0x6EE0F0),
+                .nightclub: UIColor(hex: 0xC07BFF), .supermarket: gold, .shop: UIColor(hex: 0xF29A2E),
+                .clothes: UIColor(hex: 0xF5C9D6), .shoes: UIColor(hex: 0xC98A3A), .jewelry: UIColor(hex: 0x6EE0F0),
+                .pharmacy: UIColor(hex: 0x3DD06A), .hospital: red, .clinic: red, .police: gold, .fire: red,
+                .bank: green, .atm: green, .camping: green, .school: UIColor(hex: 0xD9A93A), .university: gold,
+                .parking: blue, .bicycle: blue, .swimming: UIColor(hex: 0x4AB0F0), .worship: UIColor(hex: 0xD9B03A),
+                .attraction: gold, .monument: gold, .townhall: gold, .post: UIColor(hex: 0xF0EAD8),
+                .car: blue, .carrepair: red, .toilets: UIColor(hex: 0x4AB0F0)
+            ], redPinDefault: true)
 
-        case "dust": // western (RDR)
-            let ink = UIColor(hex: 0x1A120A)
-            return ThemeIconSet(frame: .badge(fill: ink, ring: UIColor(hex: 0xEADBB8)), glyphs: [
-                .park: ("tree.fill", w), .cinema: ("theatermasks.fill", w), .rail: ("train.side.front.car", w),
-                .library: ("book.closed.fill", w), .fuel: ("flame.fill", w), .food: ("fork.knife", w),
-                .cafe: ("cup.and.saucer.fill", w), .bar: ("mug.fill", w), .shop: ("bag.fill", w),
-                .clothes: ("hanger", w), .health: ("cross.fill", w), .police: ("star.fill", w),
-                .bank: ("dollarsign", w), .lodging: ("bed.double.fill", w), .school: ("pencil", w),
-                .parking: ("figure.equestrian.sports", w), .sport: ("target", w), .worship: ("cross", w),
-                .museum: ("building.columns.fill", w), .car: ("figure.equestrian.sports", w),
-                .default: ("dollarsign", w)
-            ], cloverDefault: false)
+        case "dust": // dischi scuri western
+            return ThemeIconSet(frame: .badge(fill: UIColor(hex: 0x1A120A), ring: UIColor(hex: 0xEADBB8)), tint: w,
+                                glyphs: [.rail: "train.side.front.car", .bar: "mug.fill", .parking: "figure.equestrian.sports",
+                                         .car: "figure.equestrian.sports", .bank: "dollarsign", .worship: "cross",
+                                         .police: "star.fill", .default: "dollarsign"])
 
-        case "bunker": // terminale verde (Pip-Boy)
+        case "bunker": // esagoni verdi
             let g = UIColor(hex: 0x5DFF5D)
-            return ThemeIconSet(frame: .hexagon(fill: UIColor(hex: 0x031203), ring: g), glyphs: [
-                .park: ("tree.fill", g), .cinema: ("film.fill", g), .rail: ("tram.fill", g),
-                .library: ("book.fill", g), .fuel: ("bolt.fill", g), .food: ("fork.knife", g),
-                .cafe: ("cup.and.saucer.fill", g), .bar: ("wineglass.fill", g), .shop: ("cart.fill", g),
-                .clothes: ("tshirt.fill", g), .health: ("cross.case.fill", g), .police: ("shield.fill", g),
-                .bank: ("dollarsign.circle", g), .lodging: ("house.fill", g), .school: ("graduationcap.fill", g),
-                .parking: ("parkingsign", g), .sport: ("figure.boxing", g), .worship: ("building.columns.fill", g),
-                .museum: ("building.columns.fill", g), .car: ("car.fill", g), .default: ("atom", g)
-            ], cloverDefault: false)
+            return ThemeIconSet(frame: .hexagon(fill: UIColor(hex: 0x031203), ring: g), tint: g,
+                                glyphs: [.fuel: "bolt.fill", .default: "atom"])
 
-        case "pixel": // mondo a blocchi: oggetti pixelati colorati
-            return ThemeIconSet(frame: .pixel(halo: UIColor(hex: 0x1D1D1D)), glyphs: [
-                .park: ("tree.fill", UIColor(hex: 0x4FAF2F)), .cinema: ("film.fill", UIColor(hex: 0xBDBDBD)),
-                .rail: ("tram.fill", UIColor(hex: 0x9E9E9E)), .library: ("book.fill", UIColor(hex: 0x8B5A2B)),
-                .fuel: ("flame.fill", UIColor(hex: 0xFF8A1F)), .food: ("carrot.fill", UIColor(hex: 0xFF8A1F)),
-                .cafe: ("mug.fill", UIColor(hex: 0xE8A33A)), .bar: ("mug.fill", UIColor(hex: 0xF2B233)),
-                .shop: ("shippingbox.fill", UIColor(hex: 0xA0702E)), .clothes: ("tshirt.fill", UIColor(hex: 0x4A7BD8)),
-                .health: ("heart.fill", UIColor(hex: 0xE02424)), .police: ("shield.fill", UIColor(hex: 0xBDBDBD)),
-                .bank: ("suit.diamond.fill", UIColor(hex: 0x2ED36B)), .lodging: ("bed.double.fill", UIColor(hex: 0xD8332E)),
-                .school: ("book.closed.fill", UIColor(hex: 0x8B5A2B)), .parking: ("cube.fill", UIColor(hex: 0x9E9E9E)),
-                .sport: ("figure.run", w), .worship: ("sparkles", UIColor(hex: 0xC07BFF)),
-                .museum: ("building.columns.fill", UIColor(hex: 0xBDBDBD)), .car: ("cart.fill", UIColor(hex: 0x9E9E9E)),
-                .default: ("suit.diamond.fill", UIColor(hex: 0x3FE0E0))
-            ], cloverDefault: false)
+        case "pixel": // pixel art: sprite disegnati + glifi pixelati colorati, tutti 16×16
+            return ThemeIconSet(frame: .pixel(halo: UIColor(hex: 0x1D1D1D)), tint: UIColor(hex: 0xBDBDBD), colors: [
+                .garden: UIColor(hex: 0xE02424), .playground: UIColor(hex: 0xF2B233), .dog: UIColor(hex: 0xF4F1E8),
+                .cinema: UIColor(hex: 0xBDBDBD), .theatre: UIColor(hex: 0xF2D03A), .rail: UIColor(hex: 0x9E9E9E),
+                .bus: UIColor(hex: 0xF2B233), .fuel: UIColor(hex: 0xFF8A1F), .charging: UIColor(hex: 0xF2E233),
+                .fastfood: UIColor(hex: 0xE8A33A), .icecream: UIColor(hex: 0xF5A3C8), .nightclub: UIColor(hex: 0xC07BFF),
+                .shoes: UIColor(hex: 0x8B5A2B), .jewelry: UIColor(hex: 0x3FE0E0), .clinic: UIColor(hex: 0xF0F0F0),
+                .fire: UIColor(hex: 0xFF6A1F), .camping: UIColor(hex: 0x4FAF2F), .university: UIColor(hex: 0x8B5A2B),
+                .bicycle: UIColor(hex: 0x9E9E9E), .sport: UIColor(hex: 0xF0F0F0), .swimming: UIColor(hex: 0x4A7BD8),
+                .fitness: UIColor(hex: 0x9E9E9E), .worship: UIColor(hex: 0xC07BFF), .museum: UIColor(hex: 0xBDBDBD),
+                .attraction: UIColor(hex: 0xF2C230), .monument: UIColor(hex: 0x9E9E9E), .car: UIColor(hex: 0x9E9E9E),
+                .carrepair: UIColor(hex: 0x9E9E9E), .hairdresser: UIColor(hex: 0xD8D8D8), .toilets: UIColor(hex: 0x4A7BD8),
+                .lodging: UIColor(hex: 0xD8332E)
+            ])
 
-        case "neon": // rif. schermata Neon: esagoni neri con glifo bianco
-            return ThemeIconSet(frame: .hexagon(fill: UIColor(hex: 0x050506), ring: UIColor(hex: 0x1C2226)), glyphs: [
-                .park: ("tree.fill", w), .garden: ("camera.macro", w), .playground: ("figure.play", w),
-                .cinema: ("theatermasks.fill", w), .rail: ("tram.fill", w), .library: ("book.fill", w),
-                .fuel: ("fuelpump.fill", w), .food: ("fork.knife", w), .cafe: ("cup.and.saucer.fill", w),
-                .bar: ("wineglass.fill", w), .shop: ("bag.fill", w), .clothes: ("tshirt.fill", w),
-                .health: ("cross.fill", w), .police: ("star.circle.fill", w), .bank: ("dollarsign", w),
-                .lodging: ("building.2.fill", w), .school: ("graduationcap.fill", w), .parking: ("parkingsign", w),
-                .sport: ("figure.pool.swim", w), .worship: ("cross.fill", w), .museum: ("building.columns.fill", w),
-                .car: ("car.fill", w), .post: ("envelope.fill", w),
-                .default: ("arrow.up.and.down.and.arrow.left.and.right", w)
-            ], cloverDefault: false)
+        case "neon": // esagoni neri con glifo bianco
+            return ThemeIconSet(frame: .hexagon(fill: UIColor(hex: 0x050506), ring: UIColor(hex: 0x1C2226)), tint: w,
+                                glyphs: [.police: "star.circle.fill", .lodging: "building.2.fill",
+                                         .default: "arrow.up.and.down.and.arrow.left.and.right"])
 
-        case "heat": // rif. schermata Street Heat: glifi bianchi su satellite viola
-            return ThemeIconSet(frame: .outline(halo: UIColor(hex: 0x2A1E5A)), glyphs: [
-                .park: ("tree.fill", w), .garden: ("camera.macro", w), .playground: ("figure.play", w),
-                .cinema: ("theatermasks.fill", w), .rail: ("tram.fill", w), .library: ("book.fill", w),
-                .fuel: ("fuelpump.fill", w), .food: ("fork.knife", w), .cafe: ("cup.and.saucer.fill", w),
-                .bar: ("wineglass.fill", w), .shop: ("cart.fill", w), .clothes: ("tshirt.fill", w),
-                .health: ("cross.fill", w), .police: ("shield.fill", w), .bank: ("building.columns.fill", w),
-                .lodging: ("house.fill", w), .school: ("graduationcap.fill", w), .parking: ("parkingsign", w),
-                .sport: ("figure.run", w), .worship: ("cross.fill", w), .museum: ("building.columns.fill", w),
-                .car: ("car.fill", w), .post: ("envelope.fill", w), .default: ("mappin", w)
-            ], cloverDefault: false)
+        case "heat": // glifi bianchi
+            return ThemeIconSet(frame: .outline(halo: UIColor(hex: 0x2A1E5A)), tint: w)
 
-        default: // "kingdom" — rif. schermata Old Kingdom: glifi crema con contorno scuro
-            let cream = UIColor(hex: 0xF3ECD6)
-            return ThemeIconSet(frame: .outline(halo: UIColor(hex: 0x3A3428)), glyphs: [
-                .park: ("tree.fill", cream), .garden: ("leaf.fill", cream), .playground: ("figure.play", cream),
-                .cinema: ("theatermasks.fill", cream), .rail: ("figure.equestrian.sports", cream),
-                .library: ("book.fill", cream), .fuel: ("flame.fill", cream), .food: ("mortar.and.pestle.fill", cream),
-                .cafe: ("mug.fill", cream), .bar: ("mug.fill", cream), .shop: ("bag.fill", cream),
-                .clothes: ("hanger", cream), .health: ("cross.fill", cream), .police: ("shield.fill", cream),
-                .bank: ("bag.fill", cream), .lodging: ("house.fill", cream), .school: ("book.fill", cream),
-                .parking: ("cart.fill", cream), .sport: ("signpost.right.fill", cream),
-                .worship: ("building.columns.fill", cream), .museum: ("crown.fill", cream),
-                .car: ("cart.fill", cream), .post: ("envelope.fill", cream), .default: ("signpost.right.fill", cream)
-            ], cloverDefault: false)
+        default: // "kingdom" — glifi crema con contorno scuro
+            return ThemeIconSet(frame: .outline(halo: UIColor(hex: 0x3A3428)), tint: UIColor(hex: 0xF3ECD6),
+                                colors: [.default: UIColor(hex: 0xF3ECD6)],
+                                glyphs: [.rail: "figure.equestrian.sports", .restaurant: "mortar.and.pestle.fill",
+                                         .bar: "mug.fill", .supermarket: "basket.fill", .shop: "bag.fill",
+                                         .bank: "bag.fill", .atm: "bag.fill", .school: "book.fill", .parking: "cart.fill",
+                                         .car: "cart.fill", .garden: "leaf.fill", .museum: "crown.fill",
+                                         .clothes: "hanger", .default: "signpost.right.fill"])
         }
     }
 
@@ -176,38 +200,16 @@ enum MapIcons {
         }
     }
 
-    /// Icona di una categoria nello stile del tema.
+    /// Icona di una categoria nello stile del tema (usata sia sulla mappa sia sul globo).
     static func poiIcon(_ cat: POICategory, theme: MapTheme, pointSize: CGFloat) -> UIImage? {
         let set = iconSet(for: theme)
-        if cat == .default && set.cloverDefault {
-            return clover(color: theme.accent, size: pointSize * 1.45)
-        }
-        if theme.id == "pixel", let sprite = PixelArt.sprite(for: cat) {
-            return sprite
-        }
-        if cat == .default && theme.id == "palm" {
-            return redPin(size: pointSize * 1.5)   // segnaposto rosso come nelle schermate
-        }
-        let related: POICategory?
-        switch cat {
-        case .garden, .playground, .dog: related = .park
-        case .townhall: related = .museum
-        default: related = nil
-        }
-        let glyph = set.glyphs[cat] ?? related.flatMap { set.glyphs[$0] } ?? set.glyphs[.default]
-        if glyph == nil && set.cloverDefault {
-            return clover(color: theme.accent, size: pointSize * 1.45)
-        }
-        let g = glyph ?? ("mappin", theme.iconColor)
-        return framedSymbol(g.0, color: g.1, frame: set.frame, pointSize: pointSize)
-            ?? framedSymbol("mappin", color: g.1, frame: set.frame, pointSize: pointSize)
-    }
-
-    /// Icona per un simbolo qualunque nello stile del tema (usata dai segnaposto del globo).
-    static func themedSymbol(_ symbol: String, color: UIColor? = nil, theme: MapTheme, pointSize: CGFloat) -> UIImage? {
-        let set = iconSet(for: theme)
-        let c = color ?? set.glyphs[.default]?.1 ?? theme.iconColor
-        return framedSymbol(symbol, color: c, frame: set.frame, pointSize: pointSize)
+        if cat == .default && set.cloverDefault { return clover(color: theme.accent, size: pointSize * 1.45) }
+        if cat == .default && set.redPinDefault { return redPin(size: pointSize * 1.5) }
+        if theme.id == "pixel", let sprite = PixelArt.sprite(for: cat) { return sprite }
+        let color = set.color(cat)
+        return framedSymbol(set.glyph(cat), color: color, frame: set.frame, pointSize: pointSize)
+            ?? framedSymbol(cat.baseGlyph, color: color, frame: set.frame, pointSize: pointSize)
+            ?? framedSymbol("mappin", color: color, frame: set.frame, pointSize: pointSize)
     }
 
     // MARK: Disegno
@@ -217,8 +219,7 @@ enum MapIcons {
         case .outline(let halo):
             return outlinedSymbol(name, color: color, halo: halo, pointSize: pointSize)
         case .pixel(let halo):
-            guard let small = outlinedSymbol(name, color: color, halo: halo, pointSize: pointSize * 0.42, scale: 1) else { return nil }
-            return pixelate(small, factor: 2.4)
+            return pixelSymbol(name, color: color, halo: halo)
         case .badge(let fill, let ring):
             return enclosed(name, color: color, pointSize: pointSize) { ctx, rect in
                 ctx.setFillColor(fill.cgColor)
@@ -267,6 +268,39 @@ enum MapIcons {
             let s = base.size
             let r = CGRect(x: (side - s.width) / 2, y: (side - s.height) / 2, width: s.width, height: s.height)
             base.withTintColor(color, renderingMode: .alwaysOriginal).draw(in: r)
+        }
+    }
+
+    /// Glifo SF ridotto a una griglia 16×16 con contorno di 1 pixel e ingrandito ×3 senza sfumature:
+    /// risultato 48×48 pt, identico per dimensioni agli sprite disegnati a mano.
+    static func pixelSymbol(_ name: String, color: UIColor, halo: UIColor) -> UIImage? {
+        let config = UIImage.SymbolConfiguration(pointSize: 11, weight: .heavy)
+        guard let base = UIImage(systemName: name, withConfiguration: config) else { return nil }
+        let grid: CGFloat = 16
+        let fmt1 = UIGraphicsImageRendererFormat()
+        fmt1.scale = 1
+        let small = UIGraphicsImageRenderer(size: CGSize(width: grid, height: grid), format: fmt1).image { ctx in
+            ctx.cgContext.interpolationQuality = .none
+            let s = base.size
+            let k = min(12 / s.width, 12 / s.height)
+            let r = CGRect(x: (grid - s.width * k) / 2, y: (grid - s.height * k) / 2, width: s.width * k, height: s.height * k)
+            let h = base.withTintColor(halo, renderingMode: .alwaysOriginal)
+            for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                h.draw(in: r.offsetBy(dx: CGFloat(dx), dy: CGFloat(dy)))
+            }
+            base.withTintColor(color, renderingMode: .alwaysOriginal).draw(in: r)
+        }
+        guard let cg = small.cgImage else { return nil }
+        let px: CGFloat = 3
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 2
+        return UIGraphicsImageRenderer(size: CGSize(width: grid * px, height: grid * px), format: fmt).image { ctx in
+            let c = ctx.cgContext
+            c.interpolationQuality = .none
+            c.setShouldAntialias(false)
+            c.translateBy(x: 0, y: grid * px)
+            c.scaleBy(x: 1, y: -1)
+            c.draw(cg, in: CGRect(x: 0, y: 0, width: grid * px, height: grid * px))
         }
     }
 

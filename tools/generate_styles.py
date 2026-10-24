@@ -125,6 +125,8 @@ def road_line(lid, p, classes, color, widths, minzoom=0, dash=None, opacity=1.0)
 
 POI_ICON_EXPR = [
                     "match", ["get", "class"],
+                    ["town_hall"], "gm-poi-townhall",
+                    ["dog_park"], "gm-poi-dog",
                     ["garden"], "gm-poi-garden",
                     ["playground"], "gm-poi-playground",
                     ["post"], "gm-poi-post",
@@ -146,7 +148,7 @@ POI_ICON_EXPR = [
                     ["parking", "bicycle_parking", "motorcycle_parking"], "gm-poi-parking",
                     ["stadium", "sports", "pitch", "swimming", "golf", "fitness"], "gm-poi-sport",
                     ["place_of_worship", "religion"], "gm-poi-worship",
-                    ["museum", "art_gallery", "attraction", "monument", "castle", "town_hall"], "gm-poi-museum",
+                    ["museum", "art_gallery", "attraction", "monument", "castle"], "gm-poi-museum",
                     ["car", "car_repair", "car_rental", "bicycle"], "gm-poi-car",
                     "gm-poi-default",
                 ]
@@ -177,7 +179,7 @@ EXTRA = {
                   label="#ffffff", halo="#2a2a2a", road_label="#ffffff", road_halo="#2a2a2a",
                   transform="none", labels=True, poi_size=0.95),
     # rif. mappa di San Andreas allegata — campagna verde, città grigie, strade chiare, acqua blu-grigia
-    "palm": dict(road_mode="solid", minor="#d4d4d4", major="#e4e4e4", motor="#f0f0f0",
+    "palm": dict(road_mode="solid", minor="#151515", major="#0d0d0d", motor="#050505",
                  land="#5e9e48", urban="#8b8b8b", building="#a2a2a2", building_mode="flat",
                  water="#6e8db4", park="#8cc965", wood="#3f7d32", grass="#7bbd57", sand="#b39a73",
                  path="#c9b892", rail="#5a5a5a", label="#ffffff", halo="#000000",
@@ -189,8 +191,8 @@ EXTRA = {
                  road_label="#ffb02e", road_halo="#2a1000", labels=True, poi_size=0.62),
     # rif. schermata Street Heat — satellite viola, strade grigio-azzurre, icone bianche
     "heat": dict(road_mode="solid", minor="#a4b2bc", major="#aab7c0", motor="#b2bec6",
-                 land="#4a3f8a", satellite=True, building="#b8a8ff", building_mode="flat", building_opacity=0.18,
-                 water="#3a3280", park="#4a3f8a", wood="#4a3f8a", grass="#4a3f8a",
+                 land="#9b55dd", satellite=True, building="#b8a8ff", building_mode="flat", building_opacity=0.18,
+                 water="#2a1260", park="#9b55dd", wood="#9b55dd", grass="#9b55dd",
                  path="#8f9aaa", rail="#8f9aaa", label="#ffffff", halo="#2a1e5a",
                  road_label="#ffffff", road_halo="#2a1e5a", labels=True, poi_size=0.62),
     # rif. schermata Old Kingdom — terra kaki, tetti di coppi in 3D, strade chiare, etichette crema
@@ -246,7 +248,7 @@ def map_style(tid, p):
         }
         # satellite in scala di grigi sopra lo sfondo viola = tinta viola come nella schermata
         layers.append({"id": "satellite", "type": "raster", "source": "satellite",
-                       "paint": {"raster-saturation": -1, "raster-contrast": 0.15, "raster-opacity": 0.62}})
+                       "paint": {"raster-saturation": -1, "raster-contrast": 0.3, "raster-opacity": 0.5}})
 
     if x.get("urban"):
         layers.append({"id": "landuse-urban", "type": "fill", "source": "openmaptiles", "source-layer": "landuse",

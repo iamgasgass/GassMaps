@@ -165,60 +165,104 @@ enum Textures {
 
 /// Sprite in pixel art (16×16) disegnati per il tema a blocchi, come nella schermata di riferimento.
 enum PixelArt {
-    private static let palette: [Character: UInt32] = [
-        // pollo arrosto
-        "k": 0x3B1F0E, "b": 0x8A4A22, "m": 0xB8692F, "l": 0xE09A55, "y": 0xF2C27A, "w": 0xF2EEE6, "g": 0xBDB6AA,
-        // corazza
-        "D": 0x0E4F4E, "d": 0x167A78, "c": 0x2BB5B0, "C": 0x64E8E0, "W": 0xCFFFFB
-    ]
-
-    private static let food = [
-        "......kkkk......",
-        "....kkmmmmkk....",
-        "...kmmllllmmk...",
-        "..kmllyylllmbk..",
-        "..kmlyyllllmbk..",
-        ".kmmllllllmmbbk.",
-        ".kmlllllllmmbbk.",
-        ".kmmlllllmmmbbk.",
-        ".kbmmmmmmmmbbbk.",
-        "..kbbmmmmmbbbk..",
-        "..kbbbbbbbbbk...",
-        "...kkbbbbbkk....",
-        "....kkkkkkwwk...",
-        "..........kwwk..",
-        "...........kgk..",
-        "............k..."
-    ]
-
-    private static let clothes = [
-        "................",
-        "..DDD......DDD..",
-        ".DcCcD....DcCcD.",
-        ".DcCCcDDDDcCCcD.",
-        ".DccCccccccCccD.",
-        ".DDdcccCCcccdDD.",
-        "...DdccCCccdD...",
-        "...DdcCWWCcdD...",
-        "...DdccCCccdD...",
-        "...DdccccccdD...",
-        "...DddccccddD...",
-        "...DddddddddD...",
-        "....DDDDDDDD....",
-        "................",
-        "................",
-        "................"
-    ]
-
-    static func sprite(for cat: POICategory) -> UIImage? {
-        switch cat {
-        case .food, .cafe, .bar: return render(food, pixel: 3)
-        case .clothes, .shop: return render(clothes, pixel: 3)
-        default: return nil
-        }
+    private struct Sprite {
+        let palette: [Character: UInt32]
+        let rows: [String]
     }
 
-    private static func render(_ rows: [String], pixel: CGFloat) -> UIImage {
+    private static let chicken = Sprite(palette: ["k": 0x3B1F0E, "b": 0x8A4A22, "m": 0xB8692F, "l": 0xE09A55,
+                                                  "y": 0xF2C27A, "w": 0xF2EEE6, "g": 0xBDB6AA], rows: [
+        "......kkkk......", "....kkmmmmkk....", "...kmmllllmmk...", "..kmllyylllmbk..",
+        "..kmlyyllllmbk..", ".kmmllllllmmbbk.", ".kmlllllllmmbbk.", ".kmmlllllmmmbbk.",
+        ".kbmmmmmmmmbbbk.", "..kbbmmmmmbbbk..", "..kbbbbbbbbbk...", "...kkbbbbbkk....",
+        "....kkkkkkwwk...", "..........kwwk..", "...........kgk..", "............k..."])
+
+    private static let chestplate = Sprite(palette: ["D": 0x0E4F4E, "d": 0x167A78, "c": 0x2BB5B0,
+                                                     "C": 0x64E8E0, "W": 0xCFFFFB], rows: [
+        "................", "..DDD......DDD..", ".DcCcD....DcCcD.", ".DcCCcDDDDcCCcD.",
+        ".DccCccccccCccD.", ".DDdcccCCcccdDD.", "...DdccCCccdD...", "...DdcCWWCcdD...",
+        "...DdccCCccdD...", "...DdccccccdD...", "...DddccccddD...", "...DddddddddD...",
+        "....DDDDDDDD....", "................", "................", "................"])
+
+    // osso (area cani)
+    private static let bone = Sprite(palette: ["k": 0x4A4A44, "w": 0xF4F1E8, "g": 0xC9C4B8], rows: [
+        "................", "..........kk.kk.", ".........kwwkwwk", ".........kwwwwgk",
+        "..........kwwgk.", ".........kwwgk..", "........kwwgk...", ".......kwwgk....",
+        "......kwwgk.....", ".....kwwgk......", "....kwwgk.......", "...kwwgk........",
+        ".kkwwwgk........", "kwwwwgk.........", "kwwgkwk.........", ".kk..k.........."])
+
+    // tulipano (giardini)
+    private static let tulip = Sprite(palette: ["R": 0x8E1A1E, "r": 0xD8282E, "l": 0xF06A6A,
+                                                "G": 0x2F6F22, "g": 0x67B347], rows: [
+        "................", "....R..RR..R....", "....RrRrrRrR....", "....RrrrrrrR....",
+        "....RrrlrrrR....", "....RrrrrrrR....", ".....RrrrrR.....", "......RRRR......",
+        ".......GG.......", "..GG...GG...GG..", "..GgG..GG..GgG..", "...GgG.GG.GgG...",
+        "....GgGGGGgG....", ".....GgGGgG.....", ".......GG.......", ".......GG......."])
+
+    // campana (municipio)
+    private static let bell = Sprite(palette: ["k": 0x5A4010, "y": 0xF2C230, "Y": 0xB8861A, "l": 0xFFF0A0], rows: [
+        "................", ".......kk.......", "......kYYk......", ".....kyyyyk.....",
+        "....kyylyyYk....", "....kylyyyYk....", "....kyyyyyYk....", "...kyyyyyyyYk...",
+        "...kyyyyyyyYk...", "..kyyyyyyyyyYk..", "..kYYYYYYYYYYk..", "...kkkkkkkkkk...",
+        "......kYYk......", ".......kk.......", "................", "................"])
+
+    // scudo blu con stella (polizia / carabinieri)
+    private static let shield = Sprite(palette: ["k": 0x10183A, "B": 0x2E4FB8, "b": 0x1C2F7A, "s": 0xF2C230], rows: [
+        "................", "..kkkkkkkkkkkk..", "..kBBBBBBBBBBk..", "..kBBBBsBBBBbk..",
+        "..kBBBsssBBBbk..", "..kBsssssssBbk..", "..kBBsssssBBbk..", "..kBBBsssBBBbk..",
+        "..kBBssBssBBbk..", "..kBsBBBBBsBbk..", "...kBBBBBBBbk...", "....kBBBBBbk....",
+        ".....kBBBbk.....", "......kBbk......", ".......kk.......", "................"])
+
+    // parchimetro (parcheggi)
+    private static let meter = Sprite(palette: ["k": 0x2E3138, "g": 0x8A8F99, "G": 0x555A63,
+                                                "c": 0x4A8BE0, "w": 0xD8ECFF], rows: [
+        "................", ".....kkkkkk.....", "....kGggggGk....", "....kgccccgk....",
+        "....kgcwccgk....", "....kgccccgk....", "....kggggggk....", "....kGgkkgGk....",
+        ".....kGggGk.....", "......kGGk......", "......kggk......", "......kggk......",
+        "......kggk......", ".....kGggGk.....", ".....kkkkkk.....", "................"])
+
+    // libro rosso (scuole / biblioteche)
+    private static let book = Sprite(palette: ["k": 0x3A0E0E, "R": 0x7E1C1C, "r": 0xA8282A,
+                                               "l": 0xE87A6A, "p": 0xF0E6D0], rows: [
+        "................", "................", "......kkkkkk....", ".....krrrrrrk...",
+        "....krrrrrrrrk..", "...krrrlrrrrRk..", "..krrrrrrrrRRk..", ".krrrrrrrrRRpk..",
+        ".kRRRrrrrRRppk..", ".kpppRRRRRppk...", "..kkpppppppk....", "....kkkkkkk.....",
+        "................", "................", "................", "................"])
+
+    // busta (poste)
+    private static let envelope = Sprite(palette: ["k": 0x6A6458, "w": 0xF2EFE6, "g": 0xC9C3B4], rows: [
+        "................", "................", "................", ".kkkkkkkkkkkkkk.",
+        ".kwgwwwwwwwwgwk.", ".kwwgwwwwwwgwwk.", ".kwwwgwwwwgwwwk.", ".kwwwwgwwgwwwwk.",
+        ".kwwwwwggwwwwwk.", ".kwwwwwwwwwwwwk.", ".kwwwwwwwwwwwwk.", ".kkkkkkkkkkkkkk.",
+        "................", "................", "................", "................"])
+
+    // segnaposto rosso (piazze e luoghi generici)
+    private static let pin = Sprite(palette: ["k": 0x4A0A0A, "r": 0xD02A2A, "R": 0x8A1616, "l": 0xF06060], rows: [
+        "................", ".....kkkkkk.....", "....krrrrrrk....", "...krrlrrrrRk...",
+        "...krrRRRrrRk...", "...krRkkkRrRk...", "...krRkkkRrRk...", "...krrRRRrrRk...",
+        "....krrrrrRk....", "....krrrrrRk....", ".....krrrRk.....", ".....krrRk......",
+        "......krk.......", "......kRk.......", ".......k........", "................"])
+
+    static func sprite(for cat: POICategory) -> UIImage? {
+        let s: Sprite
+        switch cat {
+        case .food, .cafe, .bar: s = chicken
+        case .clothes, .shop: s = chestplate
+        case .dog: s = bone
+        case .garden: s = tulip
+        case .townhall: s = bell
+        case .police: s = shield
+        case .parking: s = meter
+        case .school, .library: s = book
+        case .post: s = envelope
+        case .default: s = pin
+        default: return nil
+        }
+        return render(s, pixel: 3)
+    }
+
+    private static func render(_ sprite: Sprite, pixel: CGFloat) -> UIImage {
+        let rows = sprite.rows
         let h = CGFloat(rows.count), w = CGFloat(rows.map { $0.count }.max() ?? 0)
         let fmt = UIGraphicsImageRendererFormat()
         fmt.scale = 2
@@ -227,7 +271,7 @@ enum PixelArt {
             c.setShouldAntialias(false)
             for (y, row) in rows.enumerated() {
                 for (x, ch) in row.enumerated() {
-                    guard let hex = palette[ch] else { continue }
+                    guard let hex = sprite.palette[ch] else { continue }
                     c.setFillColor(UIColor(hex: hex).cgColor)
                     c.fill(CGRect(x: CGFloat(x) * pixel, y: CGFloat(y) * pixel, width: pixel, height: pixel))
                 }

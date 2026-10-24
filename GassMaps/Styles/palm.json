@@ -451,7 +451,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#d4d4d4",
+    "line-color": "#151515",
     "line-width": [
      "interpolate",
      [
@@ -505,7 +505,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#d4d4d4",
+    "line-color": "#151515",
     "line-width": [
      "interpolate",
      [
@@ -564,7 +564,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#e4e4e4",
+    "line-color": "#0d0d0d",
     "line-width": [
      "interpolate",
      [
@@ -625,7 +625,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#e4e4e4",
+    "line-color": "#0d0d0d",
     "line-width": [
      "interpolate",
      [
@@ -685,7 +685,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#f0f0f0",
+    "line-color": "#050505",
     "line-width": [
      "interpolate",
      [
@@ -952,6 +952,14 @@
       "class"
      ],
      [
+      "town_hall"
+     ],
+     "gm-poi-townhall",
+     [
+      "dog_park"
+     ],
+     "gm-poi-dog",
+     [
       "garden"
      ],
      "gm-poi-garden",
@@ -1086,8 +1094,7 @@
       "art_gallery",
       "attraction",
       "monument",
-      "castle",
-      "town_hall"
+      "castle"
      ],
      "gm-poi-museum",
      [

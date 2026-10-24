@@ -1110,6 +1110,14 @@
       "class"
      ],
      [
+      "town_hall"
+     ],
+     "gm-poi-townhall",
+     [
+      "dog_park"
+     ],
+     "gm-poi-dog",
+     [
       "garden"
      ],
      "gm-poi-garden",
@@ -1244,8 +1252,7 @@
       "art_gallery",
       "attraction",
       "monument",
-      "castle",
-      "town_hall"
+      "castle"
      ],
      "gm-poi-museum",
      [

@@ -4,7 +4,8 @@ import MapLibre
 /// Categorie dei luoghi mostrate sulla mappa (devono coincidere con tools/generate_styles.py)
 enum POICategory: String, CaseIterable {
     case park, cinema, rail, library, fuel, food, cafe, bar, shop, clothes, health, police,
-         bank, lodging, school, parking, sport, worship, museum, car, garden, playground, post, `default`
+         bank, lodging, school, parking, sport, worship, museum, car, garden, playground, post,
+         townhall, dog, `default`
 
     var imageName: String { "gm-poi-\(rawValue)" }
 }
@@ -187,7 +188,12 @@ enum MapIcons {
         if cat == .default && theme.id == "palm" {
             return redPin(size: pointSize * 1.5)   // segnaposto rosso come nelle schermate
         }
-        let related: POICategory? = (cat == .garden || cat == .playground) ? .park : nil
+        let related: POICategory?
+        switch cat {
+        case .garden, .playground, .dog: related = .park
+        case .townhall: related = .museum
+        default: related = nil
+        }
         let glyph = set.glyphs[cat] ?? related.flatMap { set.glyphs[$0] } ?? set.glyphs[.default]
         if glyph == nil && set.cloverDefault {
             return clover(color: theme.accent, size: pointSize * 1.45)

@@ -1,0 +1,147 @@
+import UIKit
+import MapLibre
+
+/// Freccia bianca dell'utente con croce di mira, in stile "videogioco".
+final class UserArrowView: MLNUserLocationAnnotationView {
+    private let container = CALayer()
+    private let arrowLeft = CAShapeLayer()
+    private let arrowRight = CAShapeLayer()
+    private let hLine = CAGradientLayer()
+    private let vLine = CAGradientLayer()
+    private var configured = false
+
+    override func update() {
+        if !configured { configure() }
+        guard let map = mapView else { return }
+
+        var heading: Double = 0
+        if let h = userLocation?.heading, h.trueHeading >= 0 {
+            heading = h.trueHeading
+        } else if let c = userLocation?.location?.course, c >= 0 {
+            heading = c
+        }
+        let angle = CGFloat((heading - map.direction) * .pi / 180)
+        let pitch = CGFloat(map.camera.pitch * .pi / 180)
+
+        var t = CATransform3DIdentity
+        t.m34 = -1.0 / 400
+        t = CATransform3DRotate(t, pitch * 0.85, 1, 0, 0)
+        t = CATransform3DRotate(t, angle, 0, 0, 1)
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        container.transform = t
+        CATransaction.commit()
+    }
+
+    private func configure() {
+        configured = true
+        frame = CGRect(x: 0, y: 0, width: 44, height: 44)
+        clipsToBounds = false
+        backgroundColor = .clear
+
+        // croce di mira (in coordinate schermo)
+        let lineColor = UIColor.white.withAlphaComponent(0.55).cgColor
+        let clear = UIColor.white.withAlphaComponent(0).cgColor
+        hLine.colors = [clear, lineColor, lineColor, clear]
+        hLine.locations = [0, 0.3, 0.7, 1]
+        hLine.startPoint = CGPoint(x: 0, y: 0.5)
+        hLine.endPoint = CGPoint(x: 1, y: 0.5)
+        hLine.frame = CGRect(x: 22 - 700, y: 21.5, width: 1400, height: 1)
+        layer.addSublayer(hLine)
+
+        vLine.colors = [clear, lineColor, lineColor, clear]
+        vLine.locations = [0, 0.25, 0.75, 1]
+        vLine.startPoint = CGPoint(x: 0.5, y: 0)
+        vLine.endPoint = CGPoint(x: 0.5, y: 1)
+        vLine.frame = CGRect(x: 21.5, y: 22 - 150, width: 1, height: 450)
+        layer.addSublayer(vLine)
+
+        container.frame = bounds
+        layer.addSublayer(container)
+
+        let w: CGFloat = 44
+        let left = UIBezierPath()
+        left.move(to: CGPoint(x: w / 2, y: 3))
+        left.addLine(to: CGPoint(x: 8, y: 40))
+        left.addLine(to: CGPoint(x: w / 2, y: 31))
+        left.close()
+        let right = UIBezierPath()
+        right.move(to: CGPoint(x: w / 2, y: 3))
+        right.addLine(to: CGPoint(x: w - 8, y: 40))
+        right.addLine(to: CGPoint(x: w / 2, y: 31))
+        right.close()
+
+        arrowLeft.path = left.cgPath
+        arrowLeft.fillColor = UIColor.white.cgColor
+        arrowRight.path = right.cgPath
+        arrowRight.fillColor = UIColor(white: 0.78, alpha: 1).cgColor
+        for l in [arrowLeft, arrowRight] {
+            l.frame = container.bounds
+            l.shadowColor = UIColor.black.cgColor
+            l.shadowOpacity = 0.6
+            l.shadowRadius = 4
+            l.shadowOffset = CGSize(width: 0, height: 2)
+            container.addSublayer(l)
+        }
+    }
+}
+
+/// Fumetto bianco con quadrifoglio e nome del luogo.
+final class PinBubbleView: MLNAnnotationView {
+    private let bubble = UIView()
+    private let icon = UIImageView()
+    private let label = UILabel()
+    private let tail = CAShapeLayer()
+
+    override init(reuseIdentifier: String?) {
+        super.init(reuseIdentifier: reuseIdentifier)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        backgroundColor = .clear
+        scalesWithViewingDistance = false
+        bubble.backgroundColor = .white
+        bubble.layer.cornerRadius = 14
+        bubble.layer.shadowColor = UIColor.black.cgColor
+        bubble.layer.shadowOpacity = 0.35
+        bubble.layer.shadowRadius = 8
+        bubble.layer.shadowOffset = CGSize(width: 0, height: 3)
+        addSubview(bubble)
+        bubble.addSubview(icon)
+        label.font = .systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .black
+        bubble.addSubview(label)
+        tail.fillColor = UIColor.white.cgColor
+        layer.insertSublayer(tail, at: 0)
+    }
+
+    func configure(title: String, accent: UIColor) {
+        icon.image = MapIcons.clover(color: accent, size: 30)
+        label.text = title
+        let hasTitle = !title.isEmpty
+        let height: CGFloat = 50
+        let textWidth = hasTitle ? min(220, label.intrinsicContentSize.width) : 0
+        let width: CGFloat = hasTitle ? 14 + 30 + 8 + textWidth + 16 : height
+        let tailH: CGFloat = 10
+        frame = CGRect(x: 0, y: 0, width: width, height: height + tailH)
+        bubble.frame = CGRect(x: 0, y: 0, width: width, height: height)
+        icon.frame = hasTitle ? CGRect(x: 14, y: 10, width: 30, height: 30) : CGRect(x: 10, y: 10, width: 30, height: 30)
+        label.frame = CGRect(x: 52, y: 0, width: textWidth, height: height)
+        label.isHidden = !hasTitle
+
+        let p = UIBezierPath()
+        p.move(to: CGPoint(x: width / 2 - 9, y: height - 1))
+        p.addLine(to: CGPoint(x: width / 2, y: height + tailH))
+        p.addLine(to: CGPoint(x: width / 2 + 9, y: height - 1))
+        p.close()
+        tail.path = p.cgPath
+        centerOffset = CGVector(dx: 0, dy: -(height + tailH) / 2)
+    }
+}

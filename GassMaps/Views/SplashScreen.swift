@@ -38,7 +38,7 @@ struct SplashScreen: View {
         GeometryReader { geo in
             ZStack {
                 Color.black
-                RadialGradient(colors: [Color(hex: 0x0052B8), Color(hex: 0x00295E), Color(hex: 0x010E22), .black],
+                RadialGradient(colors: [Color(hex: 0x26262A), Color(hex: 0x141416), Color(hex: 0x09090A), .black],
                                center: UnitPoint(x: 0.5, y: 0.47), startRadius: 10, endRadius: geo.size.width * 0.95)
 
                 ForEach(icons) { icon in
@@ -87,41 +87,24 @@ struct SplashScreen: View {
     }
 }
 
+/// Scritta "GassMaps" nel font di GTA San Andreas (Pricedown): riempimento bianco, contorno nero spesso.
 struct LogoView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: -12) {
-            Text("GASS")
-            Text("MAPS")
-            HStack(alignment: .center, spacing: 2) {
-                Text("IRL")
-                RouteSquiggle()
-                    .stroke(Color.white, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
-                    .frame(width: 70, height: 34)
-                    .overlay(alignment: .trailing) {
-                        ZStack {
-                            Circle().strokeBorder(Color.white, lineWidth: 5).frame(width: 22, height: 22)
-                        }
-                        .offset(x: 10, y: -4)
-                    }
-            }
-        }
-        .font(.system(size: 52, weight: .black).width(.expanded))
-        .foregroundStyle(.white)
-        .shadow(color: Color(hex: 0x1E4BFF).opacity(0.8), radius: 18)
-    }
-}
+    var size: CGFloat = 66
 
-struct RouteSquiggle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        p.move(to: CGPoint(x: 0, y: rect.maxY - 4))
-        p.addCurve(to: CGPoint(x: rect.width * 0.45, y: rect.midY),
-                   control1: CGPoint(x: rect.width * 0.2, y: rect.maxY + 2),
-                   control2: CGPoint(x: rect.width * 0.25, y: rect.minY))
-        p.addCurve(to: CGPoint(x: rect.width * 0.8, y: rect.maxY - 6),
-                   control1: CGPoint(x: rect.width * 0.6, y: rect.maxY + 4),
-                   control2: CGPoint(x: rect.width * 0.7, y: rect.maxY))
-        return p
+    var body: some View {
+        let text = Text("GassMaps").font(FontRegistry.gta(size: size))
+        ZStack {
+            // contorno nero (16 copie spostate) + ombra
+            ForEach(0..<16, id: \.self) { i in
+                let a = CGFloat(i) / 16 * 2 * .pi
+                text.foregroundStyle(.black)
+                    .offset(x: cos(a) * size * 0.06, y: sin(a) * size * 0.06)
+            }
+            text.foregroundStyle(.white)
+        }
+        .shadow(color: .black.opacity(0.8), radius: 0, x: size * 0.04, y: size * 0.06)
+        .shadow(color: .black.opacity(0.6), radius: 14)
+        .fixedSize()
     }
 }
 

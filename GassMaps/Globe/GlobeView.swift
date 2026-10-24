@@ -226,8 +226,8 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
 
         // icone del tema (priorità massima)
         for marker in theme.markers {
-            guard let image = MapIcons.outlinedSymbol(marker.symbol, color: theme.iconColor,
-                                                      halo: theme.iconHalo, pointSize: 40) else { continue }
+            guard let image = MapIcons.themedSymbol(marker.symbol, color: marker.color,
+                                                    theme: theme, pointSize: 40) else { continue }
             let node = makeBillboardNode(image: image)
             node.simdPosition = GlobeCoordinator.position(lat: marker.lat, lon: marker.lon, radius: 1.01)
             markersNode.addChildNode(node)
@@ -272,7 +272,9 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
 
     static func labelImage(text: String, isCity: Bool, theme: MapTheme) -> UIImage? {
         let fontSize: CGFloat = 36
-        let font = UIFont(name: theme.globeFont, size: fontSize) ?? UIFont.systemFont(ofSize: fontSize, weight: .heavy)
+        let gtaTheme = theme.id == "noir" || theme.id == "palm"
+        let font = gtaTheme ? FontRegistry.gtaUIFont(size: fontSize)
+            : (UIFont(name: theme.globeFont, size: fontSize) ?? UIFont.systemFont(ofSize: fontSize, weight: .heavy))
         let strokeAttrs: [NSAttributedString.Key: Any] = [
             .font: font, .foregroundColor: theme.globeLabelHalo,
             .strokeColor: theme.globeLabelHalo, .strokeWidth: 22

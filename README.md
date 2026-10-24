@@ -30,6 +30,23 @@ Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfac
 
 - **Impostazioni**: unità di distanza (KM/MI), icona app (3 icone alternative), condividi, valutaci, community Discord, contattaci, privacy, termini, cancella i miei dati, ripristina acquisti
 
+## Font di GTA San Andreas (Pricedown)
+
+La scritta **GassMaps** della splash usa il font *Pricedown* (quello di GTA San Andreas).
+Per licenza non può essere incluso nel repo: scaricalo gratis da Typodermic
+(https://typodermicfonts.com/pricedown/) e copia il file `.ttf`/`.otf` in `GassMaps/Fonts/`.
+L'app lo trova da sola (nessuna modifica necessaria) e lo usa anche per le etichette del globo dei temi GTA.
+Senza il file viene usato un sostituto simile.
+
+## Contenuti di ogni mappa
+
+Ogni tema ha il proprio set di icone sulla mappa e sul globo, nello stile del gioco a cui si ispira:
+Vice Noir (radar GTA V, quadrifoglio viola), Palm Coast (icone colorate GTA SA), Dust Valley (badge western),
+Bunker OS (esagoni verdi), Pixel Land (oggetti pixelati), Neon District (esagoni neon), Street Heat (corse),
+Old Kingdom (medievale). Le categorie: parchi, cinema/teatri, stazioni, biblioteche, carburante, ristoranti,
+caffè, bar, negozi, abbigliamento, salute, polizia, banche, alloggi, scuole, parcheggi, sport, luoghi di culto,
+musei/attrazioni, auto.
+
 ## Compilare l'IPA non firmata (GitHub Actions)
 
 1. Crea un repository su GitHub e carica **tutto il contenuto** di questa cartella (compresa la cartella nascosta `.github`).

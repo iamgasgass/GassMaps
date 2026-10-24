@@ -5,6 +5,7 @@ struct GlobeMarker {
     let lat: Double
     let lon: Double
     let symbol: String
+    var color: UIColor? = nil
 }
 
 struct MapTheme: Identifiable, Equatable {
@@ -109,10 +110,10 @@ enum Themes {
             accent: UIColor(hex: 0x45FF45), iconColor: UIColor(hex: 0x5DFF5D), iconHalo: .black,
             polar: UIColor(hex: 0x0D260D), buttonTint: Color(hex: 0x8FE58F),
             markers: [
-                GlobeMarker(lat: 45, lon: -40, symbol: "atom"),
-                GlobeMarker(lat: 40, lon: -75, symbol: "bolt.shield.fill"),
-                GlobeMarker(lat: 55, lon: 40, symbol: "atom"),
-                GlobeMarker(lat: 35, lon: 110, symbol: "bolt.shield.fill")
+                GlobeMarker(lat: 45, lon: -40, symbol: "person.fill"),
+                GlobeMarker(lat: 40, lon: -75, symbol: "atom"),
+                GlobeMarker(lat: 55, lon: 40, symbol: "person.fill"),
+                GlobeMarker(lat: 35, lon: 110, symbol: "atom")
             ],
             globeFont: "Menlo-Bold", globeUppercase: true, globeLabel: UIColor(hex: 0x5DFF5D), globeLabelHalo: .black, haze: UIColor(hex: 0x0F3A12), glow: UIColor(hex: 0x45FF45)),
         MapTheme(
@@ -121,11 +122,11 @@ enum Themes {
             accent: UIColor(hex: 0x8840D8), iconColor: .white, iconHalo: UIColor(hex: 0x1D1D4A),
             polar: UIColor(hex: 0xF4F7F7), buttonTint: .white,
             markers: [
-                GlobeMarker(lat: 38, lon: -30, symbol: "mug.fill"),
-                GlobeMarker(lat: 22, lon: -32, symbol: "mug.fill"),
-                GlobeMarker(lat: 53, lon: 2, symbol: "globe.europe.africa.fill"),
-                GlobeMarker(lat: 30, lon: -60, symbol: "suit.diamond.fill"),
-                GlobeMarker(lat: 10, lon: 20, symbol: "mug.fill")
+                GlobeMarker(lat: 38, lon: -30, symbol: "mug.fill", color: UIColor(hex: 0xF2B233)),
+                GlobeMarker(lat: 22, lon: -32, symbol: "mug.fill", color: UIColor(hex: 0xF2B233)),
+                GlobeMarker(lat: 53, lon: 2, symbol: "circle.hexagongrid.fill", color: UIColor(hex: 0xC8C8D8)),
+                GlobeMarker(lat: 30, lon: -60, symbol: "suit.diamond.fill", color: UIColor(hex: 0x2ED36B)),
+                GlobeMarker(lat: 10, lon: 20, symbol: "mug.fill", color: UIColor(hex: 0xF2B233))
             ],
             globeFont: "Courier-Bold", globeUppercase: false, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x1D1D4A), haze: UIColor(hex: 0xC8D4FF), glow: UIColor(hex: 0xE6ECFF)),
         MapTheme(
@@ -134,10 +135,10 @@ enum Themes {
             accent: UIColor(hex: 0xFF2E7E), iconColor: UIColor(hex: 0x3FF2FF), iconHalo: .black,
             polar: UIColor(hex: 0x1A1424), buttonTint: .white,
             markers: [
-                GlobeMarker(lat: 56, lon: 8, symbol: "cpu.fill"),
+                GlobeMarker(lat: 56, lon: 8, symbol: "camera.aperture"),
                 GlobeMarker(lat: 42, lon: 13, symbol: "gearshape.fill"),
-                GlobeMarker(lat: 29, lon: 3, symbol: "cpu.fill"),
-                GlobeMarker(lat: 33, lon: -12, symbol: "tram.fill")
+                GlobeMarker(lat: 29, lon: 3, symbol: "camera.aperture"),
+                GlobeMarker(lat: 33, lon: -12, symbol: "bus.fill")
             ],
             globeFont: "AvenirNextCondensed-DemiBold", globeUppercase: true, globeLabel: UIColor(hex: 0x3FF2FF), globeLabelHalo: .black, haze: UIColor(hex: 0x1A1430), glow: UIColor(hex: 0x9CC8FF)),
         MapTheme(
@@ -146,10 +147,10 @@ enum Themes {
             accent: UIColor(hex: 0x8840D8), iconColor: .white, iconHalo: UIColor(hex: 0x1C1C1C),
             polar: UIColor(hex: 0xE8EEF0), buttonTint: .white,
             markers: [
-                GlobeMarker(lat: 54, lon: 0, symbol: "globe.americas.fill"),
-                GlobeMarker(lat: 47, lon: 27, symbol: "star.circle.fill"),
-                GlobeMarker(lat: 40, lon: 50, symbol: "car.side.fill"),
-                GlobeMarker(lat: 27, lon: 75, symbol: "die.face.5.fill")
+                GlobeMarker(lat: 53, lon: -2, symbol: "globe.americas.fill", color: UIColor(hex: 0x8A5AE8)),
+                GlobeMarker(lat: 46, lon: 28, symbol: "star.circle.fill", color: UIColor(hex: 0xF2C230)),
+                GlobeMarker(lat: 40, lon: 50, symbol: "car.side.fill", color: UIColor(hex: 0x2E6BF2)),
+                GlobeMarker(lat: 27, lon: 75, symbol: "die.face.5.fill", color: .white)
             ],
             globeFont: "Futura-CondensedExtraBold", globeUppercase: false, globeLabel: .white, globeLabelHalo: .black, haze: UIColor(hex: 0xB8C8D0), glow: UIColor(hex: 0x9CC8FF)),
         MapTheme(

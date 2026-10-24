@@ -932,17 +932,21 @@
      ],
      [
       "park",
-      "garden"
+      "garden",
+      "playground"
      ],
      "gm-poi-park",
      [
       "cinema",
-      "theatre"
+      "theatre",
+      "music"
      ],
      "gm-poi-cinema",
      [
       "railway",
-      "bus"
+      "bus",
+      "ferry_terminal",
+      "aerialway"
      ],
      "gm-poi-rail",
      [
@@ -951,7 +955,8 @@
      ],
      "gm-poi-library",
      [
-      "fuel"
+      "fuel",
+      "charging_station"
      ],
      "gm-poi-fuel",
      [
@@ -962,26 +967,62 @@
      "gm-poi-food",
      [
       "cafe",
-      "bar",
-      "beer",
-      "ice_cream"
+      "ice_cream",
+      "bakery"
      ],
      "gm-poi-cafe",
      [
+      "bar",
+      "pub",
+      "beer",
+      "nightclub",
+      "alcohol_shop"
+     ],
+     "gm-poi-bar",
+     [
       "shop",
       "grocery",
-      "clothing_store",
+      "convenience",
+      "supermarket",
       "jewelry",
-      "convenience"
+      "gift",
+      "mall"
      ],
      "gm-poi-shop",
+     [
+      "clothing_store",
+      "shoes",
+      "fashion"
+     ],
+     "gm-poi-clothes",
      [
       "hospital",
       "pharmacy",
       "doctors",
-      "dentist"
+      "dentist",
+      "veterinary"
      ],
      "gm-poi-health",
+     [
+      "police",
+      "fire_station",
+      "prison"
+     ],
+     "gm-poi-police",
+     [
+      "bank",
+      "atm",
+      "money_transfer"
+     ],
+     "gm-poi-bank",
+     [
+      "lodging",
+      "hotel",
+      "motel",
+      "hostel",
+      "campsite"
+     ],
+     "gm-poi-lodging",
      [
       "school",
       "college",
@@ -991,15 +1032,40 @@
      "gm-poi-school",
      [
       "parking",
-      "bicycle_parking"
+      "bicycle_parking",
+      "motorcycle_parking"
      ],
      "gm-poi-parking",
      [
       "stadium",
       "sports",
-      "pitch"
+      "pitch",
+      "swimming",
+      "golf",
+      "fitness"
      ],
      "gm-poi-sport",
+     [
+      "place_of_worship",
+      "religion"
+     ],
+     "gm-poi-worship",
+     [
+      "museum",
+      "art_gallery",
+      "attraction",
+      "monument",
+      "castle",
+      "town_hall"
+     ],
+     "gm-poi-museum",
+     [
+      "car",
+      "car_repair",
+      "car_rental",
+      "bicycle"
+     ],
+     "gm-poi-car",
      "gm-poi-default"
     ],
     "icon-size": 0.5,

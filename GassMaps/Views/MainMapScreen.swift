@@ -147,7 +147,11 @@ struct TopBar: View {
                 Spacer(minLength: 0)
 
                 Button { state.showSettings = true } label: {
-                    GlassCircle(size: 44) { DonutIcon() }
+                    GlassCircle(size: 44) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 19, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
                 }
                 .buttonStyle(.plain)
             }

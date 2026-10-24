@@ -118,40 +118,68 @@ struct CloverIcon: View {
     }
 }
 
-/// Pannello inferiore flottante in Liquid Glass, con maniglia, trascinabile per chiudere.
+/// Pannello inferiore flottante in Liquid Glass, con maniglia.
+/// Si chiude con uno swipe verso il basso breve (60 pt) o con un colpo veloce, da qualunque punto del pannello.
 struct BottomPanel<Content: View>: View {
     var onDismiss: (() -> Void)?
     @ViewBuilder var content: Content
     @State private var drag: CGFloat = 0
+    @State private var panelHeight: CGFloat = 320
+    @State private var closing = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Capsule()
-                .fill(Color.white.opacity(0.35))
+                .fill(Color.white.opacity(0.4))
                 .frame(width: 40, height: 5)
                 .frame(maxWidth: .infinity)
-                .padding(.top, 9)
-                .padding(.bottom, 16)
+                .frame(height: 30)
+                .contentShape(Rectangle())
             content
         }
         .padding(.horizontal, 18)
         .padding(.bottom, 26)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(RoundedRectangle(cornerRadius: 44, style: .continuous))
         .glassEffect(.regular.tint(Color.black.opacity(0.35)),
                      in: RoundedRectangle(cornerRadius: 44, style: .continuous))
+        .background(
+            GeometryReader { g in
+                Color.clear
+                    .onAppear { panelHeight = g.size.height }
+                    .onChange(of: g.size.height) { _, h in panelHeight = h }
+            }
+        )
         .padding(.horizontal, 8)
         .padding(.bottom, 8)
-        .offset(y: max(drag, 0))
-        .gesture(
-            DragGesture()
-                .onChanged { drag = $0.translation.height }
-                .onEnded { value in
-                    if value.translation.height > 110, let onDismiss = onDismiss {
+        .offset(y: drag)
+        .simultaneousGesture(dismissGesture)
+    }
+
+    private var dismissGesture: some Gesture {
+        DragGesture(minimumDistance: 6, coordinateSpace: .global)
+            .onChanged { value in
+                guard !closing else { return }
+                let t = value.translation.height
+                // verso il basso segue il dito; verso l'alto effetto elastico
+                drag = t >= 0 ? t : -pow(-t, 0.6)
+            }
+            .onEnded { value in
+                guard !closing else { return }
+                let far = value.translation.height > 60
+                let fast = value.predictedEndTranslation.height > 150
+                if let onDismiss = onDismiss, far || fast {
+                    closing = true
+                    withAnimation(.easeOut(duration: 0.2)) { drag = panelHeight + 80 }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                         onDismiss()
+                        drag = 0
+                        closing = false
                     }
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { drag = 0 }
+                } else {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) { drag = 0 }
                 }
-        )
+            }
     }
 }
 

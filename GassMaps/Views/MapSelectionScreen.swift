@@ -7,6 +7,8 @@ struct MapSelectionScreen: View {
     @State private var globeOffset: CGFloat = 0
     @State private var transitioning = false
     @State private var didAppear = false
+    @State private var globeInteraction = GlobeInteraction()
+    @State private var lastDrag: CGSize = .zero
 
     private var theme: MapTheme { Themes.all[index] }
 
@@ -63,11 +65,10 @@ struct MapSelectionScreen: View {
             .frame(width: geo.size.width, height: geo.size.height)
             .background {
                 ZStack {
-                    LinearGradient(colors: [theme.backgroundTop, theme.backgroundBottom],
-                                   startPoint: .top, endPoint: .bottom)
+                    theme.backgroundTop
                     StarField()
                         .opacity(theme.id == "pixel" ? 0.35 : 1)
-                    GlobeView(theme: globeTheme, height: fullHeight)
+                    GlobeView(theme: globeTheme, height: fullHeight, interaction: globeInteraction)
                         .frame(width: geo.size.width, height: fullHeight)
                         .offset(y: globeOffset)
                         .opacity(didAppear ? 1 : 0)
@@ -90,11 +91,18 @@ struct MapSelectionScreen: View {
                 .allowsHitTesting(false)
             }
             .contentShape(Rectangle())
+            // trascinando il globo lo si ruota; al rilascio prosegue con inerzia e poi riprende la rotazione automatica
             .gesture(
-                DragGesture(minimumDistance: 30)
+                DragGesture(minimumDistance: 2)
+                    .onChanged { value in
+                        let delta = CGSize(width: value.translation.width - lastDrag.width,
+                                           height: value.translation.height - lastDrag.height)
+                        lastDrag = value.translation
+                        globeInteraction.changed(delta: delta)
+                    }
                     .onEnded { value in
-                        if value.translation.width < -60 { move(1) }
-                        else if value.translation.width > 60 { move(-1) }
+                        lastDrag = .zero
+                        globeInteraction.ended(velocity: value.velocity)
                     }
             )
         }

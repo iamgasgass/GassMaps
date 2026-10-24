@@ -10,6 +10,15 @@ struct MainMapScreen: View {
                 GameMapView(state: state)
                     .ignoresSafeArea()
 
+                // vignettatura del tema (bordi scuri come nelle schermate di riferimento)
+                if state.theme.vignette > 0 {
+                    RadialGradient(colors: [.clear, .black.opacity(state.theme.vignette)],
+                                   center: .center, startRadius: geo.size.width * 0.42,
+                                   endRadius: geo.size.height * 0.62)
+                        .ignoresSafeArea()
+                        .allowsHitTesting(false)
+                }
+
                 // nebbia/sfocatura all'orizzonte e vignettatura
                 VStack(spacing: 0) {
                     Rectangle()

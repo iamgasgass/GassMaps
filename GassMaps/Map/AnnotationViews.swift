@@ -9,9 +9,19 @@ final class UserArrowView: MLNUserLocationAnnotationView {
     private let hLine = CAGradientLayer()
     private let vLine = CAGradientLayer()
     private var configured = false
+    /// colore della freccia per il tema attivo
+    static var tint: UIColor = .white
+    private var appliedTint: UIColor?
 
     override func update() {
         if !configured { configure() }
+        if appliedTint != UserArrowView.tint {
+            appliedTint = UserArrowView.tint
+            var h: CGFloat = 0, sat: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+            UserArrowView.tint.getHue(&h, saturation: &sat, brightness: &b, alpha: &a)
+            arrowLeft.fillColor = UserArrowView.tint.cgColor
+            arrowRight.fillColor = UIColor(hue: h, saturation: sat, brightness: b * 0.78, alpha: a).cgColor
+        }
         guard let map = mapView else { return }
 
         var heading: Double = 0

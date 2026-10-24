@@ -13,7 +13,7 @@
    "id": "background",
    "type": "background",
    "paint": {
-    "background-color": "#86a072"
+    "background-color": "#738372"
    }
   },
   {
@@ -87,7 +87,7 @@
    "source": "openmaptiles",
    "source-layer": "water",
    "paint": {
-    "fill-color": "#6a92b8"
+    "fill-color": "#607da7"
    }
   },
   {

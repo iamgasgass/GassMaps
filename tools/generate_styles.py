@@ -123,123 +123,7 @@ def road_line(lid, p, classes, color, widths, minzoom=0, dash=None, opacity=1.0)
     return layer
 
 
-def map_style(tid, p):
-    layers = [
-        {"id": "background", "type": "background", "paint": {"background-color": p["land"]}},
-        {
-            "id": "landcover-ice", "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
-            "filter": cls("ice"), "paint": {"fill-color": p["ice"]},
-        },
-        {
-            "id": "landcover-sand", "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
-            "filter": cls("sand"), "paint": {"fill-color": p["sand"]},
-        },
-        {
-            "id": "landcover-wood", "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
-            "filter": cls("wood", "forest"), "paint": {"fill-color": p["wood"], "fill-opacity": 0.9},
-        },
-        {
-            "id": "landcover-grass", "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
-            "filter": cls("grass", "farmland", "scrub"), "paint": {"fill-color": p["grass"], "fill-opacity": 0.8},
-        },
-        {
-            "id": "park", "type": "fill", "source": "openmaptiles", "source-layer": "park",
-            "paint": {"fill-color": p["park"], "fill-opacity": 0.9},
-        },
-        {
-            "id": "water", "type": "fill", "source": "openmaptiles", "source-layer": "water",
-            "paint": {"fill-color": p["water"], "fill-antialias": True},
-        },
-        {
-            "id": "waterway", "type": "line", "source": "openmaptiles", "source-layer": "waterway",
-            "paint": {"line-color": p["waterway"], "line-width": interp([(8, 0.5), (14, 2), (18, 6)])},
-        },
-        {
-            "id": "boundary-state", "type": "line", "source": "openmaptiles", "source-layer": "boundary",
-            "filter": ["all", ["==", ["get", "admin_level"], 4], ["!=", ["get", "maritime"], 1]],
-            "paint": {"line-color": p["boundary"], "line-opacity": 0.35, "line-dasharray": [3, 2],
-                      "line-width": interp([(3, 0.4), (10, 1.2)])},
-        },
-        {
-            "id": "boundary-country", "type": "line", "source": "openmaptiles", "source-layer": "boundary",
-            "filter": ["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1]],
-            "paint": {"line-color": p["boundary"], "line-opacity": 0.7,
-                      "line-width": interp([(2, 0.6), (8, 1.6), (12, 2.4)])},
-        },
-        road_line("road-path", p, ["path", "track"], p["path"], [(14, 0.5), (18, 3)], minzoom=15, dash=[2, 1.5]),
-        road_line("road-rail", p, ["rail", "transit"], p["rail"], [(12, 0.6), (18, 3)], minzoom=12, dash=[3, 2]),
-        road_line("road-service", p, ["service"], p["minor"], [(14, 0.6), (16, 2.5), (18, 7)], minzoom=14, opacity=0.85),
-        road_line("road-minor", p, ["minor"], p["minor"], [(12, 0.5), (14, 1.6), (16, 5.5), (18, 16), (20, 40)], minzoom=12),
-        road_line("road-secondary", p, ["secondary", "tertiary"], p["major"],
-                  [(8, 0.5), (12, 1.6), (14, 3.5), (16, 8), (18, 20), (20, 48)], minzoom=8),
-        road_line("road-primary", p, ["primary", "trunk"], p["major"],
-                  [(5, 0.5), (10, 1.6), (14, 5), (16, 10), (18, 24), (20, 56)], minzoom=5),
-        road_line("road-motorway", p, ["motorway"], p["motor"],
-                  [(4, 0.6), (10, 2), (14, 6), (16, 12), (18, 28), (20, 64)], minzoom=4),
-        {
-            "id": "building-3d", "type": "fill-extrusion", "source": "openmaptiles", "source-layer": "building",
-            "minzoom": 14,
-            "paint": {
-                "fill-extrusion-color": p["building"],
-                "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14, 0, 15.5,
-                                          ["to-number", ["get", "render_height"], 8]],
-                "fill-extrusion-base": ["to-number", ["get", "render_min_height"], 0],
-                "fill-extrusion-opacity": 0.92,
-                "fill-extrusion-vertical-gradient": True,
-            },
-        },
-        {
-            "id": "road-oneway", "type": "symbol", "source": "openmaptiles", "source-layer": "transportation",
-            "minzoom": 16,
-            "filter": ["match", ["get", "oneway"], [1, -1], True, False],
-            "layout": {
-                "symbol-placement": "line", "symbol-spacing": 90, "icon-image": "gm-oneway",
-                "icon-size": interp([(16, 0.55), (19, 0.9)]),
-                "icon-rotate": ["match", ["get", "oneway"], -1, 180, 0],
-                "icon-rotation-alignment": "map", "icon-allow-overlap": False,
-            },
-            "paint": {"icon-opacity": p["oneway"]},
-        },
-        {
-            "id": "housenumber", "type": "symbol", "source": "openmaptiles", "source-layer": "housenumber",
-            "minzoom": 17,
-            "layout": {"text-field": ["get", "housenumber"], "text-font": BOLD, "text-size": 10},
-            "paint": {"text-color": p["house"], "text-halo-color": p["halo"], "text-halo-width": 0.6},
-        },
-        {
-            "id": "water-label", "type": "symbol", "source": "openmaptiles", "source-layer": "water_name",
-            "layout": {"text-field": NAME, "text-font": ITAL, "text-size": 13, "text-letter-spacing": 0.2,
-                       "text-transform": p["transform"], "text-max-width": 6},
-            "paint": {"text-color": p["water_label"], "text-halo-color": p["halo"], "text-halo-width": 0.6},
-        },
-        {
-            "id": "road-shield", "type": "symbol", "source": "openmaptiles", "source-layer": "transportation_name",
-            "minzoom": 11,
-            "filter": ["all", ["has", "ref"], ["<=", ["to-number", ["get", "ref_length"], 9], 6]],
-            "layout": {
-                "symbol-placement": "point", "symbol-spacing": 400,
-                "text-field": ["get", "ref"], "text-font": BOLD, "text-size": 9,
-                "icon-image": "gm-shield", "icon-text-fit": "both", "icon-text-fit-padding": [2, 4, 2, 4],
-                "text-rotation-alignment": "viewport", "icon-rotation-alignment": "viewport",
-            },
-            "paint": {"text-color": "#ffffff"},
-        },
-        {
-            "id": "road-label", "type": "symbol", "source": "openmaptiles", "source-layer": "transportation_name",
-            "minzoom": 14,
-            "layout": {
-                "symbol-placement": "line", "text-field": NAME, "text-font": BOLD,
-                "text-size": interp([(14, 9), (16, 11), (18, 14)]), "text-transform": p["transform"],
-                "text-letter-spacing": 0.04, "text-rotation-alignment": "map", "text-pitch-alignment": "viewport",
-            },
-            "paint": {"text-color": p["road_label"], "text-halo-color": p["road_halo"], "text-halo-width": 1.4},
-        },
-        {
-            "id": "poi", "type": "symbol", "source": "openmaptiles", "source-layer": "poi",
-            "minzoom": 15,
-            "filter": ["<=", ["to-number", ["get", "rank"], 30], 22],
-            "layout": {
-                "icon-image": [
+POI_ICON_EXPR = [
                     "match", ["get", "class"],
                     ["park", "garden", "playground"], "gm-poi-park",
                     ["cinema", "theatre", "music"], "gm-poi-cinema",
@@ -262,54 +146,256 @@ def map_style(tid, p):
                     ["museum", "art_gallery", "attraction", "monument", "castle", "town_hall"], "gm-poi-museum",
                     ["car", "car_repair", "car_rental", "bicycle"], "gm-poi-car",
                     "gm-poi-default",
-                ],
-                "icon-size": 0.5,
-                "text-field": NAME, "text-font": BOLD, "text-size": 10.5,
-                "text-transform": p["transform"], "text-anchor": "top", "text-offset": [0, 1.1],
-                "text-max-width": 8, "text-optional": True,
-            },
-            "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.2},
-        },
-        {
-            "id": "place-minor", "type": "symbol", "source": "openmaptiles", "source-layer": "place",
-            "filter": cls("village", "hamlet", "suburb", "quarter", "neighbourhood"),
-            "layout": {"text-field": NAME, "text-font": BOLD, "text-transform": p["transform"],
-                       "text-size": interp([(10, 10), (15, 13)]), "text-max-width": 8},
-            "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.4},
-        },
-        {
-            "id": "place-town", "type": "symbol", "source": "openmaptiles", "source-layer": "place",
-            "filter": cls("town"),
-            "layout": {"text-field": NAME, "text-font": BOLD, "text-transform": p["transform"],
-                       "text-size": interp([(8, 11), (14, 16)]), "text-max-width": 8},
-            "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.5},
-        },
-        {
-            "id": "place-city", "type": "symbol", "source": "openmaptiles", "source-layer": "place",
-            "filter": cls("city"),
-            "layout": {"text-field": NAME, "text-font": BOLD, "text-transform": p["transform"],
-                       "text-size": interp([(4, 11), (10, 18)]), "text-max-width": 8},
-            "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.6},
-        },
-        {
-            "id": "place-country", "type": "symbol", "source": "openmaptiles", "source-layer": "place",
-            "filter": cls("country"), "maxzoom": 9,
-            "layout": {"text-field": NAME_EN, "text-font": BOLD, "text-transform": p["transform"],
-                       "text-size": interp([(2, 10), (6, 16)]), "text-max-width": 7},
-            "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.6},
-        },
-    ]
+                ]
+
+
+# ---------------------------------------------------------------------------
+# Impostazioni di resa per tema, ricavate dalle schermate di riferimento.
+# road_mode:     "solid" (strade piene) | "casing" (bordo chiaro + interno, a doppia linea)
+# building_mode: "extrude" (3D) | "flat" | "ink" (contorno a inchiostro) | "pattern" (texture)
+# pattern:       immagini disegnate dall'app (MapIcons.swift) usate come texture
+# ---------------------------------------------------------------------------
+EXTRA = {
+    # rif. schermata 5 — scuro con strade a doppia linea, edifici piatti più chiari, icone nere
+    "noir": dict(road_mode="casing", casing="#b8b8b8", inner="#6a6a6a", minor_solid="#a8a8a8",
+                 land="#161616", building="#353535", building_mode="flat", water="#34495a",
+                 park="#1c1f1c", wood="#1b1d1b", grass="#1b1e1b", labels=True),
+    # rif. schermata 1 — grigio lavanda, strade nere, parchi verdi, fiume blu, sentieri marroni
+    "palm": dict(road_mode="solid", minor="#0c0c0c", major="#050505", motor="#000000",
+                 land="#a69ca0", building="#b2a9ad", building_mode="flat", water="#6f84ad",
+                 water_outline="#a9c4e6", park="#356a2b", wood="#356a2b", grass="#8ea24a",
+                 path="#86705a", path_solid=True, rail="#6e1f1f", labels=True),
+    # rif. schermata 2 — pergamena, inchiostro, edifici contornati, sentieri tratteggiati
+    "dust": dict(road_mode="solid", minor="#33312b", major="#2c2a25", motor="#24221e",
+                 land="#d4c09a", bg_pattern="gm-paper", building="#c3ad89", building_mode="ink",
+                 ink="#2e2b24", water="#8f9283", water_outline="#2e2b24", park="#cdb891",
+                 wood="#cdb891", grass="#d0bb94", path="#3a362d", rail="#3a362d",
+                 label="#2b2924", halo="#d4c09a", road_label="#2b2924", road_halo="#d4c09a", labels=True),
+    # rif. schermata 3 — erba, acqua e tetti a blocchi pixelati, strade grigie
+    "pixel": dict(road_mode="solid", minor="#8e8e8e", major="#969696", motor="#a0a0a0",
+                  land="#6e9050", bg_pattern="gm-grass", water="#5a5abe", water_pattern="gm-water",
+                  building="#a8784a", building_mode="pattern", building_pattern="gm-planks",
+                  building_pattern_big="gm-stone", park="#6e9050", wood="#4f7a33", grass="#6e9050",
+                  label="#ffffff", halo="#2a2a2a", road_label="#ffffff", road_halo="#2a2a2a",
+                  transform="none", labels=True),
+    # rif. schermata 4 — nero, strade ciano a doppia linea, edifici 3D cremisi, etichette arancioni
+    "neon": dict(road_mode="casing", casing="#4b9fb0", inner="#070707", minor_solid=None,
+                 land="#070707", building="#b3204a", building_mode="extrude", water="#0f2347",
+                 park="#080a08", wood="#080a08", grass="#080a08", label="#ffb02e", halo="#3a1600",
+                 road_label="#ffb02e", road_halo="#2a1000", labels=True),
+}
+
+
+def road_widths(kind):
     return {
-        "version": 8,
-        "name": "GassMaps " + tid,
-        "sources": {"openmaptiles": SOURCE},
-        "glyphs": GLYPHS,
-        "layers": layers,
-    }
+        "path": [(14, 0.6), (18, 2.4)],
+        "rail": [(12, 0.8), (18, 3)],
+        "service": [(14, 0.8), (16, 2.5), (18, 7)],
+        "minor": [(12, 0.6), (14, 1.8), (16, 5), (18, 14), (20, 36)],
+        "secondary": [(8, 0.6), (12, 1.8), (14, 3.8), (16, 8), (18, 20), (20, 48)],
+        "primary": [(5, 0.6), (10, 1.8), (14, 5), (16, 10), (18, 24), (20, 56)],
+        "motorway": [(4, 0.8), (10, 2.2), (14, 6), (16, 12), (18, 28), (20, 64)],
+    }[kind]
+
+
+def scaled(stops, f, add=0.0):
+    return [(z, max(0.3, w * f + add)) for z, w in stops]
+
+
+ROAD_CLASSES = [
+    ("service", ["service"], 14),
+    ("minor", ["minor"], 12),
+    ("secondary", ["secondary", "tertiary"], 8),
+    ("primary", ["primary", "trunk"], 5),
+    ("motorway", ["motorway"], 4),
+]
+
+
+def map_style(tid, p):
+    x = EXTRA.get(tid, {})
+    p = dict(p, **{k: v for k, v in x.items() if v is not None})
+    labels = x.get("labels", True)
+    layers = []
+
+    bg = {"id": "background", "type": "background", "paint": {"background-color": p["land"]}}
+    if x.get("bg_pattern"):
+        bg["paint"] = {"background-pattern": x["bg_pattern"]}
+    layers.append(bg)
+
+    for lid, classes, key, op in [("landcover-ice", ["ice"], "ice", 1), ("landcover-sand", ["sand"], "sand", 1),
+                                  ("landcover-wood", ["wood", "forest"], "wood", 0.95),
+                                  ("landcover-grass", ["grass", "farmland", "scrub"], "grass", 0.9)]:
+        layers.append({"id": lid, "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
+                       "filter": cls(*classes), "paint": {"fill-color": p[key], "fill-opacity": op}})
+    layers.append({"id": "park", "type": "fill", "source": "openmaptiles", "source-layer": "park",
+                   "paint": {"fill-color": p["park"], "fill-opacity": 0.95}})
+    layers.append({"id": "landuse-grass", "type": "fill", "source": "openmaptiles", "source-layer": "landuse",
+                   "filter": cls("grass", "cemetery", "pitch", "playground"),
+                   "paint": {"fill-color": p["park"], "fill-opacity": 0.9}})
+
+    water = {"id": "water", "type": "fill", "source": "openmaptiles", "source-layer": "water",
+             "paint": {"fill-color": p["water"], "fill-antialias": True}}
+    if x.get("water_pattern"):
+        water["paint"] = {"fill-pattern": x["water_pattern"]}
+    layers.append(water)
+    if x.get("water_outline"):
+        layers.append({"id": "water-outline", "type": "line", "source": "openmaptiles", "source-layer": "water",
+                       "paint": {"line-color": x["water_outline"], "line-width": interp([(10, 0.8), (16, 2.2), (19, 4)])}})
+    layers.append({"id": "waterway", "type": "line", "source": "openmaptiles", "source-layer": "waterway",
+                   "paint": {"line-color": p["water"], "line-width": interp([(8, 0.5), (14, 2.5), (18, 8)])}})
+
+    layers.append({"id": "boundary-state", "type": "line", "source": "openmaptiles", "source-layer": "boundary",
+                   "filter": ["all", ["==", ["get", "admin_level"], 4], ["!=", ["get", "maritime"], 1]],
+                   "paint": {"line-color": p["boundary"], "line-opacity": 0.35, "line-dasharray": [3, 2],
+                             "line-width": interp([(3, 0.4), (10, 1.2)])}})
+    layers.append({"id": "boundary-country", "type": "line", "source": "openmaptiles", "source-layer": "boundary",
+                   "filter": ["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1]],
+                   "paint": {"line-color": p["boundary"], "line-opacity": 0.7,
+                             "line-width": interp([(2, 0.6), (8, 1.6), (12, 2.4)])}})
+
+    # edifici piatti / a inchiostro / a texture (sotto le strade)
+    mode = x.get("building_mode", "extrude")
+    if mode in ("flat", "ink", "pattern"):
+        b = {"id": "building", "type": "fill", "source": "openmaptiles", "source-layer": "building",
+             "minzoom": 13, "paint": {"fill-color": p["building"]}}
+        if mode == "pattern":
+            b["paint"] = {"fill-pattern": ["case",
+                                           [">", ["to-number", ["get", "render_height"], 0], 14],
+                                           x.get("building_pattern_big", x["building_pattern"]),
+                                           x["building_pattern"]]}
+        layers.append(b)
+        if mode == "ink":
+            layers.append({"id": "building-ink", "type": "line", "source": "openmaptiles", "source-layer": "building",
+                           "minzoom": 14, "paint": {"line-color": x["ink"],
+                                                    "line-width": interp([(14, 0.6), (16, 1.6), (18, 2.6)])}})
+
+    # sentieri e ferrovie
+    path_dash = None if x.get("path_solid") else [2.2, 1.6]
+    layers.append(road_line("road-path", p, ["path", "track"], p["path"], road_widths("path"), minzoom=14, dash=path_dash))
+    layers.append(road_line("road-rail", p, ["rail", "transit"], p["rail"], road_widths("rail"), minzoom=12,
+                            dash=None if tid == "palm" else [3, 2]))
+
+    # strade
+    if x.get("road_mode") == "casing":
+        solid = x.get("minor_solid")
+        inners = []
+        for kind, classes, mz in ROAD_CLASSES:
+            w = road_widths(kind)
+            if solid and kind in ("service", "minor"):
+                layers.append(road_line(f"road-{kind}", p, classes, solid, scaled(w, 0.8), minzoom=mz))
+                continue
+            # prima tutti i bordi, poi tutti gli interni: incroci puliti
+            layers.append(road_line(f"road-{kind}-casing", p, classes, x["casing"], scaled(w, 1.0, 1.2), minzoom=mz))
+            inners.append(road_line(f"road-{kind}", p, classes, x["inner"], scaled(w, 0.62), minzoom=mz))
+        layers.extend(inners)
+    else:
+        colors = {"service": p["minor"], "minor": p["minor"], "secondary": p["major"],
+                  "primary": p["major"], "motorway": p["motor"]}
+        for kind, classes, mz in ROAD_CLASSES:
+            layers.append(road_line(f"road-{kind}", p, classes, colors[kind], road_widths(kind), minzoom=mz))
+
+    if mode == "extrude":
+        layers.append({
+            "id": "building-3d", "type": "fill-extrusion", "source": "openmaptiles", "source-layer": "building",
+            "minzoom": 14,
+            "paint": {
+                "fill-extrusion-color": p["building"],
+                "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14, 0, 15.5,
+                                          ["to-number", ["get", "render_height"], 8]],
+                "fill-extrusion-base": ["to-number", ["get", "render_min_height"], 0],
+                "fill-extrusion-opacity": 0.95,
+                "fill-extrusion-vertical-gradient": True,
+            },
+        })
+
+    layers.append({
+        "id": "road-oneway", "type": "symbol", "source": "openmaptiles", "source-layer": "transportation",
+        "minzoom": 16, "filter": ["match", ["get", "oneway"], [1, -1], True, False],
+        "layout": {"symbol-placement": "line", "symbol-spacing": 90, "icon-image": "gm-oneway",
+                   "icon-size": interp([(16, 0.55), (19, 0.9)]),
+                   "icon-rotate": ["match", ["get", "oneway"], -1, 180, 0],
+                   "icon-rotation-alignment": "map"},
+        "paint": {"icon-opacity": p["oneway"] if labels else 0},
+    })
+
+    if labels:
+        layers.append({"id": "housenumber", "type": "symbol", "source": "openmaptiles", "source-layer": "housenumber",
+                       "minzoom": 17,
+                       "layout": {"text-field": ["get", "housenumber"], "text-font": BOLD, "text-size": 10},
+                       "paint": {"text-color": p["house"], "text-halo-color": p["halo"], "text-halo-width": 0.6}})
+        layers.append({"id": "water-label", "type": "symbol", "source": "openmaptiles", "source-layer": "water_name",
+                       "layout": {"text-field": NAME, "text-font": ITAL, "text-size": 13, "text-letter-spacing": 0.2,
+                                  "text-transform": p["transform"], "text-max-width": 6},
+                       "paint": {"text-color": p["water_label"], "text-halo-color": p["halo"], "text-halo-width": 0.6}})
+        layers.append({
+            "id": "road-shield", "type": "symbol", "source": "openmaptiles", "source-layer": "transportation_name",
+            "minzoom": 11,
+            "filter": ["all", ["has", "ref"], ["<=", ["to-number", ["get", "ref_length"], 9], 6]],
+            "layout": {
+                "symbol-placement": "point", "symbol-spacing": 400,
+                "text-field": ["get", "ref"], "text-font": BOLD, "text-size": 9,
+                "icon-image": "gm-shield", "icon-text-fit": "both", "icon-text-fit-padding": [2, 4, 2, 4],
+                "text-rotation-alignment": "viewport", "icon-rotation-alignment": "viewport",
+            },
+            "paint": {"text-color": "#ffffff"},
+        })
+        layers.append({"id": "road-label", "type": "symbol", "source": "openmaptiles", "source-layer": "transportation_name",
+                       "minzoom": 14,
+                       "layout": {"symbol-placement": "line", "text-field": NAME, "text-font": BOLD,
+                                  "text-size": interp([(14, 10), (16, 12.5), (18, 16)]),
+                                  "text-transform": p["transform"], "text-letter-spacing": 0.04,
+                                  "text-rotation-alignment": "map", "text-pitch-alignment": "viewport"},
+                       "paint": {"text-color": p["road_label"], "text-halo-color": p["road_halo"],
+                                 "text-halo-width": 1.6, "text-halo-blur": 0.4 if tid == "neon" else 0}})
+
+    layers.append({
+        "id": "poi", "type": "symbol", "source": "openmaptiles", "source-layer": "poi",
+        "minzoom": 15, "filter": ["<=", ["to-number", ["get", "rank"], 30], 22],
+        "layout": {
+            "icon-image": POI_ICON_EXPR, "icon-size": 0.55, "icon-allow-overlap": False,
+            "text-field": NAME if labels else "", "text-font": BOLD, "text-size": 10.5,
+            "text-transform": p["transform"], "text-anchor": "top", "text-offset": [0, 1.2],
+            "text-max-width": 8, "text-optional": True,
+        },
+        "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.2},
+    })
+
+    if labels:
+        for lid, classes, size in [("place-minor", ["village", "hamlet", "suburb", "quarter", "neighbourhood"], [(10, 10), (15, 13)]),
+                                   ("place-town", ["town"], [(8, 11), (14, 16)]),
+                                   ("place-city", ["city"], [(4, 11), (10, 18)])]:
+            layers.append({"id": lid, "type": "symbol", "source": "openmaptiles", "source-layer": "place",
+                           "filter": cls(*classes),
+                           "layout": {"text-field": NAME, "text-font": BOLD, "text-transform": p["transform"],
+                                      "text-size": interp(size), "text-max-width": 8},
+                           "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.5}})
+    layers.append({"id": "place-country", "type": "symbol", "source": "openmaptiles", "source-layer": "place",
+                   "filter": cls("country"), "maxzoom": 9,
+                   "layout": {"text-field": NAME_EN, "text-font": BOLD, "text-transform": p["transform"],
+                              "text-size": interp([(2, 10), (6, 16)]), "text-max-width": 7},
+                   "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": 1.6}})
+
+    return {"version": 8, "name": "GassMaps " + tid, "sources": {"openmaptiles": SOURCE},
+            "glyphs": GLYPHS, "layers": layers}
+
+
+# Colori della superficie del globo misurati sul video (terra, acqua)
+GLOBE_COLORS = {
+    "noir": ("#1a1a1a", "#2c363e"),
+    "dust": ("#d9c6a2", "#a79e88"),
+    "bunker": ("#061206", "#020a02"),
+    "pixel": ("#6aa84f", "#3d3cc3"),
+    "neon": ("#0d0b0a", "#06162b"),
+    "palm": ("#738372", "#607da7"),
+    "heat": ("#a05fd8", "#1d0b45"),
+    "kingdom": ("#8a6f4a", "#6f7a62"),
+}
 
 
 def globe_style(tid, p):
-    """Stile leggero usato per generare la texture del globo (snapshot a zoom 2)."""
+    """Stile leggero usato per generare la texture del globo (snapshot)."""
+    land, water = GLOBE_COLORS.get(tid, (p["land"], p["water"]))
+    p = dict(p, land=land, water=water)
     layers = [
         {"id": "background", "type": "background", "paint": {"background-color": p["land"]}},
         {"id": "landcover-ice", "type": "fill", "source": "openmaptiles", "source-layer": "landcover",

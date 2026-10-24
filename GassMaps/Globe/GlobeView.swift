@@ -9,8 +9,10 @@ struct GlobeView: UIViewRepresentable {
     let theme: MapTheme
     /// altezza della vista in punti (serve per tenere costante la dimensione delle etichette)
     let height: CGFloat
+    /// trascinamento del globo con il dito
+    let interaction: GlobeInteraction
 
-    func makeCoordinator() -> GlobeCoordinator { GlobeCoordinator() }
+    func makeCoordinator() -> GlobeCoordinator { GlobeCoordinator(interaction: interaction) }
 
     func makeUIView(context: Context) -> SCNView {
         let view = SCNView(frame: .zero)
@@ -25,14 +27,44 @@ struct GlobeView: UIViewRepresentable {
         view.delegate = context.coordinator
         view.isPlaying = true
         view.rendersContinuously = true
-        context.coordinator.viewHeight = height
+        context.coordinator.setViewHeight(height)
         context.coordinator.apply(theme: theme)
         return view
     }
 
     func updateUIView(_ view: SCNView, context: Context) {
-        context.coordinator.viewHeight = height
+        context.coordinator.setViewHeight(height)
         context.coordinator.apply(theme: theme)
+    }
+}
+
+/// Stato del trascinamento condiviso tra SwiftUI (gesto) e SceneKit (rendering).
+final class GlobeInteraction {
+    private let lock = NSLock()
+    private var dragging = false
+    private var pending = CGSize.zero
+    private var release: CGSize?
+
+    func changed(delta: CGSize) {
+        lock.lock(); defer { lock.unlock() }
+        dragging = true
+        pending.width += delta.width
+        pending.height += delta.height
+    }
+
+    func ended(velocity: CGSize) {
+        lock.lock(); defer { lock.unlock() }
+        dragging = false
+        release = velocity
+    }
+
+    /// Restituisce e azzera lo spostamento accumulato.
+    func consume() -> (dragging: Bool, delta: CGSize, release: CGSize?) {
+        lock.lock(); defer { lock.unlock() }
+        let r = (dragging, pending, release)
+        pending = .zero
+        release = nil
+        return r
     }
 }
 
@@ -47,7 +79,17 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
 
     let scene = SCNScene()
     let cameraNode = SCNNode()
-    var viewHeight: CGFloat = 852
+    private(set) var viewHeight: CGFloat = 852
+    private let interaction: GlobeInteraction
+
+    // rotazione (yaw = longitudine, tilt = inclinazione nord/sud)
+    private static let autoSpeed: Float = -2 * .pi / 26      // rad/s, verso est come nel video
+    private static let radPerPt: Float = 0.0019
+    private var yaw: Float = Float(-39.25 * .pi / 180)
+    private var tilt: Float = 0
+    private var yawVelocity: Float = GlobeCoordinator.autoSpeed
+    private var tiltVelocity: Float = 0
+    private var lastTime: TimeInterval?
 
     private let earth = SCNNode()
     private let labelsNode = SCNNode()
@@ -68,17 +110,36 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
     private var camPos = SIMD3<Float>(0, 0, 3)
     private var camForward = SIMD3<Float>(0, 0, -1)
 
-    override init() {
+    init(interaction: GlobeInteraction) {
+        self.interaction = interaction
         super.init()
         scene.background.contents = UIColor.clear
         setupCamera()
         setupEarth()
         setupAtmosphere()
-
-        // rotazione continua verso est (come nel video)
-        let spin = SCNAction.repeatForever(SCNAction.rotateBy(x: 0, y: -CGFloat.pi * 2, z: 0, duration: 26))
-        earth.runAction(spin)
+        applyOrientation()
     }
+
+    private func applyOrientation() {
+        let qTilt = simd_quatf(angle: tilt, axis: SIMD3<Float>(1, 0, 0))
+        let qYaw = simd_quatf(angle: yaw, axis: SIMD3<Float>(0, 1, 0))
+        earth.simdOrientation = qTilt * qYaw
+    }
+
+    /// Aggiorna l'altezza della vista e la scala del bagliore (pt per unità mondo sul bordo).
+    func setViewHeight(_ h: CGFloat) {
+        guard h > 0, abs(h - viewHeight) > 0.5 || haloScaleSet == false else { return }
+        viewHeight = h
+        haloScaleSet = true
+        let fov = Float(GlobeCoordinator.fovDeg * .pi / 180)
+        let focal = Float(h) / 2 / tan(fov / 2)
+        let dist = simd_length(camPos)
+        let limb = sqrt(max(dist * dist - 1, 0.01))
+        let ptPerUnit = focal / limb
+        let halo = scene.rootNode.childNode(withName: "halo", recursively: false)?.geometry?.firstMaterial
+        halo?.setValue(NSNumber(value: ptPerUnit), forKey: "ptPerUnit")
+    }
+    private var haloScaleSet = false
 
     // MARK: Camera prospettica
 
@@ -133,30 +194,25 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
             .fragment: """
             #pragma arguments
             float3 hazeColor;
-            float3 glowColor;
             #pragma body
             float3 gm_n = normalize(_surface.normal);
             float3 gm_v = normalize(_surface.view);
             float gm_d = clamp(dot(gm_n, gm_v), 0.0, 1.0);
             float gm_rim = 1.0 - gm_d;
             // foschia atmosferica verso l'orizzonte (come la "fog" del globo originale)
-            float gm_haze = pow(gm_rim, 3.5);
-            float3 gm_c = mix(_output.color.rgb, hazeColor, clamp(gm_haze * 0.85, 0.0, 0.9));
-            // linea luminosa sul bordo
-            gm_c += glowColor * pow(gm_rim, 14.0) * 1.3;
-            _output.color.rgb = gm_c;
+            float gm_haze = pow(gm_rim, 2.8);
+            _output.color.rgb = mix(_output.color.rgb, hazeColor, clamp(gm_haze * 0.92, 0.0, 0.92));
             """
         ]
         geometry.materials = [material]
         earth.geometry = geometry
-        earth.eulerAngles = SCNVector3(0, Float(-39.25 * .pi / 180.0), 0)
         scene.rootNode.addChildNode(earth)
         earth.addChildNode(labelsNode)
         earth.addChildNode(markersNode)
     }
 
     private func setupAtmosphere() {
-        let halo = SCNSphere(radius: 1.05)
+        let halo = SCNSphere(radius: 1.12)
         halo.segmentCount = 128
         let haloMat = SCNMaterial()
         haloMat.lightingModel = .constant
@@ -168,15 +224,24 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
             .fragment: """
             #pragma arguments
             float3 glowColor;
+            float3 coreColor;
+            float3 centerView;
+            float ptPerUnit;
             #pragma body
-            float gm_d = abs(dot(normalize(_surface.normal), normalize(_surface.view)));
-            // 0 sul bordo esterno dell'alone, ~0.31 sul bordo della Terra
-            float gm_t = smoothstep(0.0, 0.31, gm_d);
-            float3 gm_col = mix(glowColor, float3(1.0, 1.0, 1.0), pow(gm_t, 6.0));
-            _output.color = float4(gm_col * pow(gm_t, 2.2) * 1.05, 1.0);
+            // altezza (in pt sullo schermo) del raggio di vista sopra il bordo della Terra
+            float3 gm_dir = normalize(_surface.position);
+            float gm_b = length(cross(centerView, gm_dir));
+            float gm_h = max(gm_b - 1.0, 0.0) * ptPerUnit;
+            // profilo misurato sul video: linea quasi bianca di ~2 pt + coda blu di ~40 pt
+            float gm_core = 0.85 * exp(-gm_h / 2.5);
+            float gm_tail = 0.25 * exp(-gm_h / 12.0);
+            _output.color = float4(coreColor * gm_core + glowColor * gm_tail, 1.0);
             """
         ]
         halo.materials = [haloMat]
+        let center = simd_inverse(cameraNode.simdTransform) * SIMD4<Float>(0, 0, 0, 1)
+        haloMat.setValue(NSValue(scnVector3: SCNVector3(center.x, center.y, center.z)), forKey: "centerView")
+        haloMat.setValue(NSNumber(value: Float(500)), forKey: "ptPerUnit")
         let haloNode = SCNNode(geometry: halo)
         haloNode.name = "halo"
         haloNode.renderingOrder = 5
@@ -191,9 +256,9 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
 
         let material = earth.geometry?.firstMaterial
         material?.setValue(GlobeCoordinator.vec(theme.haze), forKey: "hazeColor")
-        material?.setValue(GlobeCoordinator.vec(theme.glow), forKey: "glowColor")
-        scene.rootNode.childNode(withName: "halo", recursively: false)?
-            .geometry?.firstMaterial?.setValue(GlobeCoordinator.vec(theme.glow), forKey: "glowColor")
+        let haloMat = scene.rootNode.childNode(withName: "halo", recursively: false)?.geometry?.firstMaterial
+        haloMat?.setValue(GlobeCoordinator.vec(theme.glow), forKey: "glowColor")
+        haloMat?.setValue(GlobeCoordinator.vec(theme.glowCore), forKey: "coreColor")
 
         if let cached = GlobeTextureProvider.shared.cached(theme) {
             material?.diffuse.contents = cached
@@ -303,6 +368,33 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
     // MARK: Aggiornamento per frame: dimensione costante su schermo, visibilità e collisioni
 
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+        // rotazione: trascinamento con il dito, poi inerzia e ritorno alla rotazione automatica
+        let dt = Float(min(max(time - (lastTime ?? time), 0), 0.1))
+        lastTime = time
+        let input = interaction.consume()
+        if input.dragging || input.delta != .zero {
+            yaw += Float(input.delta.width) * GlobeCoordinator.radPerPt
+            tilt += Float(input.delta.height) * GlobeCoordinator.radPerPt
+            if dt > 0 {
+                yawVelocity = Float(input.delta.width) * GlobeCoordinator.radPerPt / dt
+                tiltVelocity = Float(input.delta.height) * GlobeCoordinator.radPerPt / dt
+            }
+        }
+        if let v = input.release {
+            yawVelocity = Float(v.width) * GlobeCoordinator.radPerPt
+            tiltVelocity = Float(v.height) * GlobeCoordinator.radPerPt
+        }
+        if !input.dragging {
+            let k = min(1, dt * 1.6)
+            yawVelocity += (GlobeCoordinator.autoSpeed - yawVelocity) * k
+            tiltVelocity += (0 - tiltVelocity) * min(1, dt * 3)
+            yaw += yawVelocity * dt
+            tilt += tiltVelocity * dt
+            tilt += (0 - tilt) * min(1, dt * 0.9)       // torna lentamente all'inclinazione originale
+        }
+        tilt = min(max(tilt, -0.6), 0.75)
+        applyOrientation()
+
         let viewHeight = self.viewHeight
         guard viewHeight > 0 else { return }
         lock.lock()

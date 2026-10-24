@@ -35,12 +35,13 @@ enum MapIcons {
     static func iconSet(for theme: MapTheme) -> ThemeIconSet {
         let w = UIColor.white
         switch theme.id {
-        case "noir": // GTA V
-            return ThemeIconSet(frame: .outline(halo: .black), glyphs: [
+        case "noir": // GTA V — icone nere con contorno bianco (come nelle schermate)
+            let w = UIColor.black
+            return ThemeIconSet(frame: .outline(halo: .white), glyphs: [
                 .park: ("tree.fill", w), .cinema: ("video.fill", w), .rail: ("tram.fill", w),
                 .library: ("book.fill", w), .fuel: ("fuelpump.fill", w),
                 .food: ("takeoutbag.and.cup.and.straw.fill", w), .cafe: ("cup.and.saucer.fill", w),
-                .bar: ("wineglass.fill", w), .shop: ("cart.fill", w), .clothes: ("tshirt.fill", w),
+                .bar: ("wineglass.fill", w), .shop: ("basket.fill", w), .clothes: ("tshirt.fill", w),
                 .health: ("cross.fill", w), .police: ("star.circle.fill", w), .bank: ("dollarsign", w),
                 .lodging: ("house.fill", w), .school: ("graduationcap.fill", w), .parking: ("parkingsign", w),
                 .sport: ("figure.run", w), .worship: ("building.columns.fill", w),
@@ -103,12 +104,12 @@ enum MapIcons {
             ], cloverDefault: false)
 
         case "neon": // Cyberpunk: esagoni neri con bordo ciano
-            return ThemeIconSet(frame: .hexagon(fill: UIColor(hex: 0x050508), ring: UIColor(hex: 0x3FF2FF)), glyphs: [
+            return ThemeIconSet(frame: .outline(halo: UIColor(hex: 0x3A0A16)), glyphs: [
                 .park: ("leaf.fill", w), .cinema: ("film.fill", w), .rail: ("tram.fill", w),
                 .library: ("book.fill", w), .fuel: ("bolt.car.fill", w), .food: ("fork.knife", w),
                 .cafe: ("cup.and.saucer.fill", w), .bar: ("wineglass.fill", w), .shop: ("bag.fill", w),
                 .clothes: ("tshirt.fill", w), .health: ("cross.fill", w), .police: ("shield.lefthalf.filled", w),
-                .bank: ("dollarsign", w), .lodging: ("building.2.fill", w), .school: ("graduationcap.fill", w),
+                .bank: ("dollarsign", w), .lodging: ("house.fill", w), .school: ("graduationcap.fill", w),
                 .parking: ("parkingsign", w), .sport: ("figure.boxing", w), .worship: ("sparkles", w),
                 .museum: ("building.columns.fill", w), .car: ("car.fill", w), .default: ("cpu.fill", w)
             ], cloverDefault: false)
@@ -149,7 +150,9 @@ enum MapIcons {
     }
 
     static var allNames: [String] {
-        POICategory.allCases.map { $0.imageName } + ["gm-oneway", "gm-shield", "gm-dot"]
+        POICategory.allCases.map { $0.imageName }
+            + ["gm-oneway", "gm-shield", "gm-dot"]
+            + Textures.names
     }
 
     static func image(named name: String, theme: MapTheme) -> UIImage? {
@@ -157,6 +160,7 @@ enum MapIcons {
         case "gm-oneway": return oneway(color: theme.iconColor)
         case "gm-shield": return shield(theme: theme)
         case "gm-dot": return dot(color: theme.iconColor)
+        case _ where Textures.names.contains(name): return Textures.image(named: name)
         default:
             guard name.hasPrefix("gm-poi-"),
                   let cat = POICategory(rawValue: String(name.dropFirst("gm-poi-".count))) else { return nil }
@@ -169,6 +173,9 @@ enum MapIcons {
         let set = iconSet(for: theme)
         if cat == .default && set.cloverDefault {
             return clover(color: theme.accent, size: pointSize * 1.45)
+        }
+        if theme.id == "pixel", let sprite = PixelArt.sprite(for: cat) {
+            return sprite
         }
         let glyph = set.glyphs[cat] ?? set.glyphs[.default] ?? ("mappin", theme.iconColor)
         return framedSymbol(glyph.0, color: glyph.1, frame: set.frame, pointSize: pointSize)

@@ -12,6 +12,8 @@ final class MapController {
     private var didInitialPosition = false
 
     static let defaultPitch: CGFloat = 52
+    /// inclinazione della camera per il tema attivo
+    var pitch: CGFloat { state?.theme.mapPitch ?? MapController.defaultPitch }
     static let defaultZoom: Double = 16.4
 
     static let routeSourceID = "gm-route"
@@ -29,7 +31,7 @@ final class MapController {
     func initialPosition(_ coordinate: CLLocationCoordinate2D) {
         guard !didInitialPosition, let m = mapView else { return }
         didInitialPosition = true
-        let cam = MLNMapCamera(lookingAtCenter: coordinate, altitude: 650, pitch: MapController.defaultPitch, heading: 0)
+        let cam = MLNMapCamera(lookingAtCenter: coordinate, altitude: 650, pitch: pitch, heading: 0)
         m.setCamera(cam, animated: false)
         m.setZoomLevel(MapController.defaultZoom, animated: false)
         m.setUserTrackingMode(.follow, animated: false, completionHandler: nil)
@@ -40,7 +42,7 @@ final class MapController {
         setBottomInset(0)
         if let loc = m.userLocation?.location ?? state?.location.location {
             let cam = MLNMapCamera(lookingAtCenter: loc.coordinate, altitude: 650,
-                                   pitch: MapController.defaultPitch, heading: m.direction)
+                                   pitch: pitch, heading: m.direction)
             m.fly(to: cam, withDuration: 0.8) { [weak self] in
                 self?.mapView?.setZoomLevel(MapController.defaultZoom, animated: true)
                 self?.setTracking(.follow)
@@ -66,7 +68,7 @@ final class MapController {
         state?.tracking = .none
         setBottomInset(330)
         let cam = MLNMapCamera(lookingAtCenter: coordinate, altitude: 700,
-                               pitch: MapController.defaultPitch, heading: m.direction)
+                               pitch: pitch, heading: m.direction)
         m.fly(to: cam, withDuration: 1.1, completionHandler: nil)
     }
 
@@ -90,7 +92,7 @@ final class MapController {
             m.setUserTrackingMode(.none, animated: false, completionHandler: nil)
             state?.tracking = .none
             let cam = MLNMapCamera(lookingAtCenter: place.coordinate, altitude: 700,
-                                   pitch: MapController.defaultPitch, heading: m.direction)
+                                   pitch: pitch, heading: m.direction)
             m.setCamera(cam, withDuration: 0.6, animationTimingFunction: CAMediaTimingFunction(name: .easeInEaseOut))
         }
     }

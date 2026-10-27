@@ -200,7 +200,7 @@ struct DirectionsPanel: View {
                                 .padding(.leading, 12).padding(.vertical, 3)
                         }
                         HStack(spacing: 14) {
-                            CloverIcon(color: Color(state.theme.accent), size: 24).frame(width: 26)
+                            DestinationIcon(theme: state.theme, size: 24).frame(width: 26)
                             Text(destinationName).font(.system(size: 16, weight: .bold)).foregroundStyle(.white).lineLimit(1)
                             Spacer(minLength: 0)
                         }
@@ -696,7 +696,7 @@ struct SavedPlacesPanel: View {
                                         state.pin(place)
                                     } label: {
                                         HStack(spacing: 12) {
-                                            CloverIcon(color: Color(state.theme.accent), size: 26)
+                                            DestinationIcon(theme: state.theme, size: 26)
                                             VStack(alignment: .leading, spacing: 2) {
                                                 Text(place.name.isEmpty ? "Posizione" : place.name)
                                                     .font(.system(size: 16, weight: .semibold))

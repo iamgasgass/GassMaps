@@ -243,8 +243,9 @@ final class PinBubbleView: MLNAnnotationView {
         layer.insertSublayer(tail, at: 0)
     }
 
-    func configure(title: String, accent: UIColor) {
-        icon.image = MapIcons.clover(color: accent, size: 30)
+    func configure(title: String, theme: MapTheme) {
+        icon.image = DestinationMarker.image(for: theme, size: 30)
+        icon.layer.magnificationFilter = theme.id == "pixel" ? .nearest : .linear
         label.text = title
         let hasTitle = !title.isEmpty
         let height: CGFloat = 50

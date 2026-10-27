@@ -93,7 +93,7 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         let view = (mapView.dequeueReusableAnnotationView(withIdentifier: id) as? PinBubbleView)
             ?? PinBubbleView(reuseIdentifier: id)
         let title = annotation.title ?? nil
-        view.configure(title: title ?? "", accent: state.theme.accent)
+        view.configure(title: title ?? "", theme: state.theme)
         return view
     }
 

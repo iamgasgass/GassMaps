@@ -3,6 +3,7 @@ import SwiftUI
 struct MainMapScreen: View {
     @EnvironmentObject var state: AppState
     @EnvironmentObject var location: LocationManager
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         GeometryReader { geo in
@@ -21,13 +22,20 @@ struct MainMapScreen: View {
 
                 // sfocatura superiore solo mentre l'intestazione d'avvio mostra giorno, ora e posizione
                 if state.showHeader && state.panel != .navigating {
-                    Rectangle()
-                        .fill(.ultraThinMaterial)
-                        .mask(LinearGradient(stops: [.init(color: .black, location: 0),
-                                                     .init(color: .black, location: 0.55),
-                                                     .init(color: .clear, location: 1)],
-                                             startPoint: .top, endPoint: .bottom))
-                        .frame(height: geo.safeAreaInsets.top + 170)
+                    // in modalità scura: materiale scuro più denso + velatura nera, sfocatura ben visibile
+                    ZStack {
+                        Rectangle()
+                            .fill(colorScheme == .dark ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(.ultraThinMaterial))
+                        if colorScheme == .dark {
+                            Rectangle().fill(Color.black.opacity(0.32))
+                        }
+                    }
+                    .environment(\.colorScheme, colorScheme)
+                    .mask(LinearGradient(stops: [.init(color: .black, location: 0),
+                                                 .init(color: .black, location: 0.6),
+                                                 .init(color: .clear, location: 1)],
+                                         startPoint: .top, endPoint: .bottom))
+                        .frame(height: geo.safeAreaInsets.top + (colorScheme == .dark ? 200 : 170))
                         .frame(maxHeight: .infinity, alignment: .top)
                         .ignoresSafeArea()
                         .allowsHitTesting(false)

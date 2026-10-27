@@ -275,9 +275,9 @@ EXTRA = {
                      road_label="#ffffff", road_halo="#4a4c4f", halo_width=1.1, transform="none", labels=True),
     # mappa allegata (isola): prato verde, boschi a chiome, sentieri sabbia, fiumi azzurri con riva chiara,
     # etichette bianche maiuscole con contorno nero spesso
-    "storm": dict(road_mode="solid", minor="#e3c78a", major="#e8cf96", motor="#7a7a7a",
+    "storm": dict(road_mode="solid", minor="#151515", major="#0d0d0d", motor="#050505",
                   land="#43722f", wood_pattern="gm-trees", park="#4a7b33", grass="#4b7d35", sand="#dcc38a",
-                  water="#3d8fe0", water_outline="#bfe6ff", building="#cfc8b8", building_mode="flat",
+                  water="#3d8fe0", water_outline="#bfe6ff", building="#a3a6a9", building_mode="flat",
                   path="#d8bd80", path_solid=True, rail="#5a4a3a", label="#ffffff", halo="#000000",
                   road_label="#ffffff", road_halo="#1a1a1a", halo_width=2.0, labels=True),
 }

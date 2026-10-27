@@ -31,7 +31,7 @@ final class UserArrowView: MLNUserLocationAnnotationView {
             markerLayer.contents = img?.cgImage
             markerLayer.contentsScale = img?.scale ?? 2
             // la freccia pixel ruota con la direzione come quella normale; nessuna sfumatura sui pixel
-            markerLayer.frame = appliedMarker == 3 ? container.bounds.insetBy(dx: -2, dy: -2)
+            markerLayer.frame = appliedMarker == 3 ? CGRect(x: 6, y: 6, width: 32, height: 32)
                                                    : container.bounds.insetBy(dx: -14, dy: -14)
         }
         if appliedTint != UserArrowView.tint {
@@ -145,7 +145,7 @@ extension UserArrowView {
         ]
         let colors: [Character: UIColor] = ["K": UIColor(hex: 0x1E1E1E), "W": UIColor(hex: 0xF8F8F8),
                                             "w": UIColor(hex: 0xC6C6C6)]
-        let px: CGFloat = 3
+        let px: CGFloat = 2
         let fmt = UIGraphicsImageRendererFormat()
         fmt.scale = 3
         return UIGraphicsImageRenderer(size: CGSize(width: 16 * px, height: 16 * px), format: fmt).image { ctx in

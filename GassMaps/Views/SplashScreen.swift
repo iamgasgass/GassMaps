@@ -154,7 +154,7 @@ private struct SplashPalette {
         case "heat": land = Color(hex: 0x9B55DD); road = Color(hex: 0xAAB7C0); building = Color(hex: 0xB8A8FF, opacity: 0.35)
         case "kingdom": land = Color(hex: 0x97957F); road = Color(hex: 0xCACBBC); building = Color(hex: 0xA06E5E)
         case "contract": land = Color(hex: 0xC2C5C7); road = Color(hex: 0xD6D8DA); building = Color(hex: 0x9EA1A4)
-        case "storm": land = Color(hex: 0x43722F); road = Color(hex: 0xE3C78A); building = Color(hex: 0xCFC8B8)
+        case "storm": land = Color(hex: 0x43722F); road = Color(hex: 0x151515); building = Color(hex: 0xA3A6A9)
         default: land = Color(hex: 0x161616); road = Color(hex: 0xB8B8B8); building = Color(hex: 0x353535)
         }
     }

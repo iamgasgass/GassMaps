@@ -151,7 +151,7 @@ enum Themes {
                 GlobeMarker(lat: 29, lon: 3, symbol: "camera.aperture"),
                 GlobeMarker(lat: 33, lon: -12, symbol: "bus.fill")
             ],
-            globeFont: "AvenirNextCondensed-DemiBold", globeUppercase: true, globeLabel: UIColor(hex: 0x3FF2FF), globeLabelHalo: .black, haze: UIColor(hex: 0x1A1430), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 55, vignette: 0.2),
+            globeFont: "AvenirNextCondensed-DemiBold", globeUppercase: true, globeLabel: UIColor(hex: 0x3FF2FF), globeLabelHalo: .black, haze: UIColor(hex: 0x1A1430), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 55, vignette: 0.2, arrowColor: UIColor(hex: 0x5CF29A)),
         MapTheme(
             id: "palm", name: "Palm Coast",
             backgroundTop: Color(hex: 0x051626), backgroundBottom: Color(hex: 0x051626),

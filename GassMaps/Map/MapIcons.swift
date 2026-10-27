@@ -159,11 +159,11 @@ enum MapIcons {
                                 glyphs: [.police: "star.circle.fill", .lodging: "building.2.fill",
                                          .default: "arrow.up.and.down.and.arrow.left.and.right"])
 
-        case "contract": // quadrati neri con glifo bianco; obiettivi in rosso
+        case "contract": // quadrati neri con glifo bianco; polizia, pompieri e ospedali in rosso
             let red = UIColor(hex: 0xD8333A)
             return ThemeIconSet(frame: .tactical(fill: UIColor(hex: 0x111111), bracket: w), tint: w,
                                 colors: [.police: red, .fire: red, .hospital: red],
-                                glyphs: [.police: "scope", .attraction: "camera.fill", .museum: "camera.fill",
+                                glyphs: [.attraction: "camera.fill", .museum: "camera.fill",
                                          .monument: "camera.fill", .rail: "figure.stairs", .bus: "figure.stairs",
                                          .parking: "door.left.hand.open", .lodging: "key.fill",
                                          .default: "mappin"])

@@ -93,6 +93,24 @@ THEMES = {
         halo="#d9bb85", road_label="#2b1b0b", road_halo="#e2c895", house="#5a4122",
         water_label="#e8dcc0", shield="#5a4122", oneway=0.0, transform="none",
     ),
+    # mappa tattica grigia (ispirata alla mappa allegata): area chiara, alberi/acqua scuri
+    "contract": dict(
+        land="#c2c5c7", wood="#2b2c2e", grass="#c7cacc", sand="#cfd1d3", ice="#e6e8e9",
+        park="#c7cacc", water="#34363a", waterway="#34363a", building="#9ea1a4",
+        building_top="#a9acaf", minor="#d6d8da", major="#dcdee0", motor="#e2e4e5",
+        path="#9a9da0", rail="#6f7275", boundary="#5a5d60", label="#ffffff",
+        halo="#3a3b3e", road_label="#ffffff", road_halo="#4a4c4f", house="#5f6265",
+        water_label="#c9ccce", shield="#2a2b2d", oneway=0.0, transform="none",
+    ),
+    # isola battle royale (ispirata alla mappa allegata): prati, boschi, sabbia, fiumi azzurri
+    "storm": dict(
+        land="#43722f", wood="#2f5a22", grass="#4b7d35", sand="#dcc38a", ice="#eaf4ff",
+        park="#4a7b33", water="#3d8fe0", waterway="#3d8fe0", building="#cfc8b8",
+        building_top="#ddd7c9", minor="#e3c78a", major="#e8cf96", motor="#6a6a6a",
+        path="#d8bd80", rail="#5a4a3a", boundary="#ffffff", label="#ffffff",
+        halo="#000000", road_label="#ffffff", road_halo="#1a1a1a", house="#ffffff",
+        water_label="#e8f4ff", shield="#2f7bff", oneway=0.0, transform="uppercase",
+    ),
 }
 
 
@@ -248,6 +266,20 @@ EXTRA = {
                     extrude_pattern="gm-roof", water="#7d8a86", park="#8f9078", wood="#8a8b72", grass="#929179",
                     path="#b0ae9c", rail="#6a604e", label="#f3ecd6", halo="#4a4232",
                     road_label="#f3ecd6", road_halo="#4a4232", transform="none", labels=True),
+    # mappa allegata (tattica): pavimento grigio chiaro, edifici grigi con contorno, corridoi a doppia linea,
+    # alberi e acqua grigio scuro, etichette bianche
+    "contract": dict(road_mode="casing", casing="#8c8f92", inner="#d3d5d7", minor_solid=None,
+                     land="#c2c5c7", building="#a3a6a9", building_mode="ink", ink="#7a7d80",
+                     water="#34363a", water_outline="#232426", wood="#2b2c2e", park="#c7cacc", grass="#c7cacc",
+                     path="#8c8f92", path_solid=False, label="#ffffff", halo="#3a3b3e",
+                     road_label="#ffffff", road_halo="#4a4c4f", halo_width=1.1, transform="none", labels=True),
+    # mappa allegata (isola): prato verde, boschi a chiome, sentieri sabbia, fiumi azzurri con riva chiara,
+    # etichette bianche maiuscole con contorno nero spesso
+    "storm": dict(road_mode="solid", minor="#e3c78a", major="#e8cf96", motor="#7a7a7a",
+                  land="#43722f", wood_pattern="gm-trees", park="#4a7b33", grass="#4b7d35", sand="#dcc38a",
+                  water="#3d8fe0", water_outline="#bfe6ff", building="#cfc8b8", building_mode="flat",
+                  path="#d8bd80", path_solid=True, rail="#5a4a3a", label="#ffffff", halo="#000000",
+                  road_label="#ffffff", road_halo="#1a1a1a", halo_width=2.0, labels=True),
 }
 
 
@@ -306,8 +338,11 @@ def map_style(tid, p):
     for lid, classes, key, op in [("landcover-ice", ["ice"], "ice", 1), ("landcover-sand", ["sand"], "sand", 1),
                                   ("landcover-wood", ["wood", "forest"], "wood", 0.95),
                                   ("landcover-grass", ["grass", "farmland", "scrub"], "grass", 0.9)]:
+        paint = {"fill-color": p[key], "fill-opacity": op}
+        if key == "wood" and x.get("wood_pattern"):
+            paint = {"fill-pattern": x["wood_pattern"]}
         layers.append({"id": lid, "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
-                       "filter": cls(*classes), "paint": {"fill-color": p[key], "fill-opacity": op}})
+                       "filter": cls(*classes), "paint": paint})
     if x.get("satellite"):
         layers = [l for l in layers if not l["id"].startswith("landcover")]
     layers.append({"id": "park", "type": "fill", "source": "openmaptiles", "source-layer": "park",
@@ -482,6 +517,8 @@ GLOBE_COLORS = {
     "palm": ("#738372", "#607da7"),
     "heat": ("#a05fd8", "#1d0b45"),
     "kingdom": ("#8a6f4a", "#6f7a62"),
+    "contract": ("#c2c5c7", "#2e3033"),
+    "storm": ("#4b7d35", "#3d8fe0"),
 }
 
 

@@ -3,7 +3,7 @@ import UIKit
 /// Texture ripetibili usate come "background-pattern" / "fill-pattern" negli stili mappa.
 /// Disegnate interamente dall'app (nessuna immagine esterna).
 enum Textures {
-    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof"]
+    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof", "gm-trees"]
 
     private static var cache: [String: UIImage] = [:]
 
@@ -17,6 +17,7 @@ enum Textures {
         case "gm-planks": img = planks()
         case "gm-stone": img = stone()
         case "gm-roof": img = roof()
+        case "gm-trees": img = trees()
         default: img = nil
         }
         if let img = img { cache[name] = img }
@@ -86,6 +87,43 @@ enum Textures {
                     let col = colors[Int.random(in: 0..<colors.count, using: &rng)]
                     c.setFillColor(UIColor(hex: col).cgColor)
                     c.fill(CGRect(x: CGFloat(i) * block, y: CGFloat(j) * block, width: block, height: block))
+                }
+            }
+        }
+    }
+
+    /// Bosco visto dall'alto in stile cartoon (Storm Isle): chiome tonde verde scuro con luce e ombra.
+    /// Ogni chioma che esce da un bordo viene ripetuta su quello opposto: la texture si ripete senza giunte.
+    private static func trees() -> UIImage {
+        let side: CGFloat = 128
+        var rng = SeededGenerator(seed: 0x2D5420)
+        var crowns: [(CGFloat, CGFloat, CGFloat)] = []
+        for _ in 0..<14 {
+            crowns.append((CGFloat.random(in: 0..<side, using: &rng), CGFloat.random(in: 0..<side, using: &rng),
+                           CGFloat.random(in: 11...19, using: &rng)))
+        }
+        return renderer(side).image { ctx in
+            let c = ctx.cgContext
+            c.setFillColor(UIColor(hex: 0x2F5A22).cgColor)
+            c.fill(CGRect(x: 0, y: 0, width: side, height: side))
+            for pass in 0..<3 {
+                for (x, y, r) in crowns {
+                    for dx in [-side, 0, side] {
+                        for dy in [-side, 0, side] {
+                            let cx = x + dx, cy = y + dy
+                            switch pass {
+                            case 0: // ombra
+                                c.setFillColor(UIColor(hex: 0x1C3A15).cgColor)
+                                c.fillEllipse(in: CGRect(x: cx - r + 3, y: cy - r + 4, width: r * 2, height: r * 2))
+                            case 1: // chioma
+                                c.setFillColor(UIColor(hex: 0x3B6E2A).cgColor)
+                                c.fillEllipse(in: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
+                            default: // luce
+                                c.setFillColor(UIColor(hex: 0x4F8A36).cgColor)
+                                c.fillEllipse(in: CGRect(x: cx - r * 0.75, y: cy - r * 0.8, width: r * 1.1, height: r * 1.0))
+                            }
+                        }
+                    }
                 }
             }
         }

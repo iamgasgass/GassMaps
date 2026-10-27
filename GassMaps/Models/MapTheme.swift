@@ -41,7 +41,7 @@ struct MapTheme: Identifiable, Equatable {
     var vignette: Double = 0
     /// colore della freccia utente
     var arrowColor: UIColor = .white
-    /// indicatore della posizione: 0 freccia con mirino, 1 ingranaggio, 2 anello-bussola
+    /// indicatore della posizione: 0 freccia con mirino (tutti i temi), 3 freccia pixel (Pixel Land)
     var userMarker: Int = 0
 
     static func == (lhs: MapTheme, rhs: MapTheme) -> Bool { lhs.id == rhs.id }
@@ -139,7 +139,7 @@ enum Themes {
                 GlobeMarker(lat: 30, lon: -60, symbol: "suit.diamond.fill", color: UIColor(hex: 0x2ED36B)),
                 GlobeMarker(lat: 10, lon: 20, symbol: "mug.fill", color: UIColor(hex: 0xF2B233))
             ],
-            globeFont: "Courier-Bold", globeUppercase: false, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x1D1D4A), haze: UIColor(hex: 0x8F8DE0), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 28, vignette: 0.3),
+            globeFont: "Courier-Bold", globeUppercase: false, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x1D1D4A), haze: UIColor(hex: 0x8F8DE0), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 28, vignette: 0.3, userMarker: 3),
         MapTheme(
             id: "neon", name: "Neon District",
             backgroundTop: Color(hex: 0x051626), backgroundBottom: Color(hex: 0x051626),
@@ -151,7 +151,7 @@ enum Themes {
                 GlobeMarker(lat: 29, lon: 3, symbol: "camera.aperture"),
                 GlobeMarker(lat: 33, lon: -12, symbol: "bus.fill")
             ],
-            globeFont: "AvenirNextCondensed-DemiBold", globeUppercase: true, globeLabel: UIColor(hex: 0x3FF2FF), globeLabelHalo: .black, haze: UIColor(hex: 0x1A1430), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 55, vignette: 0.2, arrowColor: UIColor(hex: 0x5CF29A)),
+            globeFont: "AvenirNextCondensed-DemiBold", globeUppercase: true, globeLabel: UIColor(hex: 0x3FF2FF), globeLabelHalo: .black, haze: UIColor(hex: 0x1A1430), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 55, vignette: 0.2),
         MapTheme(
             id: "palm", name: "Palm Coast",
             backgroundTop: Color(hex: 0x051626), backgroundBottom: Color(hex: 0x051626),
@@ -174,7 +174,7 @@ enum Themes {
                 GlobeMarker(lat: 35, lon: 105, symbol: "house.fill"),
                 GlobeMarker(lat: 45, lon: 125, symbol: "building.columns.fill")
             ],
-            globeFont: "AvenirNextCondensed-HeavyItalic", globeUppercase: true, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x22003F), haze: UIColor(hex: 0x3A1660), glow: UIColor(hex: 0x9A4DFF), glowCore: UIColor(hex: 0xE6D9F2), mapPitch: 0, vignette: 0.25, userMarker: 1),
+            globeFont: "AvenirNextCondensed-HeavyItalic", globeUppercase: true, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x22003F), haze: UIColor(hex: 0x3A1660), glow: UIColor(hex: 0x9A4DFF), glowCore: UIColor(hex: 0xE6D9F2), mapPitch: 0, vignette: 0.25),
         MapTheme(
             id: "kingdom", name: "Old Kingdom",
             backgroundTop: Color(hex: 0x2A2E29), backgroundBottom: Color(hex: 0x2A2E29),
@@ -185,6 +185,24 @@ enum Themes {
                 GlobeMarker(lat: 33, lon: 98, symbol: "house.fill"),
                 GlobeMarker(lat: 27, lon: 130, symbol: "bag.fill")
             ],
-            globeFont: "Georgia", globeUppercase: false, globeLabel: UIColor(hex: 0x2B1B0B), globeLabelHalo: UIColor(hex: 0xD9BB85), haze: UIColor(hex: 0x6E7258), glow: UIColor(hex: 0xE6CC8C), glowCore: UIColor(hex: 0xF5EBD2), mapPitch: 35, vignette: 0.25, userMarker: 2)
+            globeFont: "Georgia", globeUppercase: false, globeLabel: UIColor(hex: 0x2B1B0B), globeLabelHalo: UIColor(hex: 0xD9BB85), haze: UIColor(hex: 0x6E7258), glow: UIColor(hex: 0xE6CC8C), glowCore: UIColor(hex: 0xF5EBD2), mapPitch: 35, vignette: 0.25),
+        // mappa tattica grigia: area chiara, alberi e acqua scuri, icone quadrate nere
+        MapTheme(
+            id: "contract", name: "Silent Contract",
+            backgroundTop: Color(hex: 0x1E1F21), backgroundBottom: Color(hex: 0x1E1F21),
+            accent: UIColor(hex: 0xD8333A), iconColor: .white, iconHalo: UIColor(hex: 0x1A1A1A),
+            polar: UIColor(hex: 0xC4C7C9), buttonTint: .white,
+            markers: [],
+            globeFont: "HelveticaNeue-Medium", globeUppercase: false, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x2A2B2D),
+            haze: UIColor(hex: 0x8A8D90), glow: UIColor(hex: 0xBFC2C5), glowCore: UIColor(hex: 0xF2F3F4), mapPitch: 0, vignette: 0.2),
+        // isola battle royale: prati, boschi, sentieri di sabbia, fiumi azzurri, icone bianche contornate
+        MapTheme(
+            id: "storm", name: "Storm Isle",
+            backgroundTop: Color(hex: 0x061A33), backgroundBottom: Color(hex: 0x061A33),
+            accent: UIColor(hex: 0x2F7BFF), iconColor: .white, iconHalo: UIColor(hex: 0x111111),
+            polar: UIColor(hex: 0xEAF4FF), buttonTint: .white,
+            markers: [],
+            globeFont: "Futura-CondensedExtraBold", globeUppercase: true, globeLabel: .white, globeLabelHalo: .black,
+            haze: UIColor(hex: 0x6FA86A), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 0, vignette: 0.15)
     ]
 }

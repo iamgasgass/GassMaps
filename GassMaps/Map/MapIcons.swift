@@ -79,6 +79,8 @@ enum IconFrame {
     case hexagon(fill: UIColor, ring: UIColor)
     /// glifo pixelato su griglia 16×16 (stesse dimensioni degli sprite)
     case pixel(halo: UIColor)
+    /// mappa tattica: quadrato nero con glifo bianco e angolari bianchi
+    case tactical(fill: UIColor, bracket: UIColor)
 }
 
 struct ThemeIconSet {
@@ -156,6 +158,21 @@ enum MapIcons {
             return ThemeIconSet(frame: .hexagon(fill: UIColor(hex: 0x050506), ring: UIColor(hex: 0x1C2226)), tint: w,
                                 glyphs: [.police: "star.circle.fill", .lodging: "building.2.fill",
                                          .default: "arrow.up.and.down.and.arrow.left.and.right"])
+
+        case "contract": // quadrati neri con glifo bianco; obiettivi in rosso
+            let red = UIColor(hex: 0xD8333A)
+            return ThemeIconSet(frame: .tactical(fill: UIColor(hex: 0x111111), bracket: w), tint: w,
+                                colors: [.police: red, .fire: red, .hospital: red],
+                                glyphs: [.police: "scope", .attraction: "camera.fill", .museum: "camera.fill",
+                                         .monument: "camera.fill", .rail: "figure.stairs", .bus: "figure.stairs",
+                                         .parking: "door.left.hand.open", .lodging: "key.fill",
+                                         .default: "mappin"])
+
+        case "storm": // sagome bianche con contorno nero spesso
+            return ThemeIconSet(frame: .outline(halo: UIColor(hex: 0x101010)), tint: w,
+                                glyphs: [.shop: "shippingbox.fill", .supermarket: "cart.fill", .bank: "dollarsign.circle.fill",
+                                         .atm: "dollarsign.circle.fill", .police: "figure.wave", .attraction: "star.fill",
+                                         .parking: "car.fill", .default: "mappin.and.ellipse"])
 
         case "heat": // glifi bianchi
             return ThemeIconSet(frame: .outline(halo: UIColor(hex: 0x2A1E5A)), tint: w)
@@ -343,6 +360,23 @@ enum MapIcons {
             return outlinedSymbol(name, color: color, halo: halo, pointSize: pointSize)
         case .pixel(let halo):
             return pixelSymbol(name, color: color, halo: halo)
+        case .tactical(let fill, let bracket):
+            return enclosed(name, color: color, pointSize: pointSize) { ctx, rect in
+                let r = rect.insetBy(dx: rect.width * 0.08, dy: rect.width * 0.08)
+                ctx.setFillColor(fill.cgColor)
+                ctx.addPath(UIBezierPath(roundedRect: r, cornerRadius: r.width * 0.08).cgPath)
+                ctx.fillPath()
+                // angolari ai quattro spigoli
+                let l = r.width * 0.26, t = max(1.5, r.width * 0.06), o = rect.width * 0.02
+                ctx.setFillColor(bracket.cgColor)
+                let a = rect.insetBy(dx: o, dy: o)
+                for (x, y, sx, sy) in [(a.minX, a.minY, 1.0, 1.0), (a.maxX, a.minY, -1.0, 1.0),
+                                       (a.minX, a.maxY, 1.0, -1.0), (a.maxX, a.maxY, -1.0, -1.0)] {
+                    let fx = CGFloat(sx), fy = CGFloat(sy)
+                    ctx.fill(CGRect(x: fx > 0 ? x : x - l, y: fy > 0 ? y : y - t, width: l, height: t))
+                    ctx.fill(CGRect(x: fx > 0 ? x : x - t, y: fy > 0 ? y : y - l, width: t, height: l))
+                }
+            }
         case .badge(let fill, let ring):
             return enclosed(name, color: color, pointSize: pointSize) { ctx, rect in
                 ctx.setFillColor(fill.cgColor)
@@ -534,6 +568,8 @@ enum MapIcons {
         case "bunker": color = UIColor(hex: 0x0F5F0F)
         case "neon", "heat": color = UIColor(hex: 0xFF2E7E)
         case "dust", "kingdom": color = UIColor(hex: 0x6B4A28)
+        case "contract": color = UIColor(hex: 0x2A2B2D)
+        case "storm": color = UIColor(hex: 0x2F7BFF)
         default: color = UIColor(hex: 0x2F47C9)
         }
         return UIGraphicsImageRenderer(size: CGSize(width: 24, height: 16), format: fmt).image { _ in

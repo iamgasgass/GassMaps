@@ -27,7 +27,12 @@ final class UserArrowView: MLNUserLocationAnnotationView {
             hLine.isHidden = !arrow
             vLine.isHidden = !arrow
             markerLayer.isHidden = arrow
-            markerLayer.contents = UserArrowView.markerImage(appliedMarker)?.cgImage
+            let img = UserArrowView.markerImage(appliedMarker)
+            markerLayer.contents = img?.cgImage
+            markerLayer.contentsScale = img?.scale ?? 2
+            // la freccia pixel ruota con la direzione come quella normale; nessuna sfumatura sui pixel
+            markerLayer.frame = appliedMarker == 3 ? container.bounds.insetBy(dx: -2, dy: -2)
+                                                   : container.bounds.insetBy(dx: -14, dy: -14)
         }
         if appliedTint != UserArrowView.tint {
             appliedTint = UserArrowView.tint
@@ -85,8 +90,10 @@ final class UserArrowView: MLNUserLocationAnnotationView {
         layer.addSublayer(container)
         markerLayer.frame = bounds.insetBy(dx: -14, dy: -14)
         markerLayer.contentsGravity = .resizeAspect
+        markerLayer.magnificationFilter = .nearest
+        markerLayer.minificationFilter = .nearest
         markerLayer.isHidden = true
-        layer.addSublayer(markerLayer)
+        container.addSublayer(markerLayer)
 
         let w: CGFloat = 44
         let left = UIBezierPath()
@@ -116,8 +123,54 @@ final class UserArrowView: MLNUserLocationAnnotationView {
 }
 
 extension UserArrowView {
+    /// Freccia del giocatore in stile mappa a blocchi: punta bianca pixelata con lato in ombra e contorno scuro.
+    static func pixelArrow() -> UIImage {
+        let rows = [
+            ".......KK.......",
+            "......KWwK......",
+            "......KWwK......",
+            ".....KWWwwK.....",
+            ".....KWWwwK.....",
+            "....KWWWwwwK....",
+            "....KWWWwwwK....",
+            "...KWWWWwwwwK...",
+            "...KWWWWwwwwK...",
+            "..KWWWWKKwwwwK..",
+            "..KWWWK..KwwwK..",
+            ".KWWWK....KwwwK.",
+            ".KWWK......KwwK.",
+            "KWWK........KwwK",
+            "KKK..........KKK",
+            "................"
+        ]
+        let colors: [Character: UIColor] = ["K": UIColor(hex: 0x1E1E1E), "W": UIColor(hex: 0xF8F8F8),
+                                            "w": UIColor(hex: 0xC6C6C6)]
+        let px: CGFloat = 3
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 3
+        return UIGraphicsImageRenderer(size: CGSize(width: 16 * px, height: 16 * px), format: fmt).image { ctx in
+            let c = ctx.cgContext
+            c.setShouldAntialias(false)
+            // ombra a blocchi sotto la freccia
+            c.setFillColor(UIColor.black.withAlphaComponent(0.35).cgColor)
+            for (y, row) in rows.enumerated() {
+                for (x, ch) in row.enumerated() where ch != "." {
+                    c.fill(CGRect(x: CGFloat(x) * px + px * 0.67, y: CGFloat(y) * px + px, width: px, height: px))
+                }
+            }
+            for (y, row) in rows.enumerated() {
+                for (x, ch) in row.enumerated() {
+                    guard let col = colors[ch] else { continue }
+                    c.setFillColor(col.cgColor)
+                    c.fill(CGRect(x: CGFloat(x) * px, y: CGFloat(y) * px, width: px, height: px))
+                }
+            }
+        }
+    }
+
     /// 1 = ingranaggio (Street Heat), 2 = anello-bussola marrone (Old Kingdom)
     static func markerImage(_ kind: Int) -> UIImage? {
+        if kind == 3 { return pixelArrow() }
         let size = CGSize(width: 72, height: 72)
         let fmt = UIGraphicsImageRendererFormat()
         fmt.scale = 3

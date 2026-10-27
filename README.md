@@ -6,7 +6,7 @@ Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfac
 
 - **Splash** che mostra l'app: città animata nei colori del tema scelto, percorso che si disegna, icone dei luoghi, freccia utente, logo GassMaps su vetro e barra di caricamento
 - **Mappa 3D** inclinata con edifici estrusi, nomi delle vie in maiuscolo, frecce dei sensi unici, numeri civici, scudi stradali (SS18…) e icone dei luoghi
-- **Freccia utente** con croce di mira, rotazione secondo bussola o direzione di marcia
+- **Freccia utente** uguale in tutti i temi (croce di mira, rotazione secondo bussola o direzione di marcia); in Pixel Land è una freccia pixelata a blocchi
 - **Intestazione** all'avvio con giorno, ora e "Città, Provincia", poi barra superiore con:
   - 🌍 Selezione mappa · 🔍 Ricerca · ◉ Impostazioni
 - **Ricerca** con suggerimenti in tempo reale, *Cronologia* (con "Cancella") e *Trova nelle vicinanze* (stazione di servizio, ristorante, caffè, hotel, parcheggio, farmacia, supermercato, ospedale, bancomat, palestra)
@@ -27,6 +27,8 @@ Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfac
   | 6 | Palm Coast | costa verde soleggiata |
   | 7 | Street Heat | viola notturno |
   | 8 | Old Kingdom | pergamena medievale |
+  | 9 | Silent Contract | mappa tattica grigia, icone quadrate nere |
+  | 10 | Storm Isle | isola cartoon: prati, boschi, sentieri di sabbia, fiumi |
 
 - **Impostazioni**: unità di distanza (KM/MI), icona app (3 icone alternative), condividi, valutaci, community Discord, contattaci, privacy, termini, cancella i miei dati, ripristina acquisti
 
@@ -44,7 +46,8 @@ Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfac
 - **Cerca lungo il percorso** durante la navigazione (benzinai, ristoranti, caffè, supermercati, parcheggi, ricarica) con aggiunta della tappa
 - **Condividi orario di arrivo** durante la navigazione
 - **Salva parcheggio**: ricorda dove hai lasciato l'auto e ti ci riporta
-- **Posizione in tempo reale ottimizzata**: scarto delle letture imprecise o vecchie, aggiornamento più fitto in navigazione, aggancio al percorso più rapido
+- **Posizione in tempo reale ottimizzata**: Core Location alla massima precisione ("per la navigazione": GPS, Galileo, GLONASS, BeiDou, Wi-Fi, celle), richiesta di precisione completa se è attiva quella approssimativa, filtro di Kalman contro i salti, direzione di marcia calcolata anche senza bussola; la freccia sulla mappa usa la stessa posizione filtrata della navigazione.
+  Nota: su iPhone non esiste un "GPS di Google" separato: anche Google Maps per iOS riceve la posizione da Core Location.
 
 Limiti (dati non disponibili gratuitamente fuori da Google): traffico in tempo reale, Street View, recensioni e foto dei luoghi,
 orari di apertura, tracciato dei mezzi pubblici (per i mezzi l'app mostra il tempo e apre linee e orari in Mappe di Apple), mappe offline.

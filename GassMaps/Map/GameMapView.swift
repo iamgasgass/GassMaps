@@ -17,6 +17,8 @@ struct GameMapView: UIViewRepresentable {
         map.attributionButtonPosition = .bottomLeft
         map.attributionButtonMargins = CGPoint(x: 8, y: 6)
         map.attributionButton.alpha = 0.45
+        // la freccia usa la posizione già filtrata (stessa della navigazione)
+        map.locationManager = state.location.mapFeed
         map.showsUserLocation = true
         map.allowsTilting = true
         map.allowsRotating = true

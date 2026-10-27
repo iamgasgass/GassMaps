@@ -19,6 +19,21 @@ struct MainMapScreen: View {
                         .allowsHitTesting(false)
                 }
 
+                // sfocatura superiore solo mentre l'intestazione d'avvio mostra giorno, ora e posizione
+                if state.showHeader && state.panel != .navigating {
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+                        .mask(LinearGradient(stops: [.init(color: .black, location: 0),
+                                                     .init(color: .black, location: 0.55),
+                                                     .init(color: .clear, location: 1)],
+                                             startPoint: .top, endPoint: .bottom))
+                        .frame(height: geo.safeAreaInsets.top + 170)
+                        .frame(maxHeight: .infinity, alignment: .top)
+                        .ignoresSafeArea()
+                        .allowsHitTesting(false)
+                        .transition(.opacity)
+                }
+
                 VStack(spacing: 0) {
                     ZStack {
                         if state.panel == .navigating {

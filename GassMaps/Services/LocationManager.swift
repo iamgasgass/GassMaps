@@ -6,6 +6,9 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published var authorization: CLAuthorizationStatus = .notDetermined
     @Published var placeName: String = "Ricerca posizione..."
 
+    /// richiamato ad ogni nuova posizione (usato dalla navigazione, anche in background)
+    var onUpdate: ((CLLocation) -> Void)?
+
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
     private var lastGeocoded: CLLocation?
@@ -14,7 +17,8 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
-        manager.distanceFilter = 5
+        manager.distanceFilter = 3
+        manager.headingFilter = 2
         authorization = manager.authorizationStatus
     }
 
@@ -22,6 +26,17 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         if manager.authorizationStatus == .notDetermined {
             manager.requestWhenInUseAuthorization()
         }
+        manager.startUpdatingLocation()
+    }
+
+    /// Durante la navigazione: massima precisione e aggiornamenti anche con lo schermo spento
+    func setNavigating(_ on: Bool) {
+        manager.desiredAccuracy = on ? kCLLocationAccuracyBestForNavigation : kCLLocationAccuracyBest
+        manager.distanceFilter = on ? kCLDistanceFilterNone : 3
+        manager.activityType = on ? .automotiveNavigation : .other
+        manager.allowsBackgroundLocationUpdates = on
+        manager.showsBackgroundLocationIndicator = on
+        manager.pausesLocationUpdatesAutomatically = !on
         manager.startUpdatingLocation()
     }
 
@@ -35,9 +50,12 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let loc = locations.last else { return }
+        // scarta posizioni non valide, troppo imprecise o vecchie (es. la prima cache del GPS)
+        guard let loc = locations.last(where: { $0.horizontalAccuracy >= 0 && $0.horizontalAccuracy < 120
+                                                && abs($0.timestamp.timeIntervalSinceNow) < 15 }) else { return }
         DispatchQueue.main.async {
             self.location = loc
+            self.onUpdate?(loc)
         }
         if lastGeocoded == nil || loc.distance(from: lastGeocoded!) > 250 {
             lastGeocoded = loc

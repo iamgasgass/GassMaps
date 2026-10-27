@@ -28,6 +28,13 @@ struct GameMapView: UIViewRepresentable {
                                                      action: #selector(MapCoordinator.handleLongPress(_:)))
         map.addGestureRecognizer(longPress)
 
+        // tocco singolo: icone dei luoghi, percorsi alternativi (non interferisce col doppio tocco per lo zoom)
+        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(MapCoordinator.handleTap(_:)))
+        for g in map.gestureRecognizers ?? [] {
+            if let t = g as? UITapGestureRecognizer, t.numberOfTapsRequired == 2 { tap.require(toFail: t) }
+        }
+        map.addGestureRecognizer(tap)
+
         context.coordinator.currentStyleID = state.theme.id
         state.map.attach(map)
         return map
@@ -73,6 +80,13 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         if annotation is MLNUserLocation {
             return UserArrowView()
         }
+        if annotation is ResultAnnotation {
+            let rid = "gm-result"
+            let v = (mapView.dequeueReusableAnnotationView(withIdentifier: rid) as? ResultMarkerView)
+                ?? ResultMarkerView(reuseIdentifier: rid)
+            v.configure(color: state.theme.accent)
+            return v
+        }
         let id = "gm-pin"
         let view = (mapView.dequeueReusableAnnotationView(withIdentifier: id) as? PinBubbleView)
             ?? PinBubbleView(reuseIdentifier: id)
@@ -85,12 +99,26 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         false
     }
 
+    func mapView(_ mapView: MLNMapView, didSelect annotation: MLNAnnotation) {
+        guard let r = annotation as? ResultAnnotation, state.searchResults.indices.contains(r.index) else { return }
+        let item = state.searchResults[r.index]
+        mapView.deselectAnnotation(annotation, animated: false)
+        state.pin(Place(mapItem: item), item: item)
+    }
+
+    func mapView(_ mapView: MLNMapView, regionDidChangeAnimated animated: Bool) {
+        let h = mapView.direction
+        if abs(h - state.mapHeading) > 1 {
+            DispatchQueue.main.async { self.state.mapHeading = h }
+        }
+        DispatchQueue.main.async { self.state.mapMoved() }
+    }
+
     // MARK: Posizione
 
     func mapView(_ mapView: MLNMapView, didUpdate userLocation: MLNUserLocation?) {
         guard let loc = userLocation?.location else { return }
         state.map.initialPosition(loc.coordinate)
-        state.locationUpdated(loc)
     }
 
     func mapView(_ mapView: MLNMapView, didChange mode: MLNUserTrackingMode, animated: Bool) {
@@ -106,6 +134,27 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
     }
 
     // MARK: Gesture
+
+    @objc func handleTap(_ gesture: UITapGestureRecognizer) {
+        guard gesture.state == .ended, let map = gesture.view as? MLNMapView else { return }
+        let point = gesture.location(in: map)
+
+        // scelta di un percorso alternativo
+        if state.panel == .directions, let i = state.map.alternativeIndex(near: point),
+           state.alternativeIndices.indices.contains(i) {
+            state.selectRoute(state.alternativeIndices[i])
+            return
+        }
+        guard state.panel != .navigating, state.panel != .directions else { return }
+
+        // icona di un luogo sulla mappa → scheda del luogo
+        let rect = CGRect(x: point.x - 18, y: point.y - 18, width: 36, height: 36)
+        let features = map.visibleFeatures(in: rect, styleLayerIdentifiers: ["poi"])
+        if let f = features.first,
+           let name = (f.attribute(forKey: "name:it") as? String) ?? (f.attribute(forKey: "name") as? String) {
+            state.openPOI(name: name, coordinate: f.coordinate)
+        }
+    }
 
     @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began, let map = gesture.view as? MLNMapView else { return }

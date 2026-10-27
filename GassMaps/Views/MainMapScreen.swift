@@ -19,43 +19,42 @@ struct MainMapScreen: View {
                         .allowsHitTesting(false)
                 }
 
-                // nebbia/sfocatura all'orizzonte e vignettatura
-                VStack(spacing: 0) {
-                    Rectangle()
-                        .fill(.ultraThinMaterial)
-                        .mask(LinearGradient(colors: [.black, .black.opacity(0.7), .clear],
-                                             startPoint: .top, endPoint: .bottom))
-                        .overlay(
-                            LinearGradient(colors: [.black.opacity(0.55), .clear],
-                                           startPoint: .top, endPoint: .bottom)
-                        )
-                        .frame(height: geo.safeAreaInsets.top + 150)
-                    Spacer()
-                    // sfocatura progressiva in basso (profondità di campo, come nelle schermate)
-                    if state.theme.id == "neon" || state.theme.id == "palm" {
-                        LinearGradient(colors: [.clear, .black.opacity(0.45)], startPoint: .top, endPoint: .bottom)
-                            .frame(height: 180)
-                    } else {
-                    Rectangle()
-                        .fill(.ultraThinMaterial)
-                        .mask(LinearGradient(colors: [.clear, .black.opacity(0.75), .black],
-                                             startPoint: .top, endPoint: .bottom))
-                        .overlay(LinearGradient(colors: [.clear, .black.opacity(0.25)],
-                                                startPoint: .top, endPoint: .bottom))
-                        .frame(height: 200)
-                    }
-                }
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-
                 VStack(spacing: 0) {
                     ZStack {
-                        if state.showHeader {
+                        if state.panel == .navigating {
+                            NavigationBanner()
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                        } else if state.showHeader {
                             HeaderView()
                                 .transition(.opacity.combined(with: .move(edge: .top)))
-                        } else if state.panel != .navigating && state.panel != .directions {
-                            TopBar()
-                                .transition(.opacity)
+                        } else if state.panel != .directions {
+                            VStack(spacing: 10) {
+                                TopBar()
+                                if state.panel == .none || state.panel == .results {
+                                    CategoryChips()
+                                }
+                                if state.showSearchArea && state.panel == .results {
+                                    Button { state.searchThisArea() } label: {
+                                        Label("Cerca in questa zona", systemImage: "arrow.clockwise")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, 16).frame(height: 38)
+                                            .glassEffect(.regular.tint(Color(state.theme.accent).opacity(0.75)).interactive(),
+                                                         in: Capsule())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .transition(.scale.combined(with: .opacity))
+                                }
+                                HStack {
+                                    Spacer()
+                                    if abs(state.mapHeading) > 2 {
+                                        CompassButton()
+                                            .padding(.trailing, 18)
+                                            .transition(.scale.combined(with: .opacity))
+                                    }
+                                }
+                            }
+                            .transition(.opacity)
                         }
                     }
                     .padding(.top, 8)
@@ -81,6 +80,16 @@ struct MainMapScreen: View {
             }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.88), value: state.panel)
+        .animation(.easeInOut(duration: 0.2), value: abs(state.mapHeading) > 2)
+        .sheet(isPresented: $state.showSteps) {
+            StepsSheet()
+                .environmentObject(state)
+        }
+        .sheet(isPresented: $state.showAlongRoute) {
+            AlongRouteSheet()
+                .environmentObject(state)
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: state.showSearchArea)
         .animation(.easeInOut(duration: 0.3), value: state.isLoadingRoute)
         .alert("Indicazioni", isPresented: Binding(get: { state.routeError != nil },
                                                    set: { if !$0 { state.routeError = nil } })) {
@@ -101,6 +110,8 @@ struct MainMapScreen: View {
             NavigationPanel().transition(.move(edge: .bottom))
         case .saved:
             SavedPlacesPanel().transition(.move(edge: .bottom))
+        case .results:
+            ResultsPanel().transition(.move(edge: .bottom))
         case .none:
             EmptyView()
         }
@@ -211,5 +222,68 @@ struct BottomControls: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+}
+
+/// Scorciatoie di ricerca sotto la barra (come i chip di Google Maps)
+struct CategoryChips: View {
+    @EnvironmentObject var state: AppState
+
+    private struct Chip: Identifiable {
+        let title: String
+        let icon: String
+        var id: String { title }
+    }
+
+    private let items: [Chip] = [
+        Chip(title: "Ristoranti", icon: "fork.knife"), Chip(title: "Benzina", icon: "fuelpump.fill"),
+        Chip(title: "Caffè", icon: "cup.and.saucer.fill"), Chip(title: "Supermercati", icon: "cart.fill"),
+        Chip(title: "Hotel", icon: "bed.double.fill"), Chip(title: "Farmacie", icon: "pills.fill"),
+        Chip(title: "Parcheggi", icon: "parkingsign"), Chip(title: "Bancomat", icon: "creditcard.fill"),
+        Chip(title: "Ospedali", icon: "cross.case.fill")
+    ]
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            GlassEffectContainer(spacing: 8) {
+                HStack(spacing: 8) {
+                    ForEach(items) { item in
+                        Button { state.searchCategory(item.title) } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: item.icon).font(.system(size: 13, weight: .bold))
+                                Text(item.title).font(.system(size: 14, weight: .semibold))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14)
+                            .frame(height: 36)
+                            .contentShape(Capsule())
+                            .glassEffect(.regular.tint(state.resultsTitle == item.title && state.panel == .results
+                                                       ? Color(state.theme.accent).opacity(0.7) : nil).interactive(),
+                                         in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 2)
+            }
+        }
+    }
+}
+
+/// Bussola: compare quando la mappa è ruotata, toccala per tornare al nord
+struct CompassButton: View {
+    @EnvironmentObject var state: AppState
+
+    var body: some View {
+        Button { state.map.resetNorth() } label: {
+            GlassCircle(size: 44) {
+                Image(systemName: "location.north.line.fill")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(Color(hex: 0xFF3B4E), .white)
+                    .rotationEffect(.degrees(-state.mapHeading))
+            }
+        }
+        .buttonStyle(.plain)
     }
 }

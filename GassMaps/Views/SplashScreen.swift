@@ -1,69 +1,53 @@
 import SwiftUI
 
+/// Splash che rispecchia l'app: mappa animata nei colori del tema scelto, icone dei luoghi,
+/// percorso che si disegna fino alla freccia dell'utente, logo su vetro e barra di caricamento.
 struct SplashScreen: View {
     @EnvironmentObject var state: AppState
     @EnvironmentObject var location: LocationManager
     @State private var progress: CGFloat = 0
     @State private var appeared = false
-
-    private struct FloatingIcon: Identifiable {
-        let id = UUID()
-        let symbol: String
-        let x: CGFloat   // 0...1
-        let y: CGFloat   // 0...1
-        let size: CGFloat
-        let rotation: Double
-        let colors: [Color]
-    }
-
-    private let icons: [FloatingIcon] = [
-        FloatingIcon(symbol: "magnet", x: 0.10, y: 0.12, size: 64, rotation: -30, colors: [Color(white: 0.35), Color(white: 0.15)]),
-        FloatingIcon(symbol: "wineglass.fill", x: 0.34, y: 0.10, size: 62, rotation: 10, colors: [Color(hex: 0x5BD15B), Color(hex: 0x1F7A2A)]),
-        FloatingIcon(symbol: "suit.diamond.fill", x: 0.60, y: 0.11, size: 70, rotation: 0, colors: [Color(white: 0.45), Color(white: 0.15)]),
-        FloatingIcon(symbol: "house.fill", x: 0.90, y: 0.17, size: 70, rotation: 20, colors: [Color(hex: 0x55C24A), Color(hex: 0x1E6A1A)]),
-        FloatingIcon(symbol: "dollarsign.square.fill", x: 0.17, y: 0.33, size: 74, rotation: -12, colors: [Color(hex: 0x3BCB6A), Color(hex: 0x146B34)]),
-        FloatingIcon(symbol: "suit.spade.fill", x: 0.47, y: 0.30, size: 70, rotation: 0, colors: [Color(hex: 0x7EA0FF), Color(hex: 0x2A3E8F)]),
-        FloatingIcon(symbol: "flame.fill", x: 0.81, y: 0.35, size: 70, rotation: 70, colors: [Color(hex: 0xFFE38A), Color(hex: 0xC9A640)]),
-        FloatingIcon(symbol: "birthday.cake.fill", x: 0.26, y: 0.59, size: 70, rotation: -15, colors: [Color(hex: 0xFFB7C5), Color(hex: 0x9E4E7A)]),
-        FloatingIcon(symbol: "bed.double.fill", x: 0.68, y: 0.57, size: 74, rotation: -10, colors: [Color(hex: 0xC2378F), Color(hex: 0x5B1A70)]),
-        FloatingIcon(symbol: "gamecontroller.fill", x: 0.10, y: 0.73, size: 64, rotation: 20, colors: [Color(white: 0.4), Color(white: 0.15)]),
-        FloatingIcon(symbol: "car.fill", x: 0.46, y: 0.72, size: 72, rotation: -20, colors: [Color(hex: 0x8AA2FF), Color(hex: 0x2A3A80)]),
-        FloatingIcon(symbol: "crown.fill", x: 0.88, y: 0.69, size: 72, rotation: 15, colors: [Color(white: 0.45), Color(white: 0.15)]),
-        FloatingIcon(symbol: "star.fill", x: 0.22, y: 0.86, size: 56, rotation: 0, colors: [Color(white: 0.35), Color(white: 0.1)]),
-        FloatingIcon(symbol: "die.face.5.fill", x: 0.55, y: 0.87, size: 56, rotation: 20, colors: [Color(white: 0.35), Color(white: 0.1)]),
-        FloatingIcon(symbol: "bolt.fill", x: 0.82, y: 0.88, size: 56, rotation: -20, colors: [Color(white: 0.35), Color(white: 0.1)])
-    ]
+    @State private var start = Date()
 
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                Color.black
-                RadialGradient(colors: [Color(hex: 0x26262A), Color(hex: 0x141416), Color(hex: 0x09090A), .black],
-                               center: UnitPoint(x: 0.5, y: 0.47), startRadius: 10, endRadius: geo.size.width * 0.95)
+                SplashMapBackground(theme: state.theme, start: start)
 
-                ForEach(icons) { icon in
-                    Image(systemName: icon.symbol)
-                        .font(.system(size: icon.size, weight: .black))
-                        .foregroundStyle(LinearGradient(colors: icon.colors, startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .shadow(color: .white.opacity(0.25), radius: 1, x: -1, y: -1)
-                        .shadow(color: .black.opacity(0.7), radius: 6, x: 3, y: 5)
-                        .opacity(0.88)
-                        .rotationEffect(.degrees(icon.rotation))
-                        .position(x: icon.x * geo.size.width, y: icon.y * geo.size.height)
-                        .scaleEffect(appeared ? 1 : 0.92)
-                }
-
-                // dissolvenza verso il basso
-                LinearGradient(colors: [.clear, .clear, .black.opacity(0.85), .black],
+                // leggibilità di logo e barra
+                LinearGradient(colors: [.black.opacity(0.55), .clear, .clear, .black.opacity(0.8)],
                                startPoint: .top, endPoint: .bottom)
 
-                LogoView()
-                    .position(x: geo.size.width / 2, y: geo.size.height * 0.46)
+                SplashUserArrow(color: Color(state.theme.arrowColor), accent: Color(state.theme.accent))
+                    .position(x: geo.size.width / 2, y: geo.size.height * 0.58)
 
-                // barra di caricamento — misure prese dal video (393×852 pt):
-                // traccia x 24…369, alta 21 pt, #181818, a 51 pt dal fondo; riempimento lucido alto 15 pt
-                VStack {
+                VStack(spacing: 12) {
+                    LogoView(size: 58)
+                    Text("Il mondo reale, in stile videogioco")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.white.opacity(0.85))
+                }
+                .padding(.horizontal, 26)
+                .padding(.vertical, 22)
+                .glassEffect(.regular.tint(Color.black.opacity(0.25)), in: RoundedRectangle(cornerRadius: 32, style: .continuous))
+                .scaleEffect(appeared ? 1 : 0.92)
+                .opacity(appeared ? 1 : 0)
+                .position(x: geo.size.width / 2, y: geo.size.height * 0.27)
+
+                VStack(spacing: 18) {
                     Spacer()
+                    HStack(spacing: 8) {
+                        Image(systemName: "globe.europe.africa.fill")
+                        Text(state.theme.name)
+                    }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .frame(height: 36)
+                    .glassEffect(.regular, in: Capsule())
+                    .opacity(appeared ? 1 : 0)
+
+                    // barra di caricamento — misure prese dal video (393×852 pt)
                     LoadingBar(progress: progress)
                         .frame(height: 21)
                         .padding(.horizontal, 24)
@@ -73,8 +57,9 @@ struct SplashScreen: View {
             .ignoresSafeArea()
         }
         .onAppear {
+            start = Date()
             location.start()
-            withAnimation(.easeInOut(duration: 2.4)) { appeared = true }
+            withAnimation(.spring(response: 0.7, dampingFraction: 0.8)) { appeared = true }
             withAnimation(.easeOut(duration: 1.1)) { progress = 0.62 }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.9) {
                 withAnimation(.easeInOut(duration: 0.7)) { progress = 1 }
@@ -89,6 +74,185 @@ struct SplashScreen: View {
         }
     }
 }
+
+/// Città stilizzata generata una volta (strade, isolati, incroci) e disegnata con i colori del tema.
+private struct SplashCity {
+    struct Road { let a: CGPoint; let b: CGPoint; let major: Bool }
+    let roads: [Road]
+    let blocks: [CGRect]
+    let pois: [CGPoint]
+    let route: [CGPoint]
+
+    static let shared = SplashCity()
+
+    private init() {
+        var rng = SeededGenerator(seed: 2024)
+        let w: CGFloat = 1400, h: CGFloat = 1900
+        var xs: [CGFloat] = []
+        var x: CGFloat = -w / 2
+        while x < w / 2 { xs.append(x); x += CGFloat.random(in: 70...120, using: &rng) }
+        var ys: [CGFloat] = []
+        var y: CGFloat = -h / 2
+        while y < h / 2 { ys.append(y); y += CGFloat.random(in: 60...100, using: &rng) }
+        // il centro (freccia utente) cade su un incrocio
+        if let i = xs.indices.min(by: { abs(xs[$0]) < abs(xs[$1]) }) { xs[i] = 0 }
+        if let j = ys.indices.min(by: { abs(ys[$0]) < abs(ys[$1]) }) { ys[j] = 0 }
+
+        var roads: [Road] = []
+        for (i, x) in xs.enumerated() {
+            roads.append(Road(a: CGPoint(x: x, y: -h / 2), b: CGPoint(x: x + 40, y: h / 2), major: i % 4 == 0 || x == 0))
+        }
+        for (j, y) in ys.enumerated() {
+            roads.append(Road(a: CGPoint(x: -w / 2, y: y), b: CGPoint(x: w / 2, y: y - 30), major: j % 3 == 0 || y == 0))
+        }
+        // diagonale
+        roads.append(Road(a: CGPoint(x: -w / 2, y: h / 3), b: CGPoint(x: w / 2, y: -h / 3), major: true))
+        self.roads = roads
+
+        var blocks: [CGRect] = []
+        for i in 0..<(xs.count - 1) {
+            for j in 0..<(ys.count - 1) {
+                let cellW = xs[i + 1] - xs[i], cellH = ys[j + 1] - ys[j]
+                let n = Int.random(in: 1...3, using: &rng)
+                for _ in 0..<n {
+                    let bw = CGFloat.random(in: 0.25...0.45, using: &rng) * cellW
+                    let bh = CGFloat.random(in: 0.25...0.45, using: &rng) * cellH
+                    let bx = xs[i] + CGFloat.random(in: 8...(max(9, cellW - bw - 8)), using: &rng)
+                    let by = ys[j] + CGFloat.random(in: 8...(max(9, cellH - bh - 8)), using: &rng)
+                    blocks.append(CGRect(x: bx, y: by, width: bw, height: bh))
+                }
+            }
+        }
+        self.blocks = blocks
+
+        var pois: [CGPoint] = []
+        for _ in 0..<26 {
+            let i = Int.random(in: 1..<(xs.count - 1), using: &rng)
+            let j = Int.random(in: 1..<(ys.count - 1), using: &rng)
+            pois.append(CGPoint(x: (xs[i] + xs[i + 1]) / 2, y: (ys[j] + ys[j + 1]) / 2))
+        }
+        self.pois = pois
+
+        // percorso: dal basso fino al centro, lungo le strade
+        let x1 = xs.first(where: { $0 > 150 }) ?? 200
+        let y1 = ys.first(where: { $0 > 260 }) ?? 300
+        self.route = [CGPoint(x: x1, y: h / 2), CGPoint(x: x1, y: y1), CGPoint(x: 0, y: y1), CGPoint(x: 0, y: 0)]
+    }
+}
+
+/// Colori della mappa del tema per la splash
+private struct SplashPalette {
+    let land: Color, road: Color, building: Color
+
+    init(_ id: String) {
+        switch id {
+        case "palm": land = Color(hex: 0x5E9E48); road = Color(hex: 0x151515); building = Color(hex: 0xA2A2A2)
+        case "dust": land = Color(hex: 0xD4C09A); road = Color(hex: 0x2C2A25); building = Color(hex: 0xC3AD89)
+        case "bunker": land = Color(hex: 0x061206); road = Color(hex: 0x2CCF2C); building = Color(hex: 0x0B2A0B)
+        case "pixel": land = Color(hex: 0x6E9050); road = Color(hex: 0x8E8E8E); building = Color(hex: 0xA8784A)
+        case "neon": land = Color(hex: 0x070707); road = Color(hex: 0x4B9FB0); building = Color(hex: 0xB3204A)
+        case "heat": land = Color(hex: 0x9B55DD); road = Color(hex: 0xAAB7C0); building = Color(hex: 0xB8A8FF, opacity: 0.35)
+        case "kingdom": land = Color(hex: 0x97957F); road = Color(hex: 0xCACBBC); building = Color(hex: 0xA06E5E)
+        default: land = Color(hex: 0x161616); road = Color(hex: 0xB8B8B8); building = Color(hex: 0x353535)
+        }
+    }
+}
+
+private struct SplashMapBackground: View {
+    let theme: MapTheme
+    let start: Date
+
+    private static let categories: [POICategory] = [.restaurant, .cafe, .fuel, .park, .shop, .hospital, .police,
+                                                     .lodging, .museum, .supermarket, .bar, .parking, .cinema]
+
+    var body: some View {
+        let city = SplashCity.shared
+        let pal = SplashPalette(theme.id)
+        let icons: [UIImage] = SplashMapBackground.categories.compactMap { MapIcons.image(named: $0.imageName, theme: theme) }
+        TimelineView(.animation) { timeline in
+            let t = timeline.date.timeIntervalSince(start)
+            Canvas { ctx, size in
+                ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(pal.land))
+                var c = ctx
+                c.translateBy(x: size.width / 2, y: size.height * 0.58)
+                let zoom = 0.9 + 0.12 * min(t / 3, 1)
+                c.scaleBy(x: zoom, y: zoom)
+                c.rotate(by: .degrees(-16 + 4 * min(t / 3, 1)))
+
+                for b in city.blocks {
+                    c.fill(Path(roundedRect: b, cornerRadius: 2), with: .color(pal.building))
+                }
+                for r in city.roads {
+                    var p = Path(); p.move(to: r.a); p.addLine(to: r.b)
+                    c.stroke(p, with: .color(pal.road), style: StrokeStyle(lineWidth: r.major ? 11 : 5, lineCap: .round))
+                }
+                // percorso che si disegna fino alla posizione dell'utente
+                var route = Path()
+                route.addLines(city.route)
+                let trim = min(max((t - 0.3) / 2.0, 0), 1)
+                let drawn = route.trimmedPath(from: 0, to: trim)
+                c.stroke(drawn, with: .color(.black.opacity(0.5)), style: StrokeStyle(lineWidth: 13, lineCap: .round, lineJoin: .round))
+                c.stroke(drawn, with: .color(Color(theme.accent)), style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
+
+                // icone dei luoghi che compaiono una dopo l'altra
+                if !icons.isEmpty {
+                    for (i, p) in city.pois.enumerated() {
+                        let appear = min(max((t - 0.15 - Double(i) * 0.07) / 0.25, 0), 1)
+                        guard appear > 0 else { continue }
+                        let img = c.resolve(Image(uiImage: icons[i % icons.count]))
+                        let s = 30 * appear / zoom
+                        var ic = c
+                        ic.translateBy(x: p.x, y: p.y)
+                        ic.rotate(by: .degrees(16 - 4 * min(t / 3, 1)))   // icone sempre dritte
+                        ic.opacity = appear
+                        ic.draw(img, in: CGRect(x: -s / 2, y: -s / 2, width: s, height: s))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Freccia dell'utente con mirino e impulso, come sulla mappa
+private struct SplashUserArrow: View {
+    let color: Color
+    let accent: Color
+    @State private var pulse = false
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(accent.opacity(pulse ? 0 : 0.8), lineWidth: 3)
+                .frame(width: pulse ? 120 : 30, height: pulse ? 120 : 30)
+            Rectangle().fill(LinearGradient(colors: [.clear, .white.opacity(0.6), .clear], startPoint: .leading, endPoint: .trailing))
+                .frame(width: 320, height: 1)
+            Rectangle().fill(LinearGradient(colors: [.clear, .white.opacity(0.6), .clear], startPoint: .top, endPoint: .bottom))
+                .frame(width: 1, height: 260)
+            ArrowShape(half: .left).fill(color)
+                .frame(width: 34, height: 40)
+            ArrowShape(half: .right).fill(color.opacity(0.78))
+                .frame(width: 34, height: 40)
+        }
+        .shadow(color: .black.opacity(0.6), radius: 6, y: 3)
+        .onAppear {
+            withAnimation(.easeOut(duration: 1.6).repeatForever(autoreverses: false)) { pulse = true }
+        }
+    }
+
+    private struct ArrowShape: Shape {
+        enum Half { case left, right }
+        let half: Half
+        func path(in r: CGRect) -> Path {
+            var p = Path()
+            p.move(to: CGPoint(x: r.midX, y: r.minY))
+            p.addLine(to: CGPoint(x: half == .left ? r.minX : r.maxX, y: r.maxY))
+            p.addLine(to: CGPoint(x: r.midX, y: r.maxY - r.height * 0.24))
+            p.closeSubpath()
+            return p
+        }
+    }
+}
+
 
 /// Scritta "GassMaps" nel font di GTA San Andreas (Pricedown): riempimento bianco, contorno nero spesso.
 struct LogoView: View {

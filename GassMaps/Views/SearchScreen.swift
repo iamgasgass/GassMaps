@@ -13,7 +13,7 @@ struct SearchScreen: View {
             GlassEffectContainer(spacing: 12) {
             HStack(spacing: 12) {
                 HStack(spacing: 8) {
-                    TextField("", text: $search.query, prompt: Text("Cerca").foregroundColor(Color.white.opacity(0.4)))
+                    TextField("", text: $search.query, prompt: Text(placeholder).foregroundColor(Color.white.opacity(0.4)))
                         .font(.system(size: 17))
                         .foregroundStyle(.white)
                         .tint(Color(hex: 0x2F8CFF))
@@ -21,8 +21,16 @@ struct SearchScreen: View {
                         .submitLabel(.search)
                         .autocorrectionDisabled()
                         .onSubmit {
-                            search.searchText { item in
-                                if let item = item { state.select(mapItem: item) }
+                            // come Google Maps: un risultato → scheda del luogo, più risultati → elenco sulla mappa
+                            let q = search.query
+                            search.searchAll { items in
+                                if state.searchPurpose != .destination, let item = items.first {
+                                    state.select(mapItem: item)
+                                } else if items.count == 1, let item = items.first {
+                                    state.select(mapItem: item)
+                                } else {
+                                    state.showResults(items, title: q)
+                                }
                             }
                         }
                     if search.query.isEmpty {
@@ -40,6 +48,7 @@ struct SearchScreen: View {
 
                 Button {
                     focused = false
+                    state.searchPurpose = .destination
                     state.showSearch = false
                 } label: {
                     GlassCircle(size: 50) {
@@ -53,7 +62,30 @@ struct SearchScreen: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 10)
-            .padding(.bottom, 18)
+            .padding(.bottom, state.searchPurpose == .destination ? 18 : 8)
+
+            if state.searchPurpose != .destination {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(state.searchPurpose == .origin ? "Scegli il punto di partenza" : "Aggiungi una tappa")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.white.opacity(0.6))
+                    if state.searchPurpose == .origin, location.location != nil {
+                        Button {
+                            focused = false
+                            state.searchPurpose = .destination
+                            state.origin = nil
+                            state.showSearch = false
+                            state.requestDirections()
+                        } label: {
+                            ResultRow(title: "La tua posizione", subtitle: "Posizione in tempo reale")
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 14)
+            }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -75,10 +107,23 @@ struct SearchScreen: View {
         .onAppear {
             // zona di ricerca: posizione attuale, altrimenti il centro della mappa
             search.userLocation = location.location
-            if let c = location.location?.coordinate ?? state.map.centerCoordinate {
+            // zona di ricerca: l'area visibile sulla mappa (come Google Maps), altrimenti la posizione
+            if let r = state.map.visibleRegion, r.span.latitudeDelta < 3 {
+                search.region = MKCoordinateRegion(center: r.center,
+                                                   span: MKCoordinateSpan(latitudeDelta: max(r.span.latitudeDelta, 0.05),
+                                                                          longitudeDelta: max(r.span.longitudeDelta, 0.05)))
+            } else if let c = location.location?.coordinate ?? state.map.centerCoordinate {
                 search.region = MKCoordinateRegion(center: c, latitudinalMeters: 40_000, longitudinalMeters: 40_000)
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { focused = true }
+        }
+    }
+
+    private var placeholder: String {
+        switch state.searchPurpose {
+        case .origin: return "Partenza"
+        case .stop: return "Aggiungi tappa"
+        case .destination: return "Cerca"
         }
     }
 
@@ -86,6 +131,11 @@ struct SearchScreen: View {
 
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                shortcut("Casa", "house.fill", state.home)
+                shortcut("Lavoro", "briefcase.fill", state.work)
+            }
+            .padding(.bottom, 10)
             if !state.history.isEmpty {
                 HStack {
                     Text("Cronologia")
@@ -98,9 +148,9 @@ struct SearchScreen: View {
                 }
                 ForEach(state.history) { place in
                     Button {
+                        focused = false
                         state.addToHistory(place)
-                        state.showSearch = false
-                        state.pin(place)
+                        state.choose(place)
                     } label: {
                         ResultRow(title: place.name, subtitle: place.address)
                     }
@@ -109,6 +159,30 @@ struct SearchScreen: View {
             }
         }
         .padding(.bottom, 22)
+    }
+
+    private func shortcut(_ title: String, _ icon: String, _ place: Place?) -> some View {
+        Button {
+            guard let p = place else { return }
+            focused = false
+            if state.searchPurpose == .destination { state.go(to: p) } else { state.choose(p) }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: icon).font(.system(size: 16, weight: .bold))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title).font(.system(size: 15, weight: .bold))
+                    Text(place?.address ?? "Imposta dal menu ••• di un luogo")
+                        .font(.system(size: 11)).foregroundStyle(Color.white.opacity(0.5)).lineLimit(1)
+                }
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14).frame(height: 56)
+            .frame(maxWidth: .infinity)
+            .glassRow(cornerRadius: 20)
+        }
+        .buttonStyle(.plain)
+        .opacity(place == nil ? 0.6 : 1)
     }
 
     private var nearbySection: some View {
@@ -120,7 +194,7 @@ struct SearchScreen: View {
                 ForEach(SearchService.nearbyCategories, id: \.self) { category in
                     Button {
                         focused = false
-                        search.searchCategory(category)
+                        state.searchCategory(category)
                     } label: {
                         HStack(spacing: 14) {
                             Image(systemName: "magnifyingglass")
@@ -147,8 +221,13 @@ struct SearchScreen: View {
             ForEach(Array(search.completions.enumerated()), id: \.offset) { _, completion in
                 Button {
                     focused = false
-                    search.resolve(completion) { item in
-                        if let item = item { state.select(mapItem: item) }
+                    // le ricerche generiche ("pizzeria") aprono l'elenco, gli indirizzi la scheda del luogo
+                    search.resolveAll(completion) { items, isQuery in
+                        if isQuery && items.count > 1 && state.searchPurpose == .destination {
+                            state.showResults(items, title: completion.title)
+                        } else if let item = items.first {
+                            state.select(mapItem: item)
+                        }
                     }
                 } label: {
                     ResultRow(title: completion.title, subtitle: completion.subtitle)

@@ -56,6 +56,9 @@ targets:
           UIApplicationSupportsMultipleScenes: false
         NSLocationWhenInUseUsageDescription: "GassMaps usa la tua posizione per mostrarti sulla mappa, calcolare i percorsi e trovare i luoghi vicini."
         NSLocationAlwaysAndWhenInUseUsageDescription: "GassMaps usa la tua posizione per la navigazione."
+        UIBackgroundModes:
+          - location
+          - audio
     settings:
       base:
         PRODUCT_NAME: GassMaps

@@ -1,6 +1,12 @@
 import UIKit
 import CoreLocation
 import MapLibre
+import MapKit
+
+/// Segnaposto di un risultato di ricerca
+final class ResultAnnotation: MLNPointAnnotation {
+    var index = 0
+}
 
 /// Ponte tra SwiftUI e MLNMapView.
 final class MapController {
@@ -8,6 +14,8 @@ final class MapController {
     weak var state: AppState?
 
     private(set) var routeCoordinates: [CLLocationCoordinate2D] = []
+    private(set) var alternativeCoordinates: [[CLLocationCoordinate2D]] = []
+    private var resultAnnotations: [ResultAnnotation] = []
     private var pinAnnotation: MLNPointAnnotation?
     private var didInitialPosition = false
 
@@ -19,6 +27,9 @@ final class MapController {
     static let routeSourceID = "gm-route"
     static let routeLayerID = "gm-route-line"
     static let routeCasingID = "gm-route-casing"
+    static let altSourceID = "gm-route-alt"
+    static let altLayerID = "gm-route-alt-line"
+    static let altCasingID = "gm-route-alt-casing"
 
     var centerCoordinate: CLLocationCoordinate2D? { mapView?.centerCoordinate }
 
@@ -105,13 +116,19 @@ final class MapController {
     // MARK: - Percorso
 
     func showRoute(_ coordinates: [CLLocationCoordinate2D], overview: Bool) {
+        showRoute(coordinates, alternatives: [], overview: overview)
+    }
+
+    /// Percorso scelto (colore del tema) + alternative (grigie, toccabili) come in Google Maps
+    func showRoute(_ coordinates: [CLLocationCoordinate2D], alternatives: [[CLLocationCoordinate2D]], overview: Bool) {
         routeCoordinates = coordinates
+        alternativeCoordinates = alternatives.filter { $0.count > 1 }
         guard let m = mapView else { return }
         if let style = m.style { installRoute(in: style) }
         guard overview, coordinates.count > 1 else { return }
 
         var minLat = 90.0, maxLat = -90.0, minLon = 180.0, maxLon = -180.0
-        for c in coordinates {
+        for c in coordinates + alternativeCoordinates.flatMap({ $0 }) {
             minLat = min(minLat, c.latitude); maxLat = max(maxLat, c.latitude)
             minLon = min(minLon, c.longitude); maxLon = max(maxLon, c.longitude)
         }
@@ -129,6 +146,7 @@ final class MapController {
     }
 
     func installRoute(in style: MLNStyle) {
+        installAlternatives(in: style)
         guard routeCoordinates.count > 1 else { return }
         var coords = routeCoordinates
         let line = MLNPolylineFeature(coordinates: &coords, count: UInt(coords.count))
@@ -163,12 +181,125 @@ final class MapController {
         }
     }
 
+    private func installAlternatives(in style: MLNStyle) {
+        let shapes: [MLNShape] = alternativeCoordinates.map { coords in
+            var c = coords
+            return MLNPolylineFeature(coordinates: &c, count: UInt(c.count))
+        }
+        let collection = MLNShapeCollectionFeature(shapes: shapes)
+        if let source = style.source(withIdentifier: MapController.altSourceID) as? MLNShapeSource {
+            source.shape = collection
+            return
+        }
+        guard !shapes.isEmpty else { return }
+        let source = MLNShapeSource(identifier: MapController.altSourceID, shape: collection, options: nil)
+        style.addSource(source)
+        let casing = MLNLineStyleLayer(identifier: MapController.altCasingID, source: source)
+        casing.lineColor = NSExpression(forConstantValue: UIColor.black.withAlphaComponent(0.45))
+        casing.lineWidth = NSExpression(forConstantValue: 10)
+        casing.lineCap = NSExpression(forConstantValue: "round")
+        casing.lineJoin = NSExpression(forConstantValue: "round")
+        let layer = MLNLineStyleLayer(identifier: MapController.altLayerID, source: source)
+        layer.lineColor = NSExpression(forConstantValue: UIColor(white: 0.62, alpha: 0.95))
+        layer.lineWidth = NSExpression(forConstantValue: 5.5)
+        layer.lineCap = NSExpression(forConstantValue: "round")
+        layer.lineJoin = NSExpression(forConstantValue: "round")
+        // le alternative stanno sotto al percorso scelto
+        if let below = style.layer(withIdentifier: MapController.routeCasingID) ?? style.layer(withIdentifier: "road-oneway") {
+            style.insertLayer(casing, below: below)
+            style.insertLayer(layer, below: below)
+        } else {
+            style.addLayer(casing)
+            style.addLayer(layer)
+        }
+    }
+
     func clearRoute() {
         routeCoordinates = []
+        alternativeCoordinates = []
         guard let style = mapView?.style else { return }
         if let source = style.source(withIdentifier: MapController.routeSourceID) as? MLNShapeSource {
             source.shape = nil
         }
+        if let source = style.source(withIdentifier: MapController.altSourceID) as? MLNShapeSource {
+            source.shape = nil
+        }
+    }
+
+    /// Indice dell'alternativa più vicina al punto toccato (entro 26 pt), se c'è
+    func alternativeIndex(near point: CGPoint) -> Int? {
+        guard let m = mapView else { return nil }
+        var best: (Int, CGFloat)?
+        for (i, coords) in alternativeCoordinates.enumerated() {
+            let pts = coords.map { m.convert($0, toPointTo: m) }
+            for j in 0..<(pts.count - 1) {
+                let d = MapController.distance(point, pts[j], pts[j + 1])
+                if d < 26 && (best == nil || d < best!.1) { best = (i, d) }
+            }
+        }
+        return best?.0
+    }
+
+    private static func distance(_ p: CGPoint, _ a: CGPoint, _ b: CGPoint) -> CGFloat {
+        let vx = b.x - a.x, vy = b.y - a.y
+        let len2 = vx * vx + vy * vy
+        var t = len2 > 0 ? ((p.x - a.x) * vx + (p.y - a.y) * vy) / len2 : 0
+        t = min(max(t, 0), 1)
+        let cx = a.x + t * vx - p.x, cy = a.y + t * vy - p.y
+        return sqrt(cx * cx + cy * cy)
+    }
+
+    // MARK: - Risultati di ricerca
+
+    func showResults(_ items: [MKMapItem]) {
+        guard let m = mapView else { return }
+        clearResults()
+        removePin()
+        let anns = items.enumerated().map { i, item -> ResultAnnotation in
+            let a = ResultAnnotation()
+            a.coordinate = item.placemark.coordinate
+            a.title = item.name
+            a.index = i
+            return a
+        }
+        resultAnnotations = anns
+        m.addAnnotations(anns)
+        m.setUserTrackingMode(.none, animated: false, completionHandler: nil)
+        state?.tracking = .none
+        m.contentInset = .zero
+        let coords = anns.map { $0.coordinate }
+        guard let first = coords.first else { return }
+        var minLat = first.latitude, maxLat = first.latitude, minLon = first.longitude, maxLon = first.longitude
+        for c in coords {
+            minLat = min(minLat, c.latitude); maxLat = max(maxLat, c.latitude)
+            minLon = min(minLon, c.longitude); maxLon = max(maxLon, c.longitude)
+        }
+        let pad = 0.002
+        let bounds = MLNCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat - pad, longitude: minLon - pad),
+                                         ne: CLLocationCoordinate2D(latitude: maxLat + pad, longitude: maxLon + pad))
+        let cam = m.cameraThatFitsCoordinateBounds(bounds, edgePadding: UIEdgeInsets(top: 170, left: 40, bottom: 400, right: 40))
+        cam.pitch = min(pitch, 30)
+        m.setCamera(cam, withDuration: 0.6, animationTimingFunction: CAMediaTimingFunction(name: .easeInEaseOut))
+    }
+
+    func clearResults() {
+        if !resultAnnotations.isEmpty { mapView?.removeAnnotations(resultAnnotations) }
+        resultAnnotations = []
+    }
+
+    /// Area visibile della mappa (per "Cerca in questa zona" e per i suggerimenti di ricerca)
+    var visibleRegion: MKCoordinateRegion? {
+        guard let m = mapView else { return nil }
+        let b = m.visibleCoordinateBounds
+        let center = CLLocationCoordinate2D(latitude: (b.sw.latitude + b.ne.latitude) / 2,
+                                            longitude: (b.sw.longitude + b.ne.longitude) / 2)
+        let span = MKCoordinateSpan(latitudeDelta: max(0.01, abs(b.ne.latitude - b.sw.latitude)),
+                                    longitudeDelta: max(0.01, abs(b.ne.longitude - b.sw.longitude)))
+        return MKCoordinateRegion(center: center, span: span)
+    }
+
+    func resetNorth() {
+        mapView?.resetNorth()
     }
 
     // MARK: - Navigazione

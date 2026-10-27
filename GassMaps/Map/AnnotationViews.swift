@@ -213,3 +213,49 @@ final class PinBubbleView: MLNAnnotationView {
         centerOffset = CGVector(dx: 0, dy: -(height + tailH) / 2)
     }
 }
+
+/// Segnaposto dei risultati di ricerca (a goccia, colore del tema) — tocca per aprire la scheda del luogo.
+final class ResultMarkerView: MLNAnnotationView {
+    private let imageView = UIImageView()
+
+    override init(reuseIdentifier: String?) {
+        super.init(reuseIdentifier: reuseIdentifier)
+        frame = CGRect(x: 0, y: 0, width: 30, height: 40)
+        imageView.frame = bounds
+        imageView.contentMode = .scaleAspectFit
+        addSubview(imageView)
+        centerOffset = CGVector(dx: 0, dy: -20)
+        scalesWithViewingDistance = false
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    func configure(color: UIColor) {
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 3
+        imageView.image = UIGraphicsImageRenderer(size: CGSize(width: 30, height: 40), format: fmt).image { ctx in
+            let c = ctx.cgContext
+            let r: CGFloat = 13
+            let center = CGPoint(x: 15, y: 15)
+            let path = UIBezierPath()
+            path.addArc(withCenter: center, radius: r, startAngle: .pi * 0.78, endAngle: .pi * 0.22, clockwise: true)
+            path.addLine(to: CGPoint(x: 15, y: 38))
+            path.close()
+            c.setShadow(offset: CGSize(width: 0, height: 2), blur: 4, color: UIColor.black.withAlphaComponent(0.45).cgColor)
+            color.setFill(); path.fill()
+            c.setShadow(offset: .zero, blur: 0, color: nil)
+            UIColor.white.withAlphaComponent(0.9).setStroke(); path.lineWidth = 1.5; path.stroke()
+            UIColor.white.setFill()
+            UIBezierPath(ovalIn: CGRect(x: 10, y: 10, width: 10, height: 10)).fill()
+        }
+    }
+
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        UIView.animate(withDuration: 0.15) {
+            self.transform = selected ? CGAffineTransform(scaleX: 1.25, y: 1.25) : .identity
+        }
+    }
+}

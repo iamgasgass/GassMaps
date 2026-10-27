@@ -4,7 +4,7 @@ Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfac
 
 ## Funzioni
 
-- **Splash** animata con logo GassMaps, icone fluttuanti e barra di caricamento
+- **Splash** che mostra l'app: città animata nei colori del tema scelto, percorso che si disegna, icone dei luoghi, freccia utente, logo GassMaps su vetro e barra di caricamento
 - **Mappa 3D** inclinata con edifici estrusi, nomi delle vie in maiuscolo, frecce dei sensi unici, numeri civici, scudi stradali (SS18…) e icone dei luoghi
 - **Freccia utente** con croce di mira, rotazione secondo bussola o direzione di marcia
 - **Intestazione** all'avvio con giorno, ora e "Città, Provincia", poi barra superiore con:
@@ -29,6 +29,25 @@ Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfac
   | 8 | Old Kingdom | pergamena medievale |
 
 - **Impostazioni**: unità di distanza (KM/MI), icona app (3 icone alternative), condividi, valutaci, community Discord, contattaci, privacy, termini, cancella i miei dati, ripristina acquisti
+
+## Funzioni stile Google Maps
+
+- **Scheda del luogo**: nome, categoria, indirizzo, distanza e tempi in auto/a piedi; pulsanti *Indicazioni*, *Avvia*, *Chiama*, *Salva*, *Condividi*, *Sito web*; menu ••• con *Imposta come Casa/Lavoro*, copia coordinate e indirizzo
+- **Tocco sulle icone della mappa** → si apre la scheda del luogo (telefono e sito recuperati automaticamente)
+- **Indicazioni**: schede *Auto / A piedi / Mezzi* con i tempi, **percorsi alternativi** (grigi, toccabili sulla mappa o nell'elenco) con "Più veloce", via, pedaggi, autostrade e avvisi; **opzioni** *Evita pedaggi* / *Evita autostrade*; elenco **Passaggi**
+- **Navigazione svolta per svolta**: banner con freccia della manovra, distanza e istruzione, "Poi…" per la manovra successiva, **guida vocale in italiano** (disattivabile), **ricalcolo automatico** se esci dal percorso, velocità attuale, tempo/km/orario di arrivo aggiornati, vista d'insieme, ricentra, arrivo a destinazione; funziona anche **a schermo spento**
+- **Ricerca**: suggerimenti, invio → elenco risultati sulla mappa con segnaposto; **chip rapidi** (Ristoranti, Benzina, Caffè, Supermercati, Hotel, Farmacie, Parcheggi, Bancomat, Ospedali)
+- **Casa e Lavoro** con indicazioni in un tocco; cronologia; posizioni salvate
+- **Bussola**: compare quando ruoti la mappa, tocco per tornare al nord
+- **Partenza modificabile**, **inverti partenza/destinazione**, **aggiungi tappa** e **orario di partenza** (parti ora o scegli data/ora)
+- **Cerca in questa zona** quando sposti la mappa sui risultati; la ricerca usa l'area visibile della mappa
+- **Cerca lungo il percorso** durante la navigazione (benzinai, ristoranti, caffè, supermercati, parcheggi, ricarica) con aggiunta della tappa
+- **Condividi orario di arrivo** durante la navigazione
+- **Salva parcheggio**: ricorda dove hai lasciato l'auto e ti ci riporta
+- **Posizione in tempo reale ottimizzata**: scarto delle letture imprecise o vecchie, aggiornamento più fitto in navigazione, aggancio al percorso più rapido
+
+Limiti (dati non disponibili gratuitamente fuori da Google): traffico in tempo reale, Street View, recensioni e foto dei luoghi,
+orari di apertura, tracciato dei mezzi pubblici (per i mezzi l'app mostra il tempo e apre linee e orari in Mappe di Apple), mappe offline.
 
 ## Font di GTA San Andreas (Pricedown)
 

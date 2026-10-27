@@ -76,19 +76,6 @@ struct MapSelectionScreen: View {
                     .frame(width: geo.size.width, height: fullHeight)
                     .offset(y: globeOffset)
                     .opacity(didAppear ? 1 : 0)
-                    // sfocatura progressiva della parte bassa del globo (profondità di campo)
-                    VStack {
-                        Spacer()
-                        Rectangle()
-                            .fill(.ultraThinMaterial)
-                            .mask(LinearGradient(colors: [.clear, .black.opacity(0.85), .black],
-                                                 startPoint: .top, endPoint: .bottom))
-                            .overlay(
-                                LinearGradient(colors: [.clear, theme.backgroundBottom.opacity(0.5)],
-                                               startPoint: .top, endPoint: .bottom)
-                            )
-                            .frame(height: 300)
-                    }
                 }
                 .animation(.easeInOut(duration: 0.5), value: index)
                 .ignoresSafeArea()

@@ -95,6 +95,8 @@ struct RouteStep: Identifiable, Equatable {
     var coordinate: CLLocationCoordinate2D
     /// distanza dall'inizio del percorso al punto della manovra
     var startDistance: CLLocationDistance
+    /// angolo di svolta misurato sul tracciato (+ destra, − sinistra, gradi); nil se non misurabile
+    var turnAngle: Double? = nil
 
     static func == (lhs: RouteStep, rhs: RouteStep) -> Bool { lhs.id == rhs.id }
 }

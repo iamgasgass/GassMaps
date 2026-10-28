@@ -79,8 +79,99 @@ enum RouteMath {
     }
 }
 
+/// Rende le indicazioni più precise:
+/// 1) la distanza di ogni manovra è misurata proiettando il punto della manovra sul tracciato
+///    (la stessa misura usata per la posizione durante la guida, quindi avvisi al momento giusto);
+/// 2) la direzione reale della svolta è calcolata dalla geometria della strada (30 m prima e dopo l'incrocio):
+///    se il testo dice il contrario viene corretto, se non indica una direzione la aggiunge.
+enum ManeuverRefiner {
+    static func refine(_ steps: [RouteStep], on coords: [CLLocationCoordinate2D]) -> [RouteStep] {
+        guard coords.count > 1 else { return steps }
+        let cum = RouteMath.cumulative(coords)
+        let total = cum.last ?? 0
+        var out: [RouteStep] = []
+        var lastIndex = 0
+        var lastAlong = 0.0
+        for (i, step) in steps.enumerated() {
+            var s = step
+            if i == 0 {
+                s.startDistance = 0
+                out.append(s)
+                continue
+            }
+            let proj = RouteMath.project(step.coordinate, on: coords, cumulative: cum, from: lastIndex)
+            let along = max(lastAlong, proj.offset < 60 ? proj.along : step.startDistance)
+            lastIndex = proj.index
+            lastAlong = along
+            s.startDistance = along
+            if along > 15 && along < total - 5 {
+                let before = RouteMath.point(at: max(0, along - 30), on: coords, cumulative: cum, hint: proj.index)
+                let at = RouteMath.point(at: along, on: coords, cumulative: cum, hint: proj.index)
+                let after = RouteMath.point(at: min(total, along + 30), on: coords, cumulative: cum, hint: proj.index)
+                if RouteMath.meters(before.coordinate, at.coordinate) > 5 && RouteMath.meters(at.coordinate, after.coordinate) > 5 {
+                    let bIn = MapController.bearing(from: before.coordinate, to: at.coordinate)
+                    let bOut = MapController.bearing(from: at.coordinate, to: after.coordinate)
+                    var a = bOut - bIn
+                    while a > 180 { a -= 360 }
+                    while a < -180 { a += 360 }
+                    s.turnAngle = a
+                    s.instruction = corrected(s.instruction, angle: a)
+                }
+            }
+            out.append(s)
+        }
+        return out
+    }
+
+    private static func isSpecial(_ s: String) -> Bool {
+        ["rotonda", "rotatoria", "roundabout", "uscita", "exit", "svincolo", "arriv", "destinazione",
+         "destination", "traghetto", "ferry", "inversione", "u-turn"].contains { s.contains($0) }
+    }
+
+    static func corrected(_ text: String, angle a: Double) -> String {
+        let s = text.lowercased()
+        guard !isSpecial(s) else { return text }
+        let saysLeft = s.contains("sinistra") || s.contains("left")
+        let saysRight = s.contains("destra") || s.contains("right")
+        // il testo contraddice chiaramente la geometria → si corregge la direzione
+        if saysLeft && !saysRight && a > 50 {
+            return text.replacingOccurrences(of: "sinistra", with: "destra")
+                .replacingOccurrences(of: "Sinistra", with: "Destra")
+                .replacingOccurrences(of: "left", with: "right").replacingOccurrences(of: "Left", with: "Right")
+        }
+        if saysRight && !saysLeft && a < -50 {
+            return text.replacingOccurrences(of: "destra", with: "sinistra")
+                .replacingOccurrences(of: "Destra", with: "Sinistra")
+                .replacingOccurrences(of: "right", with: "left").replacingOccurrences(of: "Right", with: "Left")
+        }
+        // nessuna direzione nel testo ma la strada gira davvero → si aggiunge
+        if !saysLeft && !saysRight && abs(a) >= 35 {
+            let side = a > 0 ? "destra" : "sinistra"
+            if s.hasPrefix("svolta ") {
+                return "Svolta a \(side) " + text.dropFirst("svolta ".count)
+            }
+            let prefix = abs(a) < 60 ? "Tieni la \(side)" : "Svolta a \(side)"
+            return "\(prefix) e \(text.prefix(1).lowercased() + text.dropFirst())"
+        }
+        return text
+    }
+}
+
 /// Icona della manovra a partire dal testo dell'istruzione (italiano o inglese).
 enum ManeuverIcon {
+    /// Icona dal tracciato reale della svolta (più affidabile del testo), tranne rotonde, uscite e arrivo
+    static func symbol(for step: RouteStep) -> String {
+        let s = step.instruction.lowercased()
+        let special = ["rotonda", "rotatoria", "roundabout", "uscita", "exit", "svincolo", "arriv",
+                       "destinazione", "destination", "traghetto", "ferry", "inversione", "u-turn"].contains { s.contains($0) }
+        guard !special, let a = step.turnAngle else { return symbol(for: step.instruction) }
+        let m = abs(a)
+        if m < 20 { return "arrow.up" }
+        if m < 55 { return a > 0 ? "arrow.up.right" : "arrow.up.left" }
+        if m < 150 { return a > 0 ? "arrow.turn.up.right" : "arrow.turn.up.left" }
+        return a > 0 ? "arrow.uturn.right" : "arrow.uturn.left"
+    }
+
     static func symbol(for instruction: String) -> String {
         let s = instruction.lowercased()
         func has(_ words: String...) -> Bool { words.contains { s.contains($0) } }
@@ -96,8 +187,10 @@ enum ManeuverIcon {
         if has("leggermente a sinistra", "slight left", "mantieni la sinistra", "keep left", "tieni la sinistra") {
             return "arrow.up.left"
         }
-        if has("a destra", "turn right", "right onto", "destra") { return "arrow.turn.up.right" }
-        if has("a sinistra", "turn left", "left onto", "sinistra") { return "arrow.turn.up.left" }
+        if has("a destra", "turn right", "right onto") { return "arrow.turn.up.right" }
+        if has("a sinistra", "turn left", "left onto") { return "arrow.turn.up.left" }
+        if has("destra") { return "arrow.turn.up.right" }
+        if has("sinistra") { return "arrow.turn.up.left" }
         if has("traghetto", "ferry") { return "ferry.fill" }
         return "arrow.up"
     }

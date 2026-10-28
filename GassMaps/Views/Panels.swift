@@ -481,7 +481,10 @@ struct NavigationBanner: View {
         steps.indices.contains(state.progress.nextStep) ? steps[state.progress.nextStep].instruction : "Prosegui sul percorso"
     }
 
-    private var icon: String { ManeuverIcon.symbol(for: instruction) }
+    private var icon: String {
+        steps.indices.contains(state.progress.nextStep) ? ManeuverIcon.symbol(for: steps[state.progress.nextStep])
+                                                        : ManeuverIcon.symbol(for: instruction)
+    }
 
     private var thenInstruction: String? {
         let i = state.progress.nextStep + 1
@@ -594,7 +597,7 @@ struct StepsSheet: View {
                     Section {
                         ForEach(Array(r.steps.enumerated()), id: \.element.id) { i, step in
                             HStack(spacing: 14) {
-                                Image(systemName: ManeuverIcon.symbol(for: step.instruction))
+                                Image(systemName: ManeuverIcon.symbol(for: step))
                                     .font(.system(size: 20, weight: .bold))
                                     .frame(width: 30)
                                     .foregroundStyle(i == state.progress.nextStep && state.panel == .navigating

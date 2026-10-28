@@ -686,13 +686,17 @@ final class AppState: ObservableObject {
         // guida vocale: avvisi prima della manovra
         if next < r.steps.count {
             let instruction = r.steps[next].instruction
-            let thresholds: [Double] = r.mode == .walk ? [120, 25] : [900, 350, 60]
-            for th in thresholds.reversed() where toManeuver <= th {
-                let key = "\(next)-\(Int(th))"
+            // avvisi in base alla velocità (come Google Maps): l'ultimo ~5 secondi prima dell'incrocio
+            let v = max(0, loc.speed)
+            let thresholds: [Double] = r.mode == .walk
+                ? [120, 25]
+                : [v > 22 ? 1800 : 900, max(350, v * 18), max(50, v * 5)]
+            for idx in thresholds.indices.reversed() where toManeuver <= thresholds[idx] {
+                let key = "\(next)-\(idx)"
                 if !announced.contains(key) {
                     // registra anche le soglie più lontane per non ripeterle
-                    for t2 in thresholds where t2 >= th { announced.insert("\(next)-\(Int(t2))") }
-                    if th == thresholds.last {
+                    for i2 in 0...idx { announced.insert("\(next)-\(i2)") }
+                    if idx == thresholds.count - 1 {
                         VoiceGuide.shared.speak(instruction)
                     } else {
                         VoiceGuide.shared.speak("Tra \(units.spoken(toManeuver)), \(lowerFirst(instruction))")

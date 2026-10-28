@@ -231,6 +231,8 @@ enum DirectionsService {
                     }
                     along += step.distance
                 }
+                // posizione esatta delle manovre sul tracciato e verifica destra/sinistra
+                steps = ManeuverRefiner.refine(steps, on: coords)
                 return RouteInfo(coordinates: coords, travelTime: route.expectedTravelTime, distance: route.distance,
                                  steps: steps, name: route.name, mode: mode,
                                  hasTolls: route.hasTolls, hasHighways: route.hasHighways,
@@ -257,9 +259,12 @@ enum DirectionsService {
             DirectionsService.routes(from: stop.coordinate, to: to, destinationItem: destinationItem, mode: mode, options: options,
                    alternatives: false, departure: departure?.addingTimeInterval(a.travelTime)) { second in
                 guard let b = second.first else { completion([]); return }
+                // le distanze delle manovre sono misurate sul tracciato: si sfasa la seconda tratta
+                // della lunghezza reale del tracciato della prima
+                let legA = RouteMath.cumulative(a.coordinates).last ?? a.distance
                 let steps = a.steps + b.steps.map { st -> RouteStep in
                     var c = st
-                    c.startDistance += a.distance
+                    c.startDistance += legA
                     return c
                 }
                 let merged = RouteInfo(coordinates: a.coordinates + b.coordinates.dropFirst(),

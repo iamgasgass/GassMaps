@@ -16,6 +16,14 @@ final class UserArrowView: MLNUserLocationAnnotationView {
     private var appliedTint: UIColor?
     private var appliedMarker: Int = -1
     private let markerLayer = CALayer()
+    /// cono della bussola (come il "fascio" di Google Maps: più largo quando la bussola è imprecisa)
+    private let beam = CAGradientLayer()
+    private let beamMask = CAShapeLayer()
+    /// cerchio di precisione (visibile quando la posizione è approssimativa)
+    private let accuracyRing = CAShapeLayer()
+    private var displayedAngle: CGFloat = 0
+    private var lastHeading: Double = 0
+    private var lastMapDirection: Double = .nan
 
     override func update() {
         if !configured { configure() }
@@ -43,23 +51,79 @@ final class UserArrowView: MLNUserLocationAnnotationView {
         }
         guard let map = mapView else { return }
 
-        var heading: Double = 0
-        if let h = userLocation?.heading, h.trueHeading >= 0 {
-            heading = h.trueHeading
-        } else if let c = userLocation?.location?.course, c >= 0 {
-            heading = c
+        // Come Google Maps: in movimento la freccia segue la direzione di marcia,
+        // da fermi segue la bussola del telefono (nord vero, altrimenti magnetico).
+        let loc = userLocation?.location
+        var heading: Double?
+        var compass = false
+        var compassAccuracy: Double = 25
+        if let l = loc, l.speed >= 1.5, l.course >= 0 {
+            heading = l.course
+        } else if let h = userLocation?.heading {
+            let v = h.trueHeading >= 0 ? h.trueHeading : h.magneticHeading
+            if v >= 0 {
+                heading = v
+                compass = true
+                if h.headingAccuracy > 0 { compassAccuracy = h.headingAccuracy }
+            }
         }
-        let angle = CGFloat((heading - map.direction) * .pi / 180)
+        if heading == nil, let c = loc?.course, c >= 0 { heading = c }
+        if let h = heading { lastHeading = h }
+
+        // rotazione dolce sul percorso più breve (niente giro completo passando da 359° a 0°);
+        // se a ruotare è la mappa (gesto dell'utente) la freccia la segue senza ritardo
+        let target = CGFloat((lastHeading - map.direction) * .pi / 180)
+        var delta = target - displayedAngle
+        delta = atan2(sin(delta), cos(delta))
+        displayedAngle += delta
+        let mapRotating = !lastMapDirection.isNaN && abs(map.direction - lastMapDirection) > 0.01
+        lastMapDirection = map.direction
         let pitch = CGFloat(map.camera.pitch * .pi / 180)
 
         var t = CATransform3DIdentity
         t.m34 = -1.0 / 400
         t = CATransform3DRotate(t, pitch * 0.85, 1, 0, 0)
-        t = CATransform3DRotate(t, angle, 0, 0, 1)
+        t = CATransform3DRotate(t, displayedAngle, 0, 0, 1)
+
+        // larghezza del cono = precisione della bussola (15°–70°)
+        let half = CGFloat(min(70, max(15, compassAccuracy))) * .pi / 180
+        let wedge = UIBezierPath()
+        wedge.move(to: CGPoint(x: 64, y: 64))
+        wedge.addArc(withCenter: CGPoint(x: 64, y: 64), radius: 64,
+                     startAngle: -.pi / 2 - half, endAngle: -.pi / 2 + half, clockwise: true)
+        wedge.close()
+
+        // cerchio di precisione in punti dello schermo
+        var ringRadius: CGFloat = 0
+        if let l = loc, l.horizontalAccuracy > 0 {
+            let mpp = map.metersPerPoint(atLatitude: l.coordinate.latitude)
+            if mpp > 0 { ringRadius = CGFloat(l.horizontalAccuracy / mpp) }
+        }
+
+        CATransaction.begin()
+        if mapRotating || abs(delta) < 0.002 {
+            CATransaction.setDisableActions(true)
+        } else {
+            CATransaction.setAnimationDuration(0.25)
+            CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
+        }
+        container.transform = t
+        CATransaction.commit()
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        container.transform = t
+        beam.isHidden = !compass || appliedMarker != 0
+        beamMask.path = wedge.cgPath
+        let tintCG = UserArrowView.tint
+        beam.colors = [tintCG.withAlphaComponent(0.45).cgColor, tintCG.withAlphaComponent(0).cgColor]
+        let showRing = ringRadius > 26
+        accuracyRing.isHidden = !showRing
+        if showRing {
+            let r = min(ringRadius, 600)
+            accuracyRing.path = UIBezierPath(ovalIn: CGRect(x: 22 - r, y: 22 - r, width: r * 2, height: r * 2)).cgPath
+            accuracyRing.fillColor = tintCG.withAlphaComponent(0.12).cgColor
+            accuracyRing.strokeColor = tintCG.withAlphaComponent(0.35).cgColor
+        }
         CATransaction.commit()
     }
 
@@ -86,8 +150,20 @@ final class UserArrowView: MLNUserLocationAnnotationView {
         vLine.frame = CGRect(x: 21.5, y: 22 - 150, width: 1, height: 450)
         layer.addSublayer(vLine)
 
+        accuracyRing.lineWidth = 1
+        accuracyRing.isHidden = true
+        layer.insertSublayer(accuracyRing, at: 0)
+
         container.frame = bounds
         layer.addSublayer(container)
+
+        // cono della bussola: parte dal centro e si apre davanti alla freccia
+        beam.frame = CGRect(x: 22 - 64, y: 22 - 64, width: 128, height: 64)
+        beam.startPoint = CGPoint(x: 0.5, y: 1)
+        beam.endPoint = CGPoint(x: 0.5, y: 0)
+        beam.mask = beamMask
+        beam.isHidden = true
+        container.addSublayer(beam)
         markerLayer.frame = bounds.insetBy(dx: -14, dy: -14)
         markerLayer.contentsGravity = .resizeAspect
         markerLayer.magnificationFilter = .nearest

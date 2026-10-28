@@ -66,6 +66,14 @@ final class MapController {
         }
     }
 
+    /// Dalla modalità bussola: nord in alto continuando a seguire la posizione
+    func resetNorthFollowing() {
+        guard let m = mapView else { return }
+        m.setUserTrackingMode(.follow, animated: true, completionHandler: nil)
+        m.setDirection(0, animated: true)
+        state?.tracking = .follow
+    }
+
     func setTracking(_ t: TrackingState) {
         guard let m = mapView else { return }
         switch t {

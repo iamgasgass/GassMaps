@@ -136,6 +136,8 @@ struct MainMapScreen: View {
             SavedPlacesPanel().transition(.move(edge: .bottom))
         case .results:
             ResultsPanel().transition(.move(edge: .bottom))
+        case .myLocation:
+            MyLocationPanel().transition(.move(edge: .bottom))
         case .none:
             EmptyView()
         }
@@ -217,6 +219,21 @@ struct TopBar: View {
 
 struct BottomControls: View {
     @EnvironmentObject var state: AppState
+    @EnvironmentObject var location: LocationManager
+
+    private var locationDenied: Bool {
+        location.authorization == .denied || location.authorization == .restricted
+    }
+
+    /// Icona come Google Maps: freccia vuota se la mappa non ti segue, piena (blu) se ti segue, bussola in modalità bussola
+    private var locationIcon: String {
+        if locationDenied { return "location.slash" }
+        switch state.tracking {
+        case .none: return "location"
+        case .follow: return "location.fill"
+        case .heading: return "location.north.line.fill"
+        }
+    }
 
     var body: some View {
         GlassEffectContainer(spacing: 18) {
@@ -237,9 +254,9 @@ struct BottomControls: View {
 
                 Button { state.cycleTracking() } label: {
                     GlassCircle(size: 46) {
-                        Image(systemName: state.tracking == .heading ? "safari.fill" : "location.fill")
+                        Image(systemName: locationIcon)
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(state.tracking == .none || locationDenied ? Color.white : Color(hex: 0x2F8CFF))
                             .contentTransition(.symbolEffect(.replace))
                     }
                 }

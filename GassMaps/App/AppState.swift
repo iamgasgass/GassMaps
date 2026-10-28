@@ -7,7 +7,7 @@ enum AppPhase: Equatable {
 }
 
 enum BottomPanelKind: Equatable {
-    case none, pinned, directions, navigating, saved, results
+    case none, pinned, directions, navigating, saved, results, myLocation
 }
 
 enum TrackingState: Equatable {
@@ -719,13 +719,43 @@ final class AppState: ObservableObject {
         map.showRoute(r.coordinates, alternatives: [], overview: true)
     }
 
+    /// Pulsante posizione come Google Maps:
+    /// mappa spostata → torna sulla tua posizione e la segue;
+    /// già centrata → modalità bussola (la mappa ruota con il telefono);
+    /// in modalità bussola → torna col nord in alto.
+    /// Senza permesso di localizzazione apre le Impostazioni di iOS.
     func cycleTracking() {
-        switch tracking {
-        case .follow: map.setTracking(.heading)
-        case .heading: map.setTracking(.follow)
-        case .none:
-            if panel == .navigating { map.startNavigation() } else { map.setTracking(.follow) }
+        switch location.authorization {
+        case .denied, .restricted:
+            if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+            return
+        case .notDetermined:
+            location.start()
+            return
+        default: break
         }
+        if panel == .navigating {
+            if tracking == .none { map.startNavigation() } else { map.setTracking(tracking == .heading ? .follow : .heading) }
+            return
+        }
+        switch tracking {
+        case .none: map.recenter()
+        case .follow: map.setTracking(.heading)
+        case .heading: map.resetNorthFollowing()
+        }
+    }
+
+    /// Imposta un luogo come posizione dell'auto parcheggiata
+    func setParking(_ place: Place) {
+        parking = Place(name: "Auto parcheggiata", address: place.address.isEmpty ? place.name : place.address,
+                        coordinate: place.coordinate)
+        Notifier.scheduleParkingReminder()
+    }
+
+    /// Tocco sulla freccia della posizione → scheda "La tua posizione"
+    func openMyLocation() {
+        guard panel == .none || panel == .saved || panel == .myLocation else { return }
+        panel = .myLocation
     }
 
     func deleteAllData() {

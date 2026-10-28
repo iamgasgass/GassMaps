@@ -22,6 +22,7 @@ struct GameMapView: UIViewRepresentable {
         // la freccia usa la posizione già filtrata (stessa della navigazione)
         map.locationManager = state.location.mapFeed
         map.showsUserLocation = true
+        map.showsUserHeadingIndicator = true   // la freccia riceve la bussola anche senza modalità bussola
         map.allowsTilting = true
         map.allowsRotating = true
         map.minimumZoomLevel = 2
@@ -151,6 +152,15 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         guard gesture.state == .ended, let map = gesture.view as? MLNMapView else { return }
         if Prefs.bool(Prefs.haptics, default: true) { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
         let point = gesture.location(in: map)
+
+        // tocco sulla freccia della posizione → scheda "La tua posizione" (come Google Maps)
+        if let ul = map.userLocation?.location, state.panel != .navigating, state.panel != .directions {
+            let p = map.convert(ul.coordinate, toPointTo: map)
+            if hypot(p.x - point.x, p.y - point.y) < 30 {
+                state.openMyLocation()
+                return
+            }
+        }
 
         // scelta di un percorso alternativo
         if state.panel == .directions, let i = state.map.alternativeIndex(near: point),

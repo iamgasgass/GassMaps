@@ -66,6 +66,7 @@ struct PinnedPlacePanel: View {
                         Menu {
                             Button { state.setHome(place) } label: { Label("Imposta come Casa", systemImage: "house.fill") }
                             Button { state.setWork(place) } label: { Label("Imposta come Lavoro", systemImage: "briefcase.fill") }
+                            Button { state.setParking(place) } label: { Label("Imposta come parcheggio auto", systemImage: "car.fill") }
                             Button {
                                 UIPasteboard.general.string = String(format: "%.6f, %.6f", place.latitude, place.longitude)
                             } label: { Label("Copia coordinate", systemImage: "doc.on.doc") }
@@ -827,5 +828,167 @@ struct AlongRouteSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+// MARK: - La tua posizione (tocco sulla freccia, come Google Maps)
+
+struct MyLocationPanel: View {
+    @EnvironmentObject var state: AppState
+    @EnvironmentObject var location: LocationManager
+    @State private var address = ""
+    @State private var showCalibration = false
+    @State private var parkingSaved = false
+
+    private var here: Place? {
+        location.location.map { Place(name: "La mia posizione", address: address, coordinate: $0.coordinate) }
+    }
+
+    var body: some View {
+        BottomPanel(onDismiss: { state.dismissPanel() }) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(Color(hex: 0x2F8CFF))
+                        .frame(width: 42, height: 42)
+                        .glassEffect(.regular, in: Circle())
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("La tua posizione")
+                            .font(.system(size: 24, weight: .heavy))
+                            .foregroundStyle(.white)
+                        Text(address.isEmpty ? "Ricerca indirizzo…" : address)
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.white.opacity(0.55))
+                            .lineLimit(2)
+                        if let l = location.location {
+                            Text(String(format: "%.5f, %.5f", l.coordinate.latitude, l.coordinate.longitude)
+                                 + (l.horizontalAccuracy > 0 ? " · precisione \(state.units.short(l.horizontalAccuracy))" : ""))
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(Color.white.opacity(0.4))
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    GlassEffectContainer(spacing: 10) {
+                        HStack(spacing: 10) {
+                            ActionChip(title: parkingSaved || state.parking != nil ? "Parcheggio salvato" : "Salva parcheggio",
+                                       icon: "parkingsign", prominent: true, accent: Color(hex: 0x2F8CFF)) {
+                                state.saveParking()
+                                parkingSaved = true
+                            }
+                            if let p = here {
+                                ShareLink(item: ShareLinks.url(for: p), subject: Text("La mia posizione"),
+                                          message: Text("Ecco dove mi trovo")) {
+                                    HStack(spacing: 7) {
+                                        Image(systemName: "square.and.arrow.up").font(.system(size: 14, weight: .bold))
+                                        Text("Condividi posizione").font(.system(size: 15, weight: .semibold))
+                                    }
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 16)
+                                    .frame(height: 44)
+                                    .glassEffect(.regular.interactive(), in: Capsule())
+                                }
+                            }
+                            ActionChip(title: "Calibra", icon: "safari") { showCalibration = true }
+                            if let p = here {
+                                ActionChip(title: "Salva", icon: state.isSaved(p) ? "bookmark.fill" : "bookmark") {
+                                    var place = p
+                                    place.name = address.components(separatedBy: ",").first ?? "La mia posizione"
+                                    state.toggleSave(place)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // luoghi nelle vicinanze
+                Text("Nelle vicinanze")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.6))
+                ScrollView(.horizontal, showsIndicators: false) {
+                    GlassEffectContainer(spacing: 8) {
+                        HStack(spacing: 8) {
+                            ForEach([("Ristoranti", "fork.knife"), ("Caffè", "cup.and.saucer.fill"),
+                                     (Prefs.isElectric ? "Ricarica elettrica" : "Benzina", Prefs.isElectric ? "bolt.car.fill" : "fuelpump.fill"),
+                                     ("Supermercati", "cart.fill"), ("Farmacie", "pills.fill"), ("Bancomat", "creditcard.fill")],
+                                    id: \.0) { item in
+                                Button { state.searchCategory(item.0) } label: {
+                                    Label(item.0, systemImage: item.1)
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 14).frame(height: 38)
+                                        .glassEffect(.regular.interactive(), in: Capsule())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear(perform: lookup)
+        .sheet(isPresented: $showCalibration) {
+            CompassCalibrationSheet()
+                .environmentObject(location)
+                .presentationDetents([.medium])
+        }
+    }
+
+    private func lookup() {
+        guard let c = location.location?.coordinate else { return }
+        Geocoder.reverse(c) { address = $0 }
+    }
+}
+
+/// Calibrazione della bussola (come "Calibra" di Google Maps)
+struct CompassCalibrationSheet: View {
+    @EnvironmentObject var location: LocationManager
+    @Environment(\.dismiss) private var dismiss
+    @State private var spin = false
+
+    private var level: (String, Color) {
+        let a = location.compassAccuracy
+        if a < 0 { return ("Non disponibile", .gray) }
+        if a <= 15 { return ("Alta", Color(hex: 0x3DD06A)) }
+        if a <= 35 { return ("Media", Color(hex: 0xF2B233)) }
+        return ("Bassa", Color(hex: 0xFF5A5F))
+    }
+
+    var body: some View {
+        VStack(spacing: 18) {
+            Text("Calibra la bussola")
+                .font(.system(size: 22, weight: .heavy))
+                .foregroundStyle(.white)
+                .padding(.top, 26)
+            Image(systemName: "infinity")
+                .font(.system(size: 64, weight: .bold))
+                .foregroundStyle(Color(hex: 0x2F8CFF))
+                .rotationEffect(.degrees(spin ? 12 : -12))
+                .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: spin)
+                .onAppear { spin = true }
+            Text("Inclina e muovi il telefono disegnando un 8 finché la precisione diventa alta.")
+                .font(.system(size: 15))
+                .foregroundStyle(Color.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 28)
+            HStack(spacing: 8) {
+                Circle().fill(level.1).frame(width: 10, height: 10)
+                Text("Precisione bussola: \(level.0)")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            .padding(.horizontal, 18).frame(height: 44)
+            .glassEffect(.regular, in: Capsule())
+            Button("Fine") { dismiss() }
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 34).frame(height: 46)
+                .glassEffect(.regular.interactive(), in: Capsule())
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity)
     }
 }

@@ -15,6 +15,8 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published var placeName: String = "Ricerca posizione..."
     /// precisione stimata in metri (dopo il filtro)
     @Published var accuracy: Double = -1
+    /// precisione della bussola in gradi (-1 = non disponibile); aggiornata solo quando cambia fascia
+    @Published var compassAccuracy: Double = -1
 
     /// richiamato ad ogni nuova posizione (usato dalla navigazione, anche in background)
     var onUpdate: ((CLLocation) -> Void)?
@@ -86,6 +88,13 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         mapFeed.forward(heading: newHeading)
+        let a = newHeading.headingAccuracy
+        let bucket: Double = a < 0 ? -1 : (a <= 15 ? 10 : (a <= 35 ? 30 : 60))
+        let old = compassAccuracy
+        let bucketOld: Double = old < 0 ? -1 : (old <= 15 ? 10 : (old <= 35 ? 30 : 60))
+        if bucket != bucketOld {
+            DispatchQueue.main.async { self.compassAccuracy = a }
+        }
     }
 
     func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool { false }

@@ -18,7 +18,7 @@ struct SettingsScreen: View {
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                VStack(spacing: 6) {
+                VStack(spacing: 12) {
                     entry(.display, "map", "App e display", "Tema, controlli della mappa, accessibilità")
                     entry(.navigation, "location.north", "Navigazione", "In auto, a piedi, con i mezzi di trasporto")
                     entry(.vehicles, "car", "I tuoi veicoli", "Tipo di motore, veicoli connessi")
@@ -56,28 +56,29 @@ struct SettingsScreen: View {
         .preferredColorScheme(.dark)
     }
 
+    /// Stessa riga Liquid Glass di prima (icona semplice, nessun cerchio), con sottotitolo come Google Maps
     private func entry(_ page: SettingsPage, _ icon: String, _ title: String, _ subtitle: String?) -> some View {
         NavigationLink(value: page) {
-            HStack(spacing: 18) {
+            HStack(spacing: 14) {
                 Image(systemName: icon)
-                    .font(.system(size: 20, weight: .regular))
-                    .foregroundStyle(.white)
-                    .frame(width: 50, height: 50)
-                    .glassEffect(.regular, in: Circle())
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title).font(.system(size: 18, weight: .regular)).foregroundStyle(.white)
+                    .font(.system(size: 19, weight: .semibold))
+                    .frame(width: 26)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title).font(.system(size: 17, weight: .medium))
                     if let subtitle {
-                        Text(subtitle).font(.system(size: 15)).foregroundStyle(Color.white.opacity(0.6))
+                        Text(subtitle).font(.system(size: 13)).foregroundStyle(Color.white.opacity(0.55))
                             .lineLimit(2).multilineTextAlignment(.leading)
                     }
                 }
-                Spacer(minLength: 8)
-                Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.85))
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.45))
             }
-            .padding(.vertical, 14)
-            .padding(.horizontal, 4)
-            .contentShape(Rectangle())
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .frame(minHeight: 60)
+            .glassRow(cornerRadius: 30)
         }
         .buttonStyle(.plain)
     }

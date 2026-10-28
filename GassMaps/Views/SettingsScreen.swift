@@ -63,11 +63,11 @@ struct SettingsScreen: View {
                 Image(systemName: icon)
                     .font(.system(size: 19, weight: .semibold))
                     .frame(width: 26)
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 1) {
                     Text(title).font(.system(size: 17, weight: .medium))
                     if let subtitle {
-                        Text(subtitle).font(.system(size: 13)).foregroundStyle(Color.white.opacity(0.55))
-                            .lineLimit(2).multilineTextAlignment(.leading)
+                        Text(subtitle).font(.system(size: 12)).foregroundStyle(Color.white.opacity(0.55))
+                            .lineLimit(1).minimumScaleFactor(0.75)
                     }
                 }
                 Spacer()
@@ -76,8 +76,7 @@ struct SettingsScreen: View {
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 18)
-            .padding(.vertical, 12)
-            .frame(minHeight: 60)
+            .frame(height: 60)          // stessa altezza delle righe di prima
             .glassRow(cornerRadius: 30)
         }
         .buttonStyle(.plain)

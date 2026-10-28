@@ -275,11 +275,18 @@ EXTRA = {
                      road_label="#ffffff", road_halo="#4a4c4f", halo_width=1.1, transform="none", labels=True),
     # mappa allegata (isola): prato verde, boschi a chiome, sentieri sabbia, fiumi azzurri con riva chiara,
     # etichette bianche maiuscole con contorno nero spesso
-    "storm": dict(road_mode="solid", minor="#151515", major="#0d0d0d", motor="#050505",
-                  land="#43722f", wood_pattern="gm-trees", park="#4a7b33", grass="#4b7d35", sand="#dcc38a",
-                  water="#3d8fe0", water_outline="#bfe6ff", building="#a3a6a9", building_mode="flat",
-                  path="#d8bd80", path_solid=True, rail="#5a4a3a", label="#ffffff", halo="#000000",
-                  road_label="#ffffff", road_halo="#1a1a1a", halo_width=2.0, labels=True),
+    # replica della mappa allegata: prato verde saturo con texture, boschi a chiome scure,
+    # sentieri sabbia larghi con bordo bruno, fiumi azzurri con schiuma bianca e fascia chiara,
+    # rocce chiare, spiagge sabbia, edifici in pietra grigia, scritte bianche maiuscole con contorno nero
+    "storm": dict(road_mode="casing", casing="#a07e45", inner="#e8cb8c", minor_solid=None, road_scale=1.35,
+                  land="#3e6b26", bg_pattern="gm-meadow", wood_pattern="gm-trees", park="#45772b", grass="#45772b",
+                  sand="#e3c78a", rock="#cfc9bd", rock_outline="#8d877b",
+                  water="#3a88e2", water_outline="#eaf6ff", water_outline_width=[(10, 1.2), (14, 3), (18, 6)],
+                  water_inner="#64aef0", waterway_casing="#eaf6ff",
+                  building="#a3a6a9", building_mode="ink", ink="#5d6064",
+                  path="#e8cb8c", path_solid=True, path_casing="#a07e45", rail="#5a4a3a",
+                  label="#ffffff", halo="#000000", road_label="#ffffff", road_halo="#111111",
+                  halo_width=2.2, labels=True),
 }
 
 
@@ -343,6 +350,10 @@ def map_style(tid, p):
             paint = {"fill-pattern": x["wood_pattern"]}
         layers.append({"id": lid, "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
                        "filter": cls(*classes), "paint": paint})
+    if x.get("rock"):
+        layers.append({"id": "landcover-rock", "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
+                       "filter": cls("rock", "bare_rock", "scree"),
+                       "paint": {"fill-color": x["rock"], "fill-outline-color": x.get("rock_outline", x["rock"])}})
     if x.get("satellite"):
         layers = [l for l in layers if not l["id"].startswith("landcover")]
     layers.append({"id": "park", "type": "fill", "source": "openmaptiles", "source-layer": "park",
@@ -356,9 +367,18 @@ def map_style(tid, p):
     if x.get("water_pattern"):
         water["paint"] = {"fill-pattern": x["water_pattern"]}
     layers.append(water)
+    if x.get("water_inner"):
+        # fascia più chiara lungo le rive (acqua bassa), sotto la schiuma bianca
+        layers.append({"id": "water-shallow", "type": "line", "source": "openmaptiles", "source-layer": "water",
+                       "paint": {"line-color": x["water_inner"], "line-blur": 2,
+                                 "line-width": interp([(10, 3), (14, 9), (18, 22)])}})
     if x.get("water_outline"):
         layers.append({"id": "water-outline", "type": "line", "source": "openmaptiles", "source-layer": "water",
-                       "paint": {"line-color": x["water_outline"], "line-width": interp([(10, 0.8), (16, 2.2), (19, 4)])}})
+                       "paint": {"line-color": x["water_outline"],
+                                 "line-width": interp(x.get("water_outline_width", [(10, 0.8), (16, 2.2), (19, 4)]))}})
+    if x.get("waterway_casing"):
+        layers.append({"id": "waterway-casing", "type": "line", "source": "openmaptiles", "source-layer": "waterway",
+                       "paint": {"line-color": x["waterway_casing"], "line-width": interp([(8, 1.5), (14, 5.5), (18, 13)])}})
     layers.append({"id": "waterway", "type": "line", "source": "openmaptiles", "source-layer": "waterway",
                    "paint": {"line-color": p["water"], "line-width": interp([(8, 0.5), (14, 2.5), (18, 8)])}})
 
@@ -394,6 +414,9 @@ def map_style(tid, p):
 
     # sentieri e ferrovie
     path_dash = None if x.get("path_solid") else [2.2, 1.6]
+    if x.get("path_casing"):
+        layers.append(road_line("road-path-casing", p, ["path", "track"], x["path_casing"],
+                                scaled(road_widths("path"), 1.6, 1.4), minzoom=14))
     layers.append(road_line("road-path", p, ["path", "track"], p["path"], road_widths("path"), minzoom=14, dash=path_dash))
     layers.append(road_line("road-rail", p, ["rail", "transit"], p["rail"], road_widths("rail"), minzoom=12,
                             dash=None if tid == "palm" else [3, 2]))
@@ -403,7 +426,7 @@ def map_style(tid, p):
         solid = x.get("minor_solid")
         inners = []
         for kind, classes, mz in ROAD_CLASSES:
-            w = road_widths(kind)
+            w = scaled(road_widths(kind), x.get("road_scale", 1.0))
             if solid and kind in ("service", "minor"):
                 layers.append(road_line(f"road-{kind}", p, classes, solid, scaled(w, 0.8), minzoom=mz))
                 continue

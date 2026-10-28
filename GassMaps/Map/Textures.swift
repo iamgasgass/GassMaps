@@ -3,7 +3,7 @@ import UIKit
 /// Texture ripetibili usate come "background-pattern" / "fill-pattern" negli stili mappa.
 /// Disegnate interamente dall'app (nessuna immagine esterna).
 enum Textures {
-    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof", "gm-trees"]
+    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof", "gm-trees", "gm-meadow"]
 
     private static var cache: [String: UIImage] = [:]
 
@@ -18,6 +18,7 @@ enum Textures {
         case "gm-stone": img = stone()
         case "gm-roof": img = roof()
         case "gm-trees": img = trees()
+        case "gm-meadow": img = meadow()
         default: img = nil
         }
         if let img = img { cache[name] = img }
@@ -104,7 +105,7 @@ enum Textures {
         }
         return renderer(side).image { ctx in
             let c = ctx.cgContext
-            c.setFillColor(UIColor(hex: 0x2F5A22).cgColor)
+            c.setFillColor(UIColor(hex: 0x3A6624).cgColor)
             c.fill(CGRect(x: 0, y: 0, width: side, height: side))
             for pass in 0..<3 {
                 for (x, y, r) in crowns {
@@ -112,17 +113,44 @@ enum Textures {
                         for dy in [-side, 0, side] {
                             let cx = x + dx, cy = y + dy
                             switch pass {
-                            case 0: // ombra
-                                c.setFillColor(UIColor(hex: 0x1C3A15).cgColor)
-                                c.fillEllipse(in: CGRect(x: cx - r + 3, y: cy - r + 4, width: r * 2, height: r * 2))
-                            case 1: // chioma
-                                c.setFillColor(UIColor(hex: 0x3B6E2A).cgColor)
+                            case 0: // ombra proiettata
+                                c.setFillColor(UIColor(hex: 0x16300F).withAlphaComponent(0.85).cgColor)
+                                c.fillEllipse(in: CGRect(x: cx - r + 4, y: cy - r + 5, width: r * 2, height: r * 2))
+                            case 1: // chioma cartoon con contorno scuro
+                                c.setFillColor(UIColor(hex: 0x24481A).cgColor)
                                 c.fillEllipse(in: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
-                            default: // luce
-                                c.setFillColor(UIColor(hex: 0x4F8A36).cgColor)
-                                c.fillEllipse(in: CGRect(x: cx - r * 0.75, y: cy - r * 0.8, width: r * 1.1, height: r * 1.0))
+                                c.setStrokeColor(UIColor(hex: 0x12260C).cgColor)
+                                c.setLineWidth(1.6)
+                                c.strokeEllipse(in: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
+                            default: // luce in alto a sinistra
+                                c.setFillColor(UIColor(hex: 0x36662A).cgColor)
+                                c.fillEllipse(in: CGRect(x: cx - r * 0.8, y: cy - r * 0.85, width: r * 1.2, height: r * 1.05))
+                                c.setFillColor(UIColor(hex: 0x4A7F34).cgColor)
+                                c.fillEllipse(in: CGRect(x: cx - r * 0.6, y: cy - r * 0.7, width: r * 0.6, height: r * 0.5))
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Prato cartoon (Storm Isle): verde saturo con macchie più chiare e più scure, ripetibile senza giunte
+    private static func meadow() -> UIImage {
+        let side: CGFloat = 128
+        var rng = SeededGenerator(seed: 0x3E6B26)
+        return renderer(side).image { ctx in
+            let c = ctx.cgContext
+            c.setFillColor(UIColor(hex: 0x3E6B26).cgColor)
+            c.fill(CGRect(x: 0, y: 0, width: side, height: side))
+            let tones: [UInt32] = [0x447430, 0x386222, 0x4A7A33, 0x3B6825]
+            for _ in 0..<22 {
+                let x = CGFloat.random(in: 0..<side, using: &rng), y = CGFloat.random(in: 0..<side, using: &rng)
+                let w = CGFloat.random(in: 10...26, using: &rng), h = w * CGFloat.random(in: 0.5...0.9, using: &rng)
+                c.setFillColor(UIColor(hex: tones[Int.random(in: 0..<tones.count, using: &rng)]).withAlphaComponent(0.7).cgColor)
+                for dx in [-side, 0, side] {
+                    for dy in [-side, 0, side] {
+                        c.fillEllipse(in: CGRect(x: x + dx - w / 2, y: y + dy - h / 2, width: w, height: h))
                     }
                 }
             }

@@ -105,12 +105,19 @@ enum ManeuverRefiner {
             lastAlong = along
             s.startDistance = along
             if along > 15 && along < total - 5 {
-                let before = RouteMath.point(at: max(0, along - 30), on: coords, cumulative: cum, hint: proj.index)
+                // rotonde: si confronta la direzione d'ingresso con quella d'uscita dalla rotonda
+                // (il giro intorno all'isola centrale non conta), altrimenti 30 m prima/dopo l'incrocio
+                let round = isRoundabout(step.instruction.lowercased())
+                let nextStart = i + 1 < steps.count ? steps[i + 1].startDistance : total
+                let outFrom = round ? min(along + 35, max(along + 10, nextStart - 25)) : along
+                let outTo = round ? min(total, outFrom + 45) : min(total, along + 30)
+                let before = RouteMath.point(at: max(0, along - (round ? 45 : 30)), on: coords, cumulative: cum, hint: proj.index)
                 let at = RouteMath.point(at: along, on: coords, cumulative: cum, hint: proj.index)
-                let after = RouteMath.point(at: min(total, along + 30), on: coords, cumulative: cum, hint: proj.index)
-                if RouteMath.meters(before.coordinate, at.coordinate) > 5 && RouteMath.meters(at.coordinate, after.coordinate) > 5 {
+                let outA = RouteMath.point(at: outFrom, on: coords, cumulative: cum, hint: proj.index)
+                let after = RouteMath.point(at: outTo, on: coords, cumulative: cum, hint: proj.index)
+                if RouteMath.meters(before.coordinate, at.coordinate) > 5 && RouteMath.meters(outA.coordinate, after.coordinate) > 5 {
                     let bIn = MapController.bearing(from: before.coordinate, to: at.coordinate)
-                    let bOut = MapController.bearing(from: at.coordinate, to: after.coordinate)
+                    let bOut = MapController.bearing(from: outA.coordinate, to: after.coordinate)
                     var a = bOut - bIn
                     while a > 180 { a -= 360 }
                     while a < -180 { a += 360 }
@@ -123,9 +130,18 @@ enum ManeuverRefiner {
         return out
     }
 
+    static func isRoundabout(_ s: String) -> Bool {
+        ["rotonda", "rotatoria", "roundabout"].contains { s.contains($0) }
+    }
+
+    /// istruzioni che non si correggono (uscite numerate, arrivo, traghetti, inversioni)
     private static func isSpecial(_ s: String) -> Bool {
-        ["rotonda", "rotatoria", "roundabout", "uscita", "exit", "svincolo", "arriv", "destinazione",
-         "destination", "traghetto", "ferry", "inversione", "u-turn"].contains { s.contains($0) }
+        if isRoundabout(s) {
+            // "Alla rotonda, gira a sinistra/destra" si verifica; "prendi la 2ª uscita" no
+            return !(s.contains("sinistra") || s.contains("destra") || s.contains("left") || s.contains("right"))
+        }
+        return ["uscita", "exit", "svincolo", "arriv", "destinazione",
+                "destination", "traghetto", "ferry", "inversione", "u-turn"].contains { s.contains($0) }
     }
 
     static func corrected(_ text: String, angle a: Double) -> String {
@@ -134,18 +150,20 @@ enum ManeuverRefiner {
         let saysLeft = s.contains("sinistra") || s.contains("left")
         let saysRight = s.contains("destra") || s.contains("right")
         // il testo contraddice chiaramente la geometria → si corregge la direzione
-        if saysLeft && !saysRight && a > 50 {
+        // (alle rotonde basta una differenza più piccola: l'uscita è già misurata dopo il giro)
+        let limit = isRoundabout(s) ? 30.0 : 50.0
+        if saysLeft && !saysRight && a > limit {
             return text.replacingOccurrences(of: "sinistra", with: "destra")
                 .replacingOccurrences(of: "Sinistra", with: "Destra")
                 .replacingOccurrences(of: "left", with: "right").replacingOccurrences(of: "Left", with: "Right")
         }
-        if saysRight && !saysLeft && a < -50 {
+        if saysRight && !saysLeft && a < -limit {
             return text.replacingOccurrences(of: "destra", with: "sinistra")
                 .replacingOccurrences(of: "Destra", with: "Sinistra")
                 .replacingOccurrences(of: "right", with: "left").replacingOccurrences(of: "Right", with: "Left")
         }
         // nessuna direzione nel testo ma la strada gira davvero → si aggiunge
-        if !saysLeft && !saysRight && abs(a) >= 35 {
+        if !saysLeft && !saysRight && abs(a) >= 35 && !isRoundabout(s) {
             let side = a > 0 ? "destra" : "sinistra"
             if s.hasPrefix("svolta ") {
                 return "Svolta a \(side) " + text.dropFirst("svolta ".count)
@@ -162,9 +180,9 @@ enum ManeuverIcon {
     /// Icona dal tracciato reale della svolta (più affidabile del testo), tranne rotonde, uscite e arrivo
     static func symbol(for step: RouteStep) -> String {
         let s = step.instruction.lowercased()
-        let special = ["rotonda", "rotatoria", "roundabout", "uscita", "exit", "svincolo", "arriv",
+        let special = ["uscita", "exit", "svincolo", "arriv",
                        "destinazione", "destination", "traghetto", "ferry", "inversione", "u-turn"].contains { s.contains($0) }
-        guard !special, let a = step.turnAngle else { return symbol(for: step.instruction) }
+        guard !special || ManeuverRefiner.isRoundabout(s), let a = step.turnAngle else { return symbol(for: step.instruction) }
         let m = abs(a)
         if m < 20 { return "arrow.up" }
         if m < 55 { return a > 0 ? "arrow.up.right" : "arrow.up.left" }

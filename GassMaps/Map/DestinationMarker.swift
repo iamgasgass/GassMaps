@@ -246,19 +246,17 @@ enum DestinationMarker {
         c.fill(CGRect(x: m - s * 0.13, y: gy + s * 0.07, width: s * 0.26, height: s * 0.045))
     }
 
-    // MARK: Silent Contract — quadrato bianco con segnaposto nero (come nella mappa tattica)
+    // MARK: Silent Contract — quadrato interamente nero con segnaposto rosso
 
     private static func tacticalPin(_ c: CGContext, _ s: CGFloat) {
         let r = CGRect(x: s * 0.08, y: s * 0.08, width: s * 0.84, height: s * 0.84)
         c.setShadow(offset: CGSize(width: 0, height: 1), blur: 2, color: UIColor.black.withAlphaComponent(0.45).cgColor)
-        c.setFillColor(UIColor.white.cgColor)
+        c.setFillColor(UIColor(hex: 0x111111).cgColor)
         c.addPath(UIBezierPath(roundedRect: r, cornerRadius: s * 0.06).cgPath); c.fillPath()
         c.setShadow(offset: .zero, blur: 0, color: nil)
-        c.setStrokeColor(UIColor(hex: 0x2A2B2D).cgColor); c.setLineWidth(max(1, s * 0.04))
-        c.addPath(UIBezierPath(roundedRect: r, cornerRadius: s * 0.06).cgPath); c.strokePath()
         let cfg = UIImage.SymbolConfiguration(pointSize: s * 0.52, weight: .bold)
         if let pin = UIImage(systemName: "mappin", withConfiguration: cfg)?
-            .withTintColor(UIColor(hex: 0x111111), renderingMode: .alwaysOriginal) {
+            .withTintColor(UIColor(hex: 0xD8333A), renderingMode: .alwaysOriginal) {
             let k = min(r.width * 0.62 / pin.size.width, r.height * 0.7 / pin.size.height)
             let sz = CGSize(width: pin.size.width * k, height: pin.size.height * k)
             pin.draw(in: CGRect(x: r.midX - sz.width / 2, y: r.midY - sz.height / 2, width: sz.width, height: sz.height))

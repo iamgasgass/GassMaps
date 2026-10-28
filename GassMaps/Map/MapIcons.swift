@@ -126,7 +126,7 @@ enum MapIcons {
                 .parking: blue, .bicycle: blue, .swimming: UIColor(hex: 0x4AB0F0), .worship: UIColor(hex: 0xD9B03A),
                 .attraction: gold, .monument: gold, .townhall: gold, .post: UIColor(hex: 0xF0EAD8),
                 .car: blue, .carrepair: red, .toilets: UIColor(hex: 0x4AB0F0)
-            ], redPinDefault: true)
+            ], cloverDefault: true)
 
         case "dust": // dischi scuri western
             return ThemeIconSet(frame: .badge(fill: UIColor(hex: 0x1A120A), ring: UIColor(hex: 0xEADBB8)), tint: w,
@@ -256,7 +256,13 @@ enum MapIcons {
     private static func rawPoiIcon(_ cat: POICategory, theme: MapTheme) -> UIImage? {
         let pointSize: CGFloat = 30
         let set = iconSet(for: theme)
-        if cat == .default && set.cloverDefault { return clover(color: theme.accent, size: pointSize * 1.45) }
+        if cat == .default && set.cloverDefault {
+            // Palm Coast: bordi e pallino centrale nel colore del contorno delle altre icone del tema
+            if case .outline(let halo) = set.frame, theme.id == "palm" {
+                return clover(color: theme.accent, size: pointSize * 1.45, border: halo, center: halo)
+            }
+            return clover(color: theme.accent, size: pointSize * 1.45)
+        }
         if cat == .default && set.redPinDefault { return redPin(size: pointSize * 1.5) }
         if theme.id == "pixel", let sprite = PixelArt.sprite(for: cat) { return sprite }
         let color = set.color(cat)
@@ -517,7 +523,8 @@ enum MapIcons {
     }
 
     /// Quadrifoglio viola (segnaposto luoghi, tema Vice Noir)
-    static func clover(color: UIColor, size: CGFloat) -> UIImage {
+    static func clover(color: UIColor, size: CGFloat, border: UIColor = .white,
+                       center: UIColor = UIColor.white.withAlphaComponent(0.9)) -> UIImage {
         let fmt = UIGraphicsImageRendererFormat()
         fmt.scale = 2
         return UIGraphicsImageRenderer(size: CGSize(width: size, height: size), format: fmt).image { ctx in
@@ -531,7 +538,7 @@ enum MapIcons {
                 CGPoint(x: mid - petal * 0.62, y: mid),
                 CGPoint(x: mid + petal * 0.62, y: mid)
             ]
-            c.setFillColor(UIColor.white.cgColor)
+            c.setFillColor(border.cgColor)
             for p in centers {
                 c.fillEllipse(in: CGRect(x: p.x - petal / 2 - 2, y: p.y - petal / 2 - 2, width: petal + 4, height: petal + 4))
             }
@@ -540,7 +547,7 @@ enum MapIcons {
                 c.fillEllipse(in: CGRect(x: p.x - petal / 2, y: p.y - petal / 2, width: petal, height: petal))
             }
             c.fillEllipse(in: CGRect(x: mid - petal * 0.55, y: mid - petal * 0.55, width: petal * 1.1, height: petal * 1.1))
-            c.setFillColor(UIColor.white.withAlphaComponent(0.9).cgColor)
+            c.setFillColor(center.cgColor)
             c.fillEllipse(in: CGRect(x: mid - petal * 0.2, y: mid - petal * 0.2, width: petal * 0.4, height: petal * 0.4))
         }
     }

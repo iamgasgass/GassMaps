@@ -56,27 +56,29 @@ struct SettingsScreen: View {
         .preferredColorScheme(.dark)
     }
 
-    /// Stessa riga Liquid Glass di prima (icona semplice, nessun cerchio), con sottotitolo come Google Maps
+    /// Dimensioni come nella versione stile Google Maps, con il Liquid Glass su tutta la scheda (icona senza cerchio)
     private func entry(_ page: SettingsPage, _ icon: String, _ title: String, _ subtitle: String?) -> some View {
         NavigationLink(value: page) {
-            HStack(spacing: 14) {
+            HStack(spacing: 18) {
                 Image(systemName: icon)
-                    .font(.system(size: 19, weight: .semibold))
-                    .frame(width: 26)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(title).font(.system(size: 17, weight: .medium))
+                    .font(.system(size: 20, weight: .regular))
+                    .frame(width: 50, height: 50)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.system(size: 18, weight: .regular))
                     if let subtitle {
-                        Text(subtitle).font(.system(size: 12)).foregroundStyle(Color.white.opacity(0.55))
-                            .lineLimit(1).minimumScaleFactor(0.75)
+                        Text(subtitle).font(.system(size: 15)).foregroundStyle(Color.white.opacity(0.6))
+                            .lineLimit(2).multilineTextAlignment(.leading)
                     }
                 }
-                Spacer()
-                Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.45))
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.85))
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 18)
-            .frame(height: 60)          // stessa altezza delle righe di prima
+            .padding(.vertical, 14)
+            .padding(.leading, 8)
+            .padding(.trailing, 18)
+            .frame(maxWidth: .infinity, minHeight: 78)
             .glassRow(cornerRadius: 30)
         }
         .buttonStyle(.plain)

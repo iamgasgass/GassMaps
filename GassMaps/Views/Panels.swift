@@ -450,7 +450,8 @@ struct NavigationPanel: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack(alignment: .bottom) {
-                // velocità attuale
+                // velocità attuale (tachimetro disattivabile dalle impostazioni)
+                if Prefs.bool(Prefs.showSpeed, default: true) {
                 VStack(spacing: 0) {
                     Text("\(state.speedKmh)").font(.system(size: 22, weight: .heavy)).contentTransition(.numericText())
                     Text(state.units == .metric ? "km/h" : "mph").font(.system(size: 10, weight: .bold))
@@ -459,6 +460,7 @@ struct NavigationPanel: View {
                 .frame(width: 62, height: 62)
                 .glassEffect(.regular, in: Circle())
                 .padding(.leading, 16)
+                }
 
                 Spacer()
 
@@ -762,7 +764,11 @@ struct AlongRouteSheet: View {
     @EnvironmentObject var state: AppState
     @Environment(\.dismiss) private var dismiss
 
-    private let queries: [(String, String)] = [
+    private var queries: [(String, String)] {
+        let all = baseQueries
+        return Prefs.isElectric ? all.filter { $0.0 == "Ricarica elettrica" } + all.filter { $0.0 != "Ricarica elettrica" } : all
+    }
+    private let baseQueries: [(String, String)] = [
         ("Benzinai", "fuelpump.fill"), ("Ristoranti", "fork.knife"), ("Caffè", "cup.and.saucer.fill"),
         ("Supermercati", "cart.fill"), ("Parcheggi", "parkingsign"), ("Ricarica elettrica", "bolt.car.fill")
     ]

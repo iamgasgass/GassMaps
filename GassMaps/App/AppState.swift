@@ -46,7 +46,7 @@ final class AppState: ObservableObject {
     @Published var mapHeading: Double = 0
 
     // MARK: Indicazioni (come Google Maps)
-    @Published var travelMode: TravelMode = .car
+    @Published var travelMode: TravelMode = TravelMode(rawValue: UserDefaults.standard.string(forKey: Prefs.defaultMode) ?? "") ?? .car
     @Published var routes: [RouteInfo] = []
     @Published var selectedRoute = 0
     @Published var modeETAs: [TravelMode: TimeInterval] = [:]
@@ -100,7 +100,12 @@ final class AppState: ObservableObject {
     @Published var home: Place? = nil { didSet { persistOne(home, Keys.home) } }
     @Published var work: Place? = nil { didSet { persistOne(work, Keys.work) } }
     /// dove ho parcheggiato
-    @Published var parking: Place? = nil { didSet { persistOne(parking, Keys.parking) } }
+    @Published var parking: Place? = nil {
+        didSet {
+            persistOne(parking, Keys.parking)
+            if parking == nil { Notifier.cancelParkingReminder() }
+        }
+    }
     @Published var explored: Set<String> = [] {
         didSet { UserDefaults.standard.set(Array(explored), forKey: Keys.explored) }
     }
@@ -292,6 +297,7 @@ final class AppState: ObservableObject {
         let place = Place(name: "Auto parcheggiata", address: "Salvata alle \(Formatters.time.string(from: Date()))",
                           coordinate: l.coordinate)
         parking = place
+        Notifier.scheduleParkingReminder()
         Geocoder.reverse(l.coordinate) { [weak self] address in
             guard let self = self, var p = self.parking, p.id == place.id else { return }
             p.address = address
@@ -300,6 +306,7 @@ final class AppState: ObservableObject {
     }
 
     func addToHistory(_ place: Place) {
+        guard Prefs.bool(Prefs.saveHistory, default: true) else { return }
         var h = history.filter { !($0.name == place.name && $0.address == place.address) }
         h.insert(place, at: 0)
         history = Array(h.prefix(15))
@@ -489,7 +496,7 @@ final class AppState: ObservableObject {
                                  remainingTime: r.travelTime)
         panel = .navigating
         location.setNavigating(true)
-        UIApplication.shared.isIdleTimerDisabled = true
+        UIApplication.shared.isIdleTimerDisabled = Prefs.bool(Prefs.keepAwake, default: true)
         map.startNavigation()
         if let first = r.steps.first?.instruction {
             VoiceGuide.shared.speak(first)

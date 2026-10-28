@@ -30,7 +30,14 @@ Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfac
   | 9 | Silent Contract | mappa tattica grigia, icone quadrate nere |
   | 10 | Storm Isle | isola cartoon: prati, boschi, sentieri di sabbia, fiumi |
 
-- **Impostazioni**: unità di distanza (KM/MI), icona app (3 icone alternative), condividi, valutaci, community Discord, contattaci, privacy, termini, cancella i miei dati, ripristina acquisti
+- **Impostazioni** organizzate come Google Maps, in Liquid Glass:
+  - *App e display*: tema della mappa, icona app, unità di distanza, bussola, scala, vista inclinata 3D, feedback aptico, accessibilità
+  - *Navigazione*: indicazioni vocali, volume e velocità della voce, prova voce, evita autostrade/pedaggi, tachimetro, schermo acceso, modalità predefinita
+  - *I tuoi veicoli*: tipo di motore (con auto elettrica/plug-in i pulsanti rapidi propongono la ricarica), veicoli connessi
+  - *Posizione e privacy*: stato e precisione della posizione, luoghi esplorati, parcheggio, cronologia (salvataggio e cancellazione), Casa/Lavoro, cancella i miei dati
+  - *Mappe offline*: scarica la zona visibile con il tema attuale, avanzamento, aggiorna, elimina, svuota cache
+  - *Notifiche*: promemoria parcheggio (1–8 ore), consigli settimanali
+  - *Informazioni e termini*: versione, termini, privacy, note legali, valuta l'app, condividi, Discord, contattaci, ripristina acquisti
 
 ## Funzioni stile Google Maps
 

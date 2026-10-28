@@ -4,6 +4,7 @@ struct MainMapScreen: View {
     @EnvironmentObject var state: AppState
     @EnvironmentObject var location: LocationManager
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(Prefs.showCompass) private var showCompass = true
 
     var body: some View {
         GeometryReader { geo in
@@ -70,7 +71,7 @@ struct MainMapScreen: View {
                                 }
                                 HStack {
                                     Spacer()
-                                    if abs(state.mapHeading) > 2 {
+                                    if showCompass && abs(state.mapHeading) > 2 {
                                         CompassButton()
                                             .padding(.trailing, 18)
                                             .transition(.scale.combined(with: .opacity))
@@ -258,13 +259,20 @@ struct CategoryChips: View {
         var id: String { title }
     }
 
-    private let items: [Chip] = [
+    private let baseItems: [Chip] = [
         Chip(title: "Ristoranti", icon: "fork.knife"), Chip(title: "Benzina", icon: "fuelpump.fill"),
         Chip(title: "Caffè", icon: "cup.and.saucer.fill"), Chip(title: "Supermercati", icon: "cart.fill"),
         Chip(title: "Hotel", icon: "bed.double.fill"), Chip(title: "Farmacie", icon: "pills.fill"),
         Chip(title: "Parcheggi", icon: "parkingsign"), Chip(title: "Bancomat", icon: "creditcard.fill"),
         Chip(title: "Ospedali", icon: "cross.case.fill")
     ]
+    @AppStorage(Prefs.engine) private var engine = "gas"
+
+    /// con auto elettrica o plug-in "Benzina" diventa "Ricarica" (come Google Maps)
+    private var items: [Chip] {
+        guard engine == "electric" || engine == "plugin" else { return baseItems }
+        return baseItems.map { $0.title == "Benzina" ? Chip(title: "Ricarica elettrica", icon: "bolt.car.fill") : $0 }
+    }
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {

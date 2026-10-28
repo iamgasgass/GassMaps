@@ -3,6 +3,8 @@ import MapLibre
 
 struct GameMapView: UIViewRepresentable {
     @ObservedObject var state: AppState
+    @AppStorage(Prefs.showScale) private var showScale = false
+    @AppStorage(Prefs.tilt3D) private var tilt3D = true
 
     func makeCoordinator() -> MapCoordinator {
         MapCoordinator(state: state)
@@ -44,6 +46,13 @@ struct GameMapView: UIViewRepresentable {
 
     func updateUIView(_ map: MLNMapView, context: Context) {
         context.coordinator.state = state
+        if map.showsScale != showScale { map.showsScale = showScale }
+        if context.coordinator.tilt3D != tilt3D {
+            context.coordinator.tilt3D = tilt3D
+            let cam = map.camera
+            cam.pitch = tilt3D ? state.theme.mapPitch : 0
+            map.setCamera(cam, withDuration: 0.4, animationTimingFunction: CAMediaTimingFunction(name: .easeInEaseOut))
+        }
         if context.coordinator.currentStyleID != state.theme.id {
             context.coordinator.currentStyleID = state.theme.id
             map.styleURL = state.theme.styleURL
@@ -54,6 +63,7 @@ struct GameMapView: UIViewRepresentable {
 final class MapCoordinator: NSObject, MLNMapViewDelegate {
     var state: AppState
     var currentStyleID: String = ""
+    var tilt3D = Prefs.bool(Prefs.tilt3D, default: true)
 
     init(state: AppState) {
         self.state = state
@@ -68,7 +78,7 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         UserArrowView.marker = state.theme.userMarker
         // inclinazione propria del tema (es. pergamena vista dall'alto, neon in 3D)
         let cam = mapView.camera
-        cam.pitch = state.theme.mapPitch
+        cam.pitch = tilt3D ? state.theme.mapPitch : 0
         mapView.setCamera(cam, withDuration: 0.6, animationTimingFunction: CAMediaTimingFunction(name: .easeInEaseOut))
     }
 
@@ -139,6 +149,7 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
 
     @objc func handleTap(_ gesture: UITapGestureRecognizer) {
         guard gesture.state == .ended, let map = gesture.view as? MLNMapView else { return }
+        if Prefs.bool(Prefs.haptics, default: true) { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
         let point = gesture.location(in: map)
 
         // scelta di un percorso alternativo
@@ -160,6 +171,7 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
 
     @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began, let map = gesture.view as? MLNMapView else { return }
+        if Prefs.bool(Prefs.haptics, default: true) { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
         let point = gesture.location(in: map)
         let coord = map.convert(point, toCoordinateFrom: map)
         let place = Place(name: "", address: "Ricerca indirizzo...", coordinate: coord)

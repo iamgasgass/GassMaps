@@ -21,7 +21,10 @@ final class MapController {
 
     static let defaultPitch: CGFloat = 52
     /// inclinazione della camera per il tema attivo
-    var pitch: CGFloat { state?.theme.mapPitch ?? MapController.defaultPitch }
+    var pitch: CGFloat {
+        guard Prefs.bool(Prefs.tilt3D, default: true) else { return 0 }
+        return state?.theme.mapPitch ?? MapController.defaultPitch
+    }
     static let defaultZoom: Double = 16.4
 
     static let routeSourceID = "gm-route"

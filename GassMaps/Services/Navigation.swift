@@ -100,7 +100,9 @@ final class VoiceGuide {
         if synth.isSpeaking { synth.stopSpeaking(at: .word) }
         let u = AVSpeechUtterance(string: text)
         u.voice = AVSpeechSynthesisVoice(language: "it-IT")
-        u.rate = AVSpeechUtteranceDefaultSpeechRate * 1.02
+        u.rate = min(AVSpeechUtteranceMaximumSpeechRate,
+                     AVSpeechUtteranceDefaultSpeechRate * 1.02 * Float(Prefs.double(Prefs.voiceRate, default: 1)))
+        u.volume = Float(Prefs.double(Prefs.voiceVolume, default: 0.8))
         synth.speak(u)
     }
 

@@ -818,6 +818,9 @@ enum Prefs {
     static let parkingReminder = "gm.parkingReminder"
     static let parkingHours = "gm.parkingHours"
     static let tips = "gm.tips"
+    static let layerSatellite = "gm.layer.satellite"
+    static let layerTransit = "gm.layer.transit"
+    static let layerBike = "gm.layer.bike"
 
     private static var d: UserDefaults { .standard }
     static func bool(_ key: String, default value: Bool) -> Bool { d.object(forKey: key) == nil ? value : d.bool(forKey: key) }

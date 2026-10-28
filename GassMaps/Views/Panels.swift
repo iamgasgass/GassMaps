@@ -41,6 +41,8 @@ enum ShareLinks {
 struct PinnedPlacePanel: View {
     @EnvironmentObject var state: AppState
     @Environment(\.openURL) private var openURL
+    @State private var editingNote = false
+    @State private var noteText = ""
 
     var body: some View {
         BottomPanel(onDismiss: { state.dismissPanel() }) {
@@ -61,12 +63,48 @@ struct PinnedPlacePanel: View {
                                 .font(.system(size: 14))
                                 .foregroundStyle(Color.white.opacity(0.45))
                                 .lineLimit(2)
+                            // Plus Code e nota/elenco personali (come Google Maps)
+                            Label(PlusCode.encode(latitude: place.latitude, longitude: place.longitude), systemImage: "plus.viewfinder")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(Color.white.opacity(0.4))
+                            if let entry = state.savedEntry(place) {
+                                if let list = entry.list, let l = SavedList(rawValue: list) {
+                                    Label(l.rawValue, systemImage: l.icon)
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(Color(state.theme.accent))
+                                }
+                                if let note = entry.note {
+                                    Label(note, systemImage: "note.text")
+                                        .font(.system(size: 13))
+                                        .foregroundStyle(Color.white.opacity(0.75))
+                                        .lineLimit(3)
+                                }
+                            }
                         }
                         Spacer(minLength: 0)
                         Menu {
                             Button { state.setHome(place) } label: { Label("Imposta come Casa", systemImage: "house.fill") }
                             Button { state.setWork(place) } label: { Label("Imposta come Lavoro", systemImage: "briefcase.fill") }
                             Button { state.setParking(place) } label: { Label("Imposta come parcheggio auto", systemImage: "car.fill") }
+                            Menu {
+                                ForEach(SavedList.allCases) { list in
+                                    Button { state.save(place, in: list) } label: {
+                                        if state.savedEntry(place)?.list == list.rawValue {
+                                            Label(list.rawValue, systemImage: "checkmark")
+                                        } else {
+                                            Label(list.rawValue, systemImage: list.icon)
+                                        }
+                                    }
+                                }
+                            } label: { Label("Salva in un elenco", systemImage: "list.bullet") }
+                            Button {
+                                noteText = state.savedEntry(place)?.note ?? ""
+                                editingNote = true
+                            } label: { Label(state.savedEntry(place)?.note == nil ? "Aggiungi nota" : "Modifica nota", systemImage: "note.text") }
+                            Button { state.startMeasuring(from: place) } label: { Label("Misura distanza", systemImage: "ruler") }
+                            Button {
+                                UIPasteboard.general.string = PlusCode.encode(latitude: place.latitude, longitude: place.longitude)
+                            } label: { Label("Copia Plus Code", systemImage: "plus.viewfinder") }
                             Button {
                                 UIPasteboard.general.string = String(format: "%.6f, %.6f", place.latitude, place.longitude)
                             } label: { Label("Copia coordinate", systemImage: "doc.on.doc") }
@@ -151,6 +189,13 @@ struct PinnedPlacePanel: View {
                     }
                 }
             }
+        }
+        .alert("Nota", isPresented: $editingNote) {
+            TextField("Scrivi una nota", text: $noteText)
+            Button("Salva") { if let p = state.pinnedPlace { state.setNote(noteText, for: p) } }
+            Button("Annulla", role: .cancel) {}
+        } message: {
+            Text("La nota è visibile solo a te e salva il luogo nelle tue posizioni.")
         }
     }
 }
@@ -638,6 +683,12 @@ struct ResultsPanel: View {
 
 struct SavedPlacesPanel: View {
     @EnvironmentObject var state: AppState
+    @State private var filter: SavedList?
+
+    private var visible: [Place] {
+        guard let f = filter else { return state.saved }
+        return state.saved.filter { $0.list == f.rawValue }
+    }
 
     var body: some View {
         BottomPanel(onDismiss: { state.panel = .none }) {
@@ -691,9 +742,22 @@ struct SavedPlacesPanel: View {
                                     subtitle: "Salva la tua posizione usando l'icona \"Pin\"!")
                         .padding(.bottom, 20)
                 } else {
+                    // elenchi (come Google Maps)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        GlassEffectContainer(spacing: 8) {
+                            HStack(spacing: 8) {
+                                listChip("Tutti", "bookmark.fill", selected: filter == nil) { filter = nil }
+                                ForEach(SavedList.allCases) { l in
+                                    listChip("\(l.rawValue) \(state.saved.filter { $0.list == l.rawValue }.count)", l.icon,
+                                             selected: filter == l) { filter = l }
+                                }
+                            }
+                        }
+                    }
+                    .padding(.bottom, 10)
                     ScrollView {
                         VStack(spacing: 10) {
-                            ForEach(state.saved) { place in
+                            ForEach(visible) { place in
                                 HStack(spacing: 12) {
                                     Button {
                                         state.pin(place)
@@ -705,7 +769,7 @@ struct SavedPlacesPanel: View {
                                                     .font(.system(size: 16, weight: .semibold))
                                                     .foregroundStyle(.white)
                                                     .lineLimit(1)
-                                                Text(place.address)
+                                                Text(place.note ?? place.address)
                                                     .font(.system(size: 13))
                                                     .foregroundStyle(Color.white.opacity(0.4))
                                                     .lineLimit(1)
@@ -735,6 +799,17 @@ struct SavedPlacesPanel: View {
                 }
             }
         }
+    }
+
+    private func listChip(_ title: String, _ icon: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 13).frame(height: 34)
+                .glassEffect(.regular.tint(selected ? Color(state.theme.accent).opacity(0.7) : nil).interactive(), in: Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     private func shortcut(_ title: String, _ icon: String, _ place: Place?) -> some View {

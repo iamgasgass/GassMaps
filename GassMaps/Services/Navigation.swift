@@ -37,6 +37,23 @@ enum RouteMath {
     }
 
     /// proiezione del punto sulla polilinea: (distanza lungo il percorso, distanza dalla linea)
+    /// Punto sul percorso a una certa distanza dall'inizio, con la direzione del tratto
+    static func point(at along: Double, on coords: [CLLocationCoordinate2D], cumulative cum: [Double],
+                      hint: Int = 0) -> (coordinate: CLLocationCoordinate2D, bearing: Double, index: Int) {
+        guard coords.count > 1, cum.count == coords.count else {
+            return (coords.first ?? CLLocationCoordinate2D(), 0, 0)
+        }
+        var i = max(0, min(hint, coords.count - 2))
+        while i > 0 && cum[i] > along { i -= 1 }
+        while i < coords.count - 2 && cum[i + 1] < along { i += 1 }
+        let a = coords[i], b = coords[i + 1]
+        let seg = max(cum[i + 1] - cum[i], 0.0001)
+        let t = min(max((along - cum[i]) / seg, 0), 1)
+        let c = CLLocationCoordinate2D(latitude: a.latitude + (b.latitude - a.latitude) * t,
+                                       longitude: a.longitude + (b.longitude - a.longitude) * t)
+        return (c, MapController.bearing(from: a, to: b), i)
+    }
+
     static func project(_ p: CLLocationCoordinate2D, on coords: [CLLocationCoordinate2D],
                         cumulative cum: [Double], from startIndex: Int = 0) -> (along: Double, offset: Double, index: Int) {
         guard coords.count > 1 else { return (0, coords.first.map { meters($0, p) } ?? 0, 0) }

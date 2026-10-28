@@ -5,6 +5,7 @@ struct SearchScreen: View {
     @EnvironmentObject var state: AppState
     @EnvironmentObject var location: LocationManager
     @StateObject private var search = SearchService()
+    @StateObject private var voice = VoiceSearch()
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -20,22 +21,26 @@ struct SearchScreen: View {
                         .focused($focused)
                         .submitLabel(.search)
                         .autocorrectionDisabled()
-                        .onSubmit {
-                            // come Google Maps: un risultato → scheda del luogo, più risultati → elenco sulla mappa
-                            let q = search.query
-                            search.searchAll { items in
-                                if state.searchPurpose != .destination, let item = items.first {
-                                    state.select(mapItem: item)
-                                } else if items.count == 1, let item = items.first {
-                                    state.select(mapItem: item)
-                                } else {
-                                    state.showResults(items, title: q)
+                        .onSubmit { submit() }
+                    if search.query.isEmpty {
+                        // ricerca vocale (come il microfono di Google Maps)
+                        Button {
+                            if voice.isListening { voice.stop() } else {
+                                focused = false
+                                voice.start { text in
+                                    search.query = text
+                                    submit()
                                 }
                             }
+                        } label: {
+                            Image(systemName: voice.isListening ? "waveform" : "mic.fill")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundStyle(voice.isListening ? Color(hex: 0x2F8CFF) : Color.white.opacity(0.7))
+                                .symbolEffect(.variableColor.iterative, isActive: voice.isListening)
                         }
-                    if search.query.isEmpty {
-                        Circle().fill(Color.white.opacity(0.35)).frame(width: 10, height: 10)
-                    } else {
+                        .buttonStyle(.plain)
+                    }
+                    if !search.query.isEmpty {
                         Button { search.query = "" } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(Color.white.opacity(0.45))
@@ -87,6 +92,22 @@ struct SearchScreen: View {
                 .padding(.bottom, 14)
             }
 
+            if voice.isListening || voice.error != nil {
+                HStack(spacing: 10) {
+                    Image(systemName: voice.error == nil ? "mic.fill" : "exclamationmark.triangle.fill")
+                        .foregroundStyle(voice.error == nil ? Color(hex: 0x2F8CFF) : Color(hex: 0xFF5A5F))
+                    Text(voice.error ?? (voice.transcript.isEmpty ? "Ti ascolto…" : voice.transcript))
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.white)
+                        .lineLimit(2)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 18).frame(minHeight: 54)
+                .glassRow(cornerRadius: 26)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+            }
+
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if !search.query.isEmpty {
@@ -104,6 +125,7 @@ struct SearchScreen: View {
             .scrollDismissesKeyboard(.interactively)
         }
         .background(Color.black.ignoresSafeArea())
+        .onDisappear { voice.stop(deliver: false) }
         .onAppear {
             // zona di ricerca: posizione attuale, altrimenti il centro della mappa
             search.userLocation = location.location
@@ -116,6 +138,21 @@ struct SearchScreen: View {
                 search.region = MKCoordinateRegion(center: c, latitudinalMeters: 40_000, longitudinalMeters: 40_000)
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { focused = true }
+        }
+    }
+
+    /// Invio: un risultato → scheda del luogo, più risultati → elenco sulla mappa (come Google Maps)
+    private func submit() {
+        let q = search.query
+        guard !q.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        search.searchAll { items in
+            if state.searchPurpose != .destination, let item = items.first {
+                state.select(mapItem: item)
+            } else if items.count == 1, let item = items.first {
+                state.select(mapItem: item)
+            } else if !items.isEmpty {
+                state.showResults(items, title: q)
+            }
         }
     }
 

@@ -66,6 +66,119 @@ final class MapController {
         }
     }
 
+    // MARK: - Livelli (come il pulsante "Livelli" di Google Maps)
+
+    static let satSourceID = "gm-layer-sat"
+    static let satLayerID = "gm-layer-sat-raster"
+    static let transitLayerID = "gm-layer-transit"
+    static let bikeLayerID = "gm-layer-bike"
+
+    /// Applica i livelli scelti: satellite (con strade ed etichette sopra), trasporti pubblici, piste ciclabili
+    func applyLayers() {
+        guard let style = mapView?.style else { return }
+        let sat = Prefs.bool(Prefs.layerSatellite, default: false)
+        let transit = Prefs.bool(Prefs.layerTransit, default: false)
+        let bike = Prefs.bool(Prefs.layerBike, default: false)
+
+        // satellite
+        if sat {
+            if style.layer(withIdentifier: MapController.satLayerID) == nil {
+                let source: MLNSource
+                if let existing = style.source(withIdentifier: MapController.satSourceID) {
+                    source = existing
+                } else {
+                    let s = MLNRasterTileSource(identifier: MapController.satSourceID,
+                        tileURLTemplates: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+                        options: [.tileSize: 256, .maximumZoomLevel: 19])
+                    style.addSource(s)
+                    source = s
+                }
+                let layer = MLNRasterStyleLayer(identifier: MapController.satLayerID, source: source)
+                if let below = style.layer(withIdentifier: "road-path") ?? style.layer(withIdentifier: "road-rail") {
+                    style.insertLayer(layer, below: below)
+                } else {
+                    style.addLayer(layer)
+                }
+            }
+        } else if let l = style.layer(withIdentifier: MapController.satLayerID) {
+            style.removeLayer(l)
+        }
+
+        guard let vector = style.source(withIdentifier: "openmaptiles") else { return }
+        let below = style.layer(withIdentifier: MapController.routeCasingID) ?? style.layer(withIdentifier: "road-oneway")
+
+        // trasporti pubblici: linee ferroviarie, metro e tram evidenziate
+        if transit {
+            if style.layer(withIdentifier: MapController.transitLayerID) == nil {
+                let l = MLNLineStyleLayer(identifier: MapController.transitLayerID, source: vector)
+                l.sourceLayerIdentifier = "transportation"
+                l.predicate = NSPredicate(format: "class IN %@", ["rail", "transit"])
+                l.lineColor = NSExpression(forConstantValue: UIColor(hex: 0x2F8CFF))
+                l.lineWidth = NSExpression(forConstantValue: 3.5)
+                l.lineCap = NSExpression(forConstantValue: "round")
+                l.lineJoin = NSExpression(forConstantValue: "round")
+                if let b = below { style.insertLayer(l, below: b) } else { style.addLayer(l) }
+            }
+        } else if let l = style.layer(withIdentifier: MapController.transitLayerID) {
+            style.removeLayer(l)
+        }
+
+        // piste ciclabili
+        if bike {
+            if style.layer(withIdentifier: MapController.bikeLayerID) == nil {
+                let l = MLNLineStyleLayer(identifier: MapController.bikeLayerID, source: vector)
+                l.sourceLayerIdentifier = "transportation"
+                l.predicate = NSPredicate(format: "subclass == 'cycleway'")
+                l.lineColor = NSExpression(forConstantValue: UIColor(hex: 0x1E8E3E))
+                l.lineWidth = NSExpression(forConstantValue: 3)
+                l.lineCap = NSExpression(forConstantValue: "round")
+                l.lineJoin = NSExpression(forConstantValue: "round")
+                if let b = below { style.insertLayer(l, below: b) } else { style.addLayer(l) }
+            }
+        } else if let l = style.layer(withIdentifier: MapController.bikeLayerID) {
+            style.removeLayer(l)
+        }
+    }
+
+    // MARK: - Misura distanza
+
+    static let measureSourceID = "gm-measure"
+
+    func drawMeasure(_ points: [CLLocationCoordinate2D]) {
+        guard let style = mapView?.style else { return }
+        var coords = points
+        let shape: MLNShape? = coords.count > 1 ? MLNPolylineFeature(coordinates: &coords, count: UInt(coords.count)) : nil
+        let dots = MLNShapeCollectionFeature(shapes: points.map { c -> MLNPointFeature in
+            let f = MLNPointFeature(); f.coordinate = c; return f
+        })
+        if let source = style.source(withIdentifier: MapController.measureSourceID) as? MLNShapeSource,
+           let dotSource = style.source(withIdentifier: MapController.measureSourceID + "-dots") as? MLNShapeSource {
+            source.shape = shape
+            dotSource.shape = points.isEmpty ? nil : dots
+            return
+        }
+        guard !points.isEmpty else { return }
+        let source = MLNShapeSource(identifier: MapController.measureSourceID, shape: shape, options: nil)
+        let dotSource = MLNShapeSource(identifier: MapController.measureSourceID + "-dots", shape: dots, options: nil)
+        style.addSource(source)
+        style.addSource(dotSource)
+        let line = MLNLineStyleLayer(identifier: MapController.measureSourceID + "-line", source: source)
+        line.lineColor = NSExpression(forConstantValue: UIColor.white)
+        line.lineWidth = NSExpression(forConstantValue: 3)
+        line.lineDashPattern = NSExpression(forConstantValue: [2, 1.5])
+        let casing = MLNLineStyleLayer(identifier: MapController.measureSourceID + "-casing", source: source)
+        casing.lineColor = NSExpression(forConstantValue: UIColor.black.withAlphaComponent(0.6))
+        casing.lineWidth = NSExpression(forConstantValue: 6)
+        let circles = MLNCircleStyleLayer(identifier: MapController.measureSourceID + "-points", source: dotSource)
+        circles.circleColor = NSExpression(forConstantValue: UIColor.white)
+        circles.circleRadius = NSExpression(forConstantValue: 5)
+        circles.circleStrokeColor = NSExpression(forConstantValue: UIColor.black)
+        circles.circleStrokeWidth = NSExpression(forConstantValue: 2)
+        style.addLayer(casing)
+        style.addLayer(line)
+        style.addLayer(circles)
+    }
+
     /// Dalla modalità bussola: nord in alto continuando a seguire la posizione
     func resetNorthFollowing() {
         guard let m = mapView else { return }
@@ -324,16 +437,46 @@ final class MapController {
         return deg < 0 ? deg + 360 : deg
     }
 
+    /// Inquadratura di guida come Google Maps: la freccia sta in basso (circa a tre quarti dello schermo),
+    /// così si vede molta più strada davanti che dietro.
+    func applyNavigationInsets(animated: Bool = true) {
+        guard let m = mapView else { return }
+        let h = m.bounds.height
+        m.setContentInset(UIEdgeInsets(top: h * 0.46, left: 0, bottom: 150, right: 0), animated: animated)
+    }
+
+    /// Zoom in base alla velocità (più lontano in autostrada, più vicino in città), come Google Maps
+    func adjustNavigationZoom(speedKmh: Int, walking: Bool) {
+        guard let m = mapView, state?.tracking == .heading else { return }
+        let z: Double
+        if walking { z = 18 }
+        else if speedKmh < 25 { z = 17.6 }
+        else if speedKmh < 55 { z = 17.1 }
+        else if speedKmh < 90 { z = 16.4 }
+        else { z = 15.7 }
+        if abs(m.zoomLevel - z) > 0.35 { m.setZoomLevel(z, animated: true) }
+    }
+
+    /// Il tratto già percorso sparisce dietro la freccia (come Google Maps)
+    func trimRoute(from point: CLLocationCoordinate2D, index: Int) {
+        guard routeCoordinates.count > 1, let style = mapView?.style,
+              let source = style.source(withIdentifier: MapController.routeSourceID) as? MLNShapeSource else { return }
+        let rest = index + 1 < routeCoordinates.count ? Array(routeCoordinates[(index + 1)...]) : []
+        var coords = [point] + rest
+        guard coords.count > 1 else { source.shape = nil; return }
+        source.shape = MLNPolylineFeature(coordinates: &coords, count: UInt(coords.count))
+    }
+
     func startNavigation() {
         guard let m = mapView else { return }
-        setBottomInset(230)
+        applyNavigationInsets()
         if let loc = m.userLocation?.location ?? state?.location.location {
             // Come nel video: passaggio quasi immediato a una vista molto ravvicinata che segue la marcia
             var course = loc.course >= 0 ? loc.course : m.direction
             if loc.course < 0, routeCoordinates.count > 1 {
                 course = MapController.bearing(from: routeCoordinates[0], to: routeCoordinates[min(5, routeCoordinates.count - 1)])
             }
-            let cam = MLNMapCamera(lookingAtCenter: loc.coordinate, altitude: 230, pitch: 38, heading: course)
+            let cam = MLNMapCamera(lookingAtCenter: loc.coordinate, altitude: 230, pitch: 52, heading: course)
             m.setCamera(cam, withDuration: 0.35, animationTimingFunction: CAMediaTimingFunction(name: .easeOut))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
                 self?.mapView?.setUserTrackingMode(.followWithCourse, animated: true, completionHandler: nil)

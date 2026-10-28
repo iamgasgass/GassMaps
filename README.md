@@ -56,6 +56,14 @@ Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfac
 - **Posizione in tempo reale ottimizzata**: Core Location alla massima precisione ("per la navigazione": GPS, Galileo, GLONASS, BeiDou, Wi-Fi, celle), richiesta di precisione completa se è attiva quella approssimativa, filtro di Kalman contro i salti, direzione di marcia calcolata anche senza bussola; la freccia sulla mappa usa la stessa posizione filtrata della navigazione.
   Nota: su iPhone non esiste un "GPS di Google" separato: anche Google Maps per iOS riceve la posizione da Core Location.
 
+- **Navigazione come Google Maps**: freccia posizionata in basso così da vedere più strada davanti, tratto già percorso che sparisce, zoom automatico secondo la velocità
+- **Livelli**: mappa del tema o satellite (con strade ed etichette sopra), trasporti pubblici, piste ciclabili
+- **Misura distanza** (menu ••• di un luogo): mirino al centro, aggiungi punti, annulla, distanza totale
+- **Plus Code** nella scheda del luogo (copiabile), **ricerca per coordinate** ("40.85, 14.26")
+- **Ricerca vocale** in italiano (microfono nella barra di ricerca)
+- **Elenchi** (Preferiti, Da visitare, Luoghi speciali) e **note personali** sui luoghi; filtri nelle Posizioni salvate
+- **La tua posizione**: tocco sulla freccia → indirizzo, precisione, salva parcheggio, condividi, calibra bussola, nelle vicinanze
+
 Limiti (dati non disponibili gratuitamente fuori da Google): traffico in tempo reale, Street View, recensioni e foto dei luoghi,
 orari di apertura, tracciato dei mezzi pubblici (per i mezzi l'app mostra il tempo e apre linee e orari in Mappe di Apple), mappe offline.
 

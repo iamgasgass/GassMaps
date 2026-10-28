@@ -54,7 +54,7 @@ struct MainMapScreen: View {
                         } else if state.panel != .directions {
                             VStack(spacing: 10) {
                                 TopBar()
-                                if state.panel == .none || state.panel == .results {
+                                if (state.panel == .none || state.panel == .results) && !state.measuring {
                                     CategoryChips()
                                 }
                                 if state.showSearchArea && state.panel == .results {
@@ -69,13 +69,26 @@ struct MainMapScreen: View {
                                     .buttonStyle(.plain)
                                     .transition(.scale.combined(with: .opacity))
                                 }
-                                HStack {
+                                HStack(alignment: .top) {
                                     Spacer()
-                                    if showCompass && abs(state.mapHeading) > 2 {
-                                        CompassButton()
-                                            .padding(.trailing, 18)
-                                            .transition(.scale.combined(with: .opacity))
+                                    VStack(spacing: 10) {
+                                        // Livelli (come Google Maps)
+                                        if (state.panel == .none || state.panel == .results) && !state.measuring {
+                                            Button { state.showLayers = true } label: {
+                                                GlassCircle(size: 44) {
+                                                    Image(systemName: "square.3.layers.3d")
+                                                        .font(.system(size: 17, weight: .semibold))
+                                                        .foregroundStyle(.white)
+                                                }
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                        if showCompass && abs(state.mapHeading) > 2 {
+                                            CompassButton()
+                                                .transition(.scale.combined(with: .opacity))
+                                        }
                                     }
+                                    .padding(.trailing, 18)
                                 }
                             }
                             .transition(.opacity)
@@ -88,11 +101,24 @@ struct MainMapScreen: View {
                 // controlli inferiori
                 VStack {
                     Spacer()
-                    if state.panel == .none {
+                    if state.measuring {
+                        MeasureBar()
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, max(geo.safeAreaInsets.bottom, 12) + 8)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    } else if state.panel == .none {
                         BottomControls()
                             .padding(.bottom, max(geo.safeAreaInsets.bottom, 12) + 8)
                             .transition(.opacity)
                     }
+                }
+
+                // mirino al centro per la misura della distanza
+                if state.measuring {
+                    MeasureCrosshair()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea()
+                        .allowsHitTesting(false)
                 }
 
                 // pannelli
@@ -113,6 +139,12 @@ struct MainMapScreen: View {
             AlongRouteSheet()
                 .environmentObject(state)
         }
+        .sheet(isPresented: $state.showLayers) {
+            LayersSheet()
+                .environmentObject(state)
+                .presentationDetents([.height(330)])
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: state.measuring)
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: state.showSearchArea)
         .animation(.easeInOut(duration: 0.3), value: state.isLoadingRoute)
         .alert("Indicazioni", isPresented: Binding(get: { state.routeError != nil },
@@ -333,5 +365,103 @@ struct CompassButton: View {
             }
         }
         .buttonStyle(.plain)
+    }
+}
+
+
+// MARK: - Livelli
+
+struct LayersSheet: View {
+    @EnvironmentObject var state: AppState
+    @AppStorage(Prefs.layerSatellite) private var satellite = false
+    @AppStorage(Prefs.layerTransit) private var transit = false
+    @AppStorage(Prefs.layerBike) private var bike = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Tipo di mappa").font(.system(size: 17, weight: .bold)).foregroundStyle(.white)
+            HStack(spacing: 14) {
+                option("Tema", "map.fill", on: !satellite) { satellite = false }
+                option("Satellite", "globe.europe.africa.fill", on: satellite) { satellite = true }
+            }
+            Text("Dettagli della mappa").font(.system(size: 17, weight: .bold)).foregroundStyle(.white)
+            HStack(spacing: 14) {
+                option("Trasporti pubblici", "tram.fill", on: transit) { transit.toggle() }
+                option("Ciclabili", "bicycle", on: bike) { bike.toggle() }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 22)
+        .padding(.top, 26)
+        .onChange(of: satellite) { _, _ in state.map.applyLayers() }
+        .onChange(of: transit) { _, _ in state.map.applyLayers() }
+        .onChange(of: bike) { _, _ in state.map.applyLayers() }
+    }
+
+    private func option(_ title: String, _ icon: String, on: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(on ? Color(hex: 0x2F8CFF) : .white)
+                    .frame(width: 76, height: 64)
+                    .glassEffect(.regular.tint(on ? Color(hex: 0x2F8CFF).opacity(0.25) : nil).interactive(),
+                                 in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .strokeBorder(on ? Color(hex: 0x2F8CFF) : .clear, lineWidth: 2))
+                Text(title).font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(on ? Color(hex: 0x2F8CFF) : .white)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .frame(width: 96)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Misura distanza
+
+struct MeasureCrosshair: View {
+    var body: some View {
+        ZStack {
+            Circle().strokeBorder(Color.white, lineWidth: 2.5).frame(width: 30, height: 30)
+            Circle().strokeBorder(Color.black.opacity(0.5), lineWidth: 1).frame(width: 34, height: 34)
+            Circle().fill(Color.white).frame(width: 5, height: 5)
+        }
+        .shadow(color: .black.opacity(0.4), radius: 3)
+    }
+}
+
+struct MeasureBar: View {
+    @EnvironmentObject var state: AppState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Distanza totale").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.white.opacity(0.6))
+                    Text(state.units.short(state.measureDistance))
+                        .font(.system(size: 28, weight: .heavy)).foregroundStyle(.white)
+                        .contentTransition(.numericText())
+                }
+                Spacer()
+                Button { state.stopMeasuring() } label: {
+                    GlassCircle(size: 40) {
+                        Image(systemName: "xmark").font(.system(size: 15, weight: .bold)).foregroundStyle(.white)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+            HStack(spacing: 10) {
+                ActionChip(title: "Annulla", icon: "arrow.uturn.backward") { state.undoMeasurePoint() }
+                ActionChip(title: "Aggiungi punto", icon: "plus", prominent: true, accent: Color(hex: 0x2F8CFF)) {
+                    state.addMeasurePoint()
+                }
+            }
+            Text("Sposta la mappa per posizionare il mirino sul punto successivo.")
+                .font(.system(size: 12)).foregroundStyle(Color.white.opacity(0.5))
+        }
+        .padding(18)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
     }
 }

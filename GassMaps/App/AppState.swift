@@ -78,6 +78,11 @@ final class AppState: ObservableObject {
 
     // MARK: Partenza personalizzata, tappa, orario (come Google Maps)
     @Published var searchPurpose: SearchPurpose = .destination
+    // misura distanza
+    @Published var measuring = false
+    @Published var measurePoints: [CLLocationCoordinate2D] = []
+    @Published var measureDistance: Double = 0
+    @Published var showLayers = false
     @Published var origin: Place? = nil
     @Published var stop: Place? = nil
     @Published var departure: Date? = nil
@@ -322,6 +327,81 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// Salva in un elenco (o sposta il luogo nell'elenco scelto)
+    func save(_ place: Place, in list: SavedList) {
+        var p = place
+        if p.name.isEmpty { p.name = p.address.components(separatedBy: ",").first ?? "Posizione" }
+        if let idx = saved.firstIndex(where: { $0.exploreKey == place.exploreKey }) {
+            saved[idx].list = list.rawValue
+        } else {
+            p.list = list.rawValue
+            saved.insert(p, at: 0)
+        }
+    }
+
+    func savedEntry(_ place: Place) -> Place? {
+        saved.first { $0.exploreKey == place.exploreKey }
+    }
+
+    /// Nota personale sul luogo (lo salva se non lo era)
+    func setNote(_ note: String, for place: Place) {
+        let text = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let idx = saved.firstIndex(where: { $0.exploreKey == place.exploreKey }) {
+            saved[idx].note = text.isEmpty ? nil : text
+        } else if !text.isEmpty {
+            var p = place
+            if p.name.isEmpty { p.name = p.address.components(separatedBy: ",").first ?? "Posizione" }
+            p.note = text
+            saved.insert(p, at: 0)
+        }
+    }
+
+    // MARK: Misura distanza (come Google Maps)
+
+    func startMeasuring(from place: Place) {
+        panel = .none
+        pinnedPlace = nil
+        map.removePin()
+        map.setBottomInset(0)
+        measurePoints = [place.coordinate]
+        measuring = true
+        map.mapView?.setUserTrackingMode(.none, animated: false, completionHandler: nil)
+        tracking = .none
+        map.mapView?.setCenter(place.coordinate, animated: true)
+        updateMeasure()
+    }
+
+    func addMeasurePoint() {
+        guard let c = map.centerCoordinate else { return }
+        measurePoints.append(c)
+        updateMeasure()
+    }
+
+    func undoMeasurePoint() {
+        if measurePoints.count > 1 { measurePoints.removeLast() }
+        updateMeasure()
+    }
+
+    func stopMeasuring() {
+        measuring = false
+        measurePoints = []
+        map.drawMeasure([])
+    }
+
+    /// Ridisegna la linea fino al mirino al centro della mappa e aggiorna il totale
+    func updateMeasure() {
+        guard measuring else { return }
+        var pts = measurePoints
+        if let c = map.centerCoordinate { pts.append(c) }
+        var total = 0.0
+        for i in 1..<max(1, pts.count) {
+            total += CLLocation(latitude: pts[i - 1].latitude, longitude: pts[i - 1].longitude)
+                .distance(from: CLLocation(latitude: pts[i].latitude, longitude: pts[i].longitude))
+        }
+        measureDistance = total
+        map.drawMeasure(pts)
+    }
+
     func isSaved(_ place: Place) -> Bool {
         saved.contains { $0.exploreKey == place.exploreKey }
     }
@@ -380,6 +460,7 @@ final class AppState: ObservableObject {
 
     /// La mappa è stata spostata lontano dai risultati → mostra "Cerca in questa zona"
     func mapMoved() {
+        if measuring { updateMeasure() }
         guard panel == .results, let c = map.centerCoordinate, let rc = resultsCenter else { return }
         let moved = CLLocation(latitude: c.latitude, longitude: c.longitude).distance(from: rc) > 900
         if moved != showSearchArea { showSearchArea = moved }
@@ -563,6 +644,12 @@ final class AppState: ObservableObject {
         lastProjectionIndex = proj.index
         let total = cumulative.last ?? r.distance
         let traveled = proj.along
+        // tratto percorso nascosto e zoom secondo la velocità
+        if proj.offset < 35 {
+            let p = RouteMath.point(at: traveled, on: r.coordinates, cumulative: cumulative, hint: proj.index)
+            map.trimRoute(from: p.coordinate, index: p.index)
+        }
+        map.adjustNavigationZoom(speedKmh: speedKmh, walking: r.mode == .walk)
         let remaining = max(0, total - traveled)
 
         // prossima manovra

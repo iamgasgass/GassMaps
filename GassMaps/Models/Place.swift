@@ -8,6 +8,9 @@ struct Place: Codable, Identifiable, Equatable, Hashable {
     var address: String
     var latitude: Double
     var longitude: Double
+    /// elenco salvato (Preferiti, Da visitare, Luoghi speciali) e nota personale, come Google Maps
+    var list: String? = nil
+    var note: String? = nil
 
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
@@ -206,4 +209,60 @@ enum Formatters {
         f.dateFormat = "EEEE, HH:mm"
         return f
     }()
+}
+
+
+/// Elenchi delle posizioni salvate (come Google Maps)
+enum SavedList: String, CaseIterable, Identifiable {
+    case favorites = "Preferiti", toVisit = "Da visitare", starred = "Luoghi speciali"
+    var id: String { rawValue }
+    var icon: String {
+        switch self {
+        case .favorites: return "heart.fill"
+        case .toVisit: return "flag.fill"
+        case .starred: return "star.fill"
+        }
+    }
+}
+
+/// Plus Code (Open Location Code), il codice di posizione mostrato da Google Maps
+enum PlusCode {
+    private static let alphabet = Array("23456789CFGHJMPQRVWX")
+
+    static func encode(latitude: Double, longitude: Double) -> String {
+        var lat = min(max(latitude, -90), 90)
+        if lat >= 90 { lat = 89.9999999 }
+        var lon = longitude
+        while lon < -180 { lon += 360 }
+        while lon >= 180 { lon -= 360 }
+        var latV = lat + 90, lonV = lon + 180
+        var code = ""
+        var res = 20.0
+        for i in 0..<5 {
+            let la = min(19, max(0, Int(floor(latV / res + 1e-10))))
+            let lo = min(19, max(0, Int(floor(lonV / res + 1e-10))))
+            latV -= Double(la) * res
+            lonV -= Double(lo) * res
+            code.append(alphabet[la])
+            code.append(alphabet[lo])
+            if i == 3 { code.append("+") }
+            res /= 20
+        }
+        return code
+    }
+}
+
+/// Coordinate scritte nella ricerca ("40.85, 14.26" oppure "40,85 14,26")
+enum CoordinateParser {
+    static func parse(_ text: String) -> CLLocationCoordinate2D? {
+        let cleaned = text.trimmingCharacters(in: .whitespaces)
+        let pattern = #"^\s*(-?\d{1,2}(?:[.,]\d+)?)\s*[,; ]\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$"#
+        guard let re = try? NSRegularExpression(pattern: pattern),
+              let m = re.firstMatch(in: cleaned, range: NSRange(cleaned.startIndex..., in: cleaned)),
+              let r1 = Range(m.range(at: 1), in: cleaned), let r2 = Range(m.range(at: 2), in: cleaned) else { return nil }
+        let a = Double(cleaned[r1].replacingOccurrences(of: ",", with: "."))
+        let b = Double(cleaned[r2].replacingOccurrences(of: ",", with: "."))
+        guard let lat = a, let lon = b, abs(lat) <= 90, abs(lon) <= 180 else { return nil }
+        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
 }

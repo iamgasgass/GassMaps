@@ -137,6 +137,13 @@ final class SearchService: NSObject, ObservableObject, MKLocalSearchCompleterDel
 
     /// Tutti i risultati per il testo cercato, i più pertinenti/vicini per primi
     func searchAll(done: @escaping ([MKMapItem]) -> Void) {
+        // coordinate scritte a mano → punto esatto
+        if let c = CoordinateParser.parse(query) {
+            let item = MKMapItem(placemark: MKPlacemark(coordinate: c))
+            item.name = String(format: "%.6f, %.6f", c.latitude, c.longitude)
+            done([item])
+            return
+        }
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
         if let r = region { request.region = r }

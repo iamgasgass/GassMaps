@@ -278,7 +278,7 @@ EXTRA = {
     # replica della mappa allegata: prato verde saturo con texture, boschi a chiome scure,
     # sentieri sabbia larghi con bordo bruno, fiumi azzurri con schiuma bianca e fascia chiara,
     # rocce chiare, spiagge sabbia, edifici in pietra grigia, scritte bianche maiuscole con contorno nero
-    "storm": dict(road_mode="casing", casing="#a07e45", inner="#e8cb8c", minor_solid=None, road_scale=1.35,
+    "storm": dict(road_mode="solid", minor="#222222", major="#1e1e1e", motor="#1a1a1a",
                   land="#3e6b26", bg_pattern="gm-meadow", wood_pattern="gm-trees", park="#45772b", grass="#45772b",
                   sand="#e3c78a", rock="#cfc9bd", rock_outline="#8d877b",
                   water="#3a88e2", water_outline="#eaf6ff", water_outline_width=[(10, 1.2), (14, 3), (18, 6)],

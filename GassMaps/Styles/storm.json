@@ -568,300 +568,6 @@
    }
   },
   {
-   "id": "road-service-casing",
-   "type": "line",
-   "source": "openmaptiles",
-   "source-layer": "transportation",
-   "minzoom": 14,
-   "filter": [
-    "all",
-    [
-     "match",
-     [
-      "get",
-      "class"
-     ],
-     [
-      "service"
-     ],
-     true,
-     false
-    ],
-    [
-     "!=",
-     [
-      "get",
-      "brunnel"
-     ],
-     "tunnel"
-    ]
-   ],
-   "layout": {
-    "line-cap": "round",
-    "line-join": "round"
-   },
-   "paint": {
-    "line-color": "#a07e45",
-    "line-width": [
-     "interpolate",
-     [
-      "exponential",
-      1.5
-     ],
-     [
-      "zoom"
-     ],
-     14,
-     2.2800000000000002,
-     16,
-     4.575,
-     18,
-     10.65
-    ],
-    "line-opacity": 1.0
-   }
-  },
-  {
-   "id": "road-minor-casing",
-   "type": "line",
-   "source": "openmaptiles",
-   "source-layer": "transportation",
-   "minzoom": 12,
-   "filter": [
-    "all",
-    [
-     "match",
-     [
-      "get",
-      "class"
-     ],
-     [
-      "minor"
-     ],
-     true,
-     false
-    ],
-    [
-     "!=",
-     [
-      "get",
-      "brunnel"
-     ],
-     "tunnel"
-    ]
-   ],
-   "layout": {
-    "line-cap": "round",
-    "line-join": "round"
-   },
-   "paint": {
-    "line-color": "#a07e45",
-    "line-width": [
-     "interpolate",
-     [
-      "exponential",
-      1.5
-     ],
-     [
-      "zoom"
-     ],
-     12,
-     2.01,
-     14,
-     3.63,
-     16,
-     7.95,
-     18,
-     20.1,
-     20,
-     49.800000000000004
-    ],
-    "line-opacity": 1.0
-   }
-  },
-  {
-   "id": "road-secondary-casing",
-   "type": "line",
-   "source": "openmaptiles",
-   "source-layer": "transportation",
-   "minzoom": 8,
-   "filter": [
-    "all",
-    [
-     "match",
-     [
-      "get",
-      "class"
-     ],
-     [
-      "secondary",
-      "tertiary"
-     ],
-     true,
-     false
-    ],
-    [
-     "!=",
-     [
-      "get",
-      "brunnel"
-     ],
-     "tunnel"
-    ]
-   ],
-   "layout": {
-    "line-cap": "round",
-    "line-join": "round"
-   },
-   "paint": {
-    "line-color": "#a07e45",
-    "line-width": [
-     "interpolate",
-     [
-      "exponential",
-      1.5
-     ],
-     [
-      "zoom"
-     ],
-     8,
-     2.01,
-     12,
-     3.63,
-     14,
-     6.33,
-     16,
-     12.0,
-     18,
-     28.2,
-     20,
-     66.00000000000001
-    ],
-    "line-opacity": 1.0
-   }
-  },
-  {
-   "id": "road-primary-casing",
-   "type": "line",
-   "source": "openmaptiles",
-   "source-layer": "transportation",
-   "minzoom": 5,
-   "filter": [
-    "all",
-    [
-     "match",
-     [
-      "get",
-      "class"
-     ],
-     [
-      "primary",
-      "trunk"
-     ],
-     true,
-     false
-    ],
-    [
-     "!=",
-     [
-      "get",
-      "brunnel"
-     ],
-     "tunnel"
-    ]
-   ],
-   "layout": {
-    "line-cap": "round",
-    "line-join": "round"
-   },
-   "paint": {
-    "line-color": "#a07e45",
-    "line-width": [
-     "interpolate",
-     [
-      "exponential",
-      1.5
-     ],
-     [
-      "zoom"
-     ],
-     5,
-     2.01,
-     10,
-     3.63,
-     14,
-     7.95,
-     16,
-     14.7,
-     18,
-     33.60000000000001,
-     20,
-     76.80000000000001
-    ],
-    "line-opacity": 1.0
-   }
-  },
-  {
-   "id": "road-motorway-casing",
-   "type": "line",
-   "source": "openmaptiles",
-   "source-layer": "transportation",
-   "minzoom": 4,
-   "filter": [
-    "all",
-    [
-     "match",
-     [
-      "get",
-      "class"
-     ],
-     [
-      "motorway"
-     ],
-     true,
-     false
-    ],
-    [
-     "!=",
-     [
-      "get",
-      "brunnel"
-     ],
-     "tunnel"
-    ]
-   ],
-   "layout": {
-    "line-cap": "round",
-    "line-join": "round"
-   },
-   "paint": {
-    "line-color": "#a07e45",
-    "line-width": [
-     "interpolate",
-     [
-      "exponential",
-      1.5
-     ],
-     [
-      "zoom"
-     ],
-     4,
-     2.2800000000000002,
-     10,
-     4.170000000000001,
-     14,
-     9.3,
-     16,
-     17.400000000000002,
-     18,
-     39.00000000000001,
-     20,
-     87.60000000000001
-    ],
-    "line-opacity": 1.0
-   }
-  },
-  {
    "id": "road-service",
    "type": "line",
    "source": "openmaptiles",
@@ -895,7 +601,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#e8cb8c",
+    "line-color": "#222222",
     "line-width": [
      "interpolate",
      [
@@ -906,11 +612,11 @@
       "zoom"
      ],
      14,
-     0.6696000000000001,
+     0.8,
      16,
-     2.0925,
+     2.5,
      18,
-     5.859000000000001
+     7
     ],
     "line-opacity": 1.0
    }
@@ -949,7 +655,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#e8cb8c",
+    "line-color": "#222222",
     "line-width": [
      "interpolate",
      [
@@ -960,15 +666,15 @@
       "zoom"
      ],
      12,
-     0.5022,
+     0.6,
      14,
-     1.5066000000000002,
+     1.8,
      16,
-     4.185,
+     5,
      18,
-     11.718000000000002,
+     14,
      20,
-     30.132
+     36
     ],
     "line-opacity": 1.0
    }
@@ -1008,7 +714,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#e8cb8c",
+    "line-color": "#1e1e1e",
     "line-width": [
      "interpolate",
      [
@@ -1019,17 +725,17 @@
       "zoom"
      ],
      8,
-     0.5022,
+     0.6,
      12,
-     1.5066000000000002,
+     1.8,
      14,
-     3.1806,
+     3.8,
      16,
-     6.696000000000001,
+     8,
      18,
-     16.74,
      20,
-     40.17600000000001
+     20,
+     48
     ],
     "line-opacity": 1.0
    }
@@ -1069,7 +775,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#e8cb8c",
+    "line-color": "#1e1e1e",
     "line-width": [
      "interpolate",
      [
@@ -1080,17 +786,17 @@
       "zoom"
      ],
      5,
-     0.5022,
+     0.6,
      10,
-     1.5066000000000002,
+     1.8,
      14,
-     4.185,
+     5,
      16,
-     8.37,
+     10,
      18,
-     20.088000000000005,
+     24,
      20,
-     46.87200000000001
+     56
     ],
     "line-opacity": 1.0
    }
@@ -1129,7 +835,7 @@
     "line-join": "round"
    },
    "paint": {
-    "line-color": "#e8cb8c",
+    "line-color": "#1a1a1a",
     "line-width": [
      "interpolate",
      [
@@ -1140,17 +846,17 @@
       "zoom"
      ],
      4,
-     0.6696000000000001,
+     0.8,
      10,
-     1.8414000000000004,
+     2.2,
      14,
-     5.022000000000001,
+     6,
      16,
-     10.044000000000002,
+     12,
      18,
-     23.436000000000003,
+     28,
      20,
-     53.568000000000005
+     64
     ],
     "line-opacity": 1.0
    }

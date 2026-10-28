@@ -105,7 +105,7 @@ enum Textures {
         }
         return renderer(side).image { ctx in
             let c = ctx.cgContext
-            c.setFillColor(UIColor(hex: 0x3A6624).cgColor)
+            c.setFillColor(UIColor(hex: 0x2F5A22).cgColor)
             c.fill(CGRect(x: 0, y: 0, width: side, height: side))
             for pass in 0..<3 {
                 for (x, y, r) in crowns {
@@ -113,20 +113,15 @@ enum Textures {
                         for dy in [-side, 0, side] {
                             let cx = x + dx, cy = y + dy
                             switch pass {
-                            case 0: // ombra proiettata
-                                c.setFillColor(UIColor(hex: 0x16300F).withAlphaComponent(0.85).cgColor)
-                                c.fillEllipse(in: CGRect(x: cx - r + 4, y: cy - r + 5, width: r * 2, height: r * 2))
-                            case 1: // chioma cartoon con contorno scuro
-                                c.setFillColor(UIColor(hex: 0x24481A).cgColor)
+                            case 0: // ombra
+                                c.setFillColor(UIColor(hex: 0x1C3A15).cgColor)
+                                c.fillEllipse(in: CGRect(x: cx - r + 3, y: cy - r + 4, width: r * 2, height: r * 2))
+                            case 1: // chioma
+                                c.setFillColor(UIColor(hex: 0x3B6E2A).cgColor)
                                 c.fillEllipse(in: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
-                                c.setStrokeColor(UIColor(hex: 0x12260C).cgColor)
-                                c.setLineWidth(1.6)
-                                c.strokeEllipse(in: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
-                            default: // luce in alto a sinistra
-                                c.setFillColor(UIColor(hex: 0x36662A).cgColor)
-                                c.fillEllipse(in: CGRect(x: cx - r * 0.8, y: cy - r * 0.85, width: r * 1.2, height: r * 1.05))
-                                c.setFillColor(UIColor(hex: 0x4A7F34).cgColor)
-                                c.fillEllipse(in: CGRect(x: cx - r * 0.6, y: cy - r * 0.7, width: r * 0.6, height: r * 0.5))
+                            default: // luce
+                                c.setFillColor(UIColor(hex: 0x4F8A36).cgColor)
+                                c.fillEllipse(in: CGRect(x: cx - r * 0.75, y: cy - r * 0.8, width: r * 1.1, height: r * 1.0))
                             }
                         }
                     }

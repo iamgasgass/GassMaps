@@ -83,9 +83,9 @@ struct MainMapScreen: View {
                                             }
                                             .buttonStyle(.plain)
                                         }
-                                        if showCompass && abs(state.mapHeading) > 2 {
+                                        // bussola sempre visibile sotto il pulsante Livelli
+                                        if showCompass {
                                             CompassButton()
-                                                .transition(.scale.combined(with: .opacity))
                                         }
                                     }
                                     .padding(.trailing, 18)
@@ -358,10 +358,10 @@ struct CompassButton: View {
 
     /// lettera del punto cardinale verso cui guarda la parte alta della mappa
     private var letter: String {
-        let names = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"]
+        let names = ["N", "E", "S", "O"]
         var h = state.mapHeading.truncatingRemainder(dividingBy: 360)
         if h < 0 { h += 360 }
-        return names[Int((h + 22.5) / 45) % 8]
+        return names[Int((h + 45) / 90) % 4]
     }
 
     var body: some View {
@@ -396,13 +396,13 @@ struct CompassButton: View {
                     ctx.fill(tri, with: .color(Color(hex: 0xFF3B30)))
                 }
                 Text(letter)
-                    .font(.system(size: letter.count > 1 ? 13 : 17, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
                     .contentTransition(.opacity)
             }
-            .frame(width: 48, height: 48)
-            .background(Circle().fill(Color.black.opacity(0.35)))
-            .overlay(Circle().strokeBorder(Color.white.opacity(0.25), lineWidth: 1))
+            // stesso Liquid Glass e stessa misura del pulsante Impostazioni
+            .frame(width: 44, height: 44)
+            .contentShape(Circle())
             .glassEffect(.regular.interactive(), in: Circle())
         }
         .buttonStyle(.plain)

@@ -371,9 +371,10 @@ struct CompassButton: View {
                 Canvas { ctx, size in
                     let c = CGPoint(x: size.width / 2, y: size.height / 2)
                     let outer = size.width / 2 - 4.5, inner = outer - 4.5
-                    let rot = -state.mapHeading * .pi / 180
+                    // tutto in CGFloat (prima Double × CGFloat bloccava la compilazione)
+                    let rot = CGFloat(-state.mapHeading * .pi / 180)
                     for i in 0..<24 where i != 0 {
-                        let a = rot + Double(i) * .pi / 12 - .pi / 2
+                        let a: CGFloat = rot + CGFloat(i) * .pi / 12 - .pi / 2
                         let major = i % 3 == 0
                         var p = Path()
                         p.move(to: CGPoint(x: c.x + cos(a) * inner, y: c.y + sin(a) * inner))
@@ -382,10 +383,10 @@ struct CompassButton: View {
                                    style: StrokeStyle(lineWidth: major ? 2 : 1.6, lineCap: .round))
                     }
                     // triangolo rosso del nord sul bordo
-                    let a = rot - .pi / 2
+                    let a: CGFloat = rot - .pi / 2
                     let tip = CGPoint(x: c.x + cos(a) * (outer + 0.5), y: c.y + sin(a) * (outer + 0.5))
-                    let base = outer - 6
-                    let perp = a + .pi / 2
+                    let base: CGFloat = outer - 6
+                    let perp: CGFloat = a + .pi / 2
                     let bc = CGPoint(x: c.x + cos(a) * base, y: c.y + sin(a) * base)
                     var tri = Path()
                     tri.move(to: tip)

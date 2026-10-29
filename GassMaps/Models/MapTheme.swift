@@ -203,6 +203,15 @@ enum Themes {
             polar: UIColor(hex: 0xEAF4FF), buttonTint: .white,
             markers: [],
             globeFont: "Futura-CondensedExtraBold", globeUppercase: true, globeLabel: .white, globeLabelHalo: .black,
-            haze: UIColor(hex: 0x6FA86A), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 0, vignette: 0.15)
+            haze: UIColor(hex: 0x6FA86A), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 0, vignette: 0.15),
+        // guida notturna: indaco scuro, edifici 3D blu, percorso ciano, nomi delle vie nei fumetti, luoghi colorati
+        MapTheme(
+            id: "midnight", name: "Midnight Route",
+            backgroundTop: Color(hex: 0x141829), backgroundBottom: Color(hex: 0x141829),
+            accent: UIColor(hex: 0x19D3F2), iconColor: .white, iconHalo: UIColor(hex: 0x1F2338),
+            polar: UIColor(hex: 0x5A6088), buttonTint: .white,
+            markers: [],
+            globeFont: "AvenirNext-DemiBold", globeUppercase: false, globeLabel: UIColor(hex: 0xC9CDE3), globeLabelHalo: UIColor(hex: 0x1F2338),
+            haze: UIColor(hex: 0x4A5280), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 55, vignette: 0)
     ]
 }

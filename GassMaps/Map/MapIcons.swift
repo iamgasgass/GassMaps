@@ -81,6 +81,8 @@ enum IconFrame {
     case pixel(halo: UIColor)
     /// mappa tattica: quadrato nero con glifo bianco e angolari bianchi
     case tactical(fill: UIColor, bracket: UIColor)
+    /// segnaposto tondo a goccia colorato per categoria con glifo scuro (Midnight Route)
+    case teardrop(glyph: UIColor)
 }
 
 struct ThemeIconSet {
@@ -174,6 +176,20 @@ enum MapIcons {
                                          .atm: "dollarsign.circle.fill", .police: "figure.wave", .attraction: "star.fill",
                                          .parking: "car.fill", .default: "mappin.and.ellipse"])
 
+        case "midnight": // gocce colorate per famiglia di luoghi, glifo scuro (stessi colori dei nomi)
+            let orange = UIColor(hex: 0xF0A04B), blue = UIColor(hex: 0x5E9CF2), lavender = UIColor(hex: 0x9AA6F5)
+            let green = UIColor(hex: 0x5BB974), red = UIColor(hex: 0xE8706A), pink = UIColor(hex: 0xE57FB6)
+            let teal = UIColor(hex: 0x2BB5A8)
+            var colors: [POICategory: UIColor] = [:]
+            for c in [POICategory.restaurant, .fastfood, .cafe, .bakery, .icecream, .bar, .nightclub] { colors[c] = orange }
+            for c in [POICategory.supermarket, .shop, .clothes, .shoes, .jewelry, .hairdresser] { colors[c] = blue }
+            for c in [POICategory.fuel, .charging, .parking, .car, .carrepair, .rail, .bus, .bicycle] { colors[c] = lavender }
+            for c in [POICategory.park, .garden, .playground, .dog, .camping, .sport, .swimming, .fitness] { colors[c] = green }
+            for c in [POICategory.pharmacy, .hospital, .clinic] { colors[c] = red }
+            colors[.lodging] = pink
+            for c in [POICategory.cinema, .theatre, .museum, .attraction, .monument, .library] { colors[c] = teal }
+            return ThemeIconSet(frame: .teardrop(glyph: UIColor(hex: 0x1F2338)), tint: UIColor(hex: 0xAAB1D2), colors: colors)
+
         case "heat": // glifi bianchi
             return ThemeIconSet(frame: .outline(halo: UIColor(hex: 0x2A1E5A)), tint: w)
 
@@ -200,7 +216,7 @@ enum MapIcons {
 
     static var allNames: [String] {
         POICategory.allCases.map { $0.imageName }
-            + ["gm-oneway", "gm-shield", "gm-dot"]
+            + ["gm-oneway", "gm-shield", "gm-dot", "gm-callout"]
             + Textures.names
     }
 
@@ -232,6 +248,7 @@ enum MapIcons {
         case "gm-oneway": return oneway(color: theme.iconColor)
         case "gm-shield": return shield(theme: theme)
         case "gm-dot": return dot(color: theme.iconColor)
+        case "gm-callout": return callout()
         case _ where Textures.names.contains(name): return Textures.image(named: name)
         default:
             guard name.hasPrefix("gm-poi-"),
@@ -366,6 +383,27 @@ enum MapIcons {
             return outlinedSymbol(name, color: color, halo: halo, pointSize: pointSize)
         case .pixel(let halo):
             return pixelSymbol(name, color: color, halo: halo)
+        case .teardrop(let glyphColor):
+            guard let base = glyphImage(name, pointSize: pointSize * 0.55, weight: .bold) else { return nil }
+            let d = pointSize * 1.3
+            let fmt = UIGraphicsImageRendererFormat()
+            fmt.scale = 2
+            return UIGraphicsImageRenderer(size: CGSize(width: d + 4, height: d * 1.22 + 4), format: fmt).image { ctx in
+                let c = ctx.cgContext
+                let r = d / 2
+                let center = CGPoint(x: 2 + r, y: 2 + r)
+                let path = UIBezierPath()
+                path.addArc(withCenter: center, radius: r, startAngle: .pi * 0.62, endAngle: .pi * 0.38, clockwise: true)
+                path.addLine(to: CGPoint(x: center.x, y: 2 + d * 1.22))
+                path.close()
+                c.setShadow(offset: CGSize(width: 0, height: 1), blur: 2, color: UIColor.black.withAlphaComponent(0.45).cgColor)
+                color.setFill(); path.fill()
+                c.setShadow(offset: .zero, blur: 0, color: nil)
+                UIColor.white.withAlphaComponent(0.85).setStroke(); path.lineWidth = 1.2; path.stroke()
+                let s = base.size
+                base.withTintColor(glyphColor, renderingMode: .alwaysOriginal)
+                    .draw(in: CGRect(x: center.x - s.width / 2, y: center.y - s.height / 2, width: s.width, height: s.height))
+            }
         case .tactical(let fill, let bracket):
             return enclosed(name, color: color, pointSize: pointSize) { ctx, rect in
                 let r = rect.insetBy(dx: rect.width * 0.08, dy: rect.width * 0.08)
@@ -577,6 +615,7 @@ enum MapIcons {
         case "dust", "kingdom": color = UIColor(hex: 0x6B4A28)
         case "contract": color = UIColor(hex: 0x2A2B2D)
         case "storm": color = UIColor(hex: 0x2F7BFF)
+        case "midnight": color = UIColor(hex: 0x2F63D6)
         default: color = UIColor(hex: 0x2F47C9)
         }
         return UIGraphicsImageRenderer(size: CGSize(width: 24, height: 16), format: fmt).image { _ in
@@ -584,6 +623,24 @@ enum MapIcons {
             color.setFill(); path.fill()
             UIColor.white.setStroke(); path.lineWidth = 1.2; path.stroke()
         }
+    }
+
+    /// Fumetto per i nomi delle vie (Midnight Route): fondo indaco, bordo chiaro, codina in basso a sinistra.
+    /// Le estremità non si deformano quando il fumetto si allarga attorno al testo.
+    static func callout() -> UIImage {
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 2
+        let w: CGFloat = 40, h: CGFloat = 34
+        let img = UIGraphicsImageRenderer(size: CGSize(width: w, height: h), format: fmt).image { _ in
+            let body = UIBezierPath(roundedRect: CGRect(x: 1.5, y: 1.5, width: w - 3, height: h - 9), cornerRadius: 9)
+            let tail = UIBezierPath()
+            tail.move(to: CGPoint(x: 9, y: h - 8.5)); tail.addLine(to: CGPoint(x: 13, y: h - 1.5)); tail.addLine(to: CGPoint(x: 17, y: h - 8.5))
+            UIColor(hex: 0x2E3454).withAlphaComponent(0.92).setFill()
+            body.fill(); tail.fill()
+            UIColor(hex: 0xA0A8D0).setStroke()
+            body.lineWidth = 1.5; body.stroke()
+        }
+        return img.resizableImage(withCapInsets: UIEdgeInsets(top: 12, left: 20, bottom: 14, right: 12), resizingMode: .stretch)
     }
 
     static func dot(color: UIColor) -> UIImage {

@@ -29,6 +29,7 @@ Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfac
   | 8 | Old Kingdom | pergamena medievale |
   | 9 | Silent Contract | mappa tattica grigia, icone quadrate nere |
   | 10 | Storm Isle | isola cartoon: prati, boschi, sentieri di sabbia, fiumi |
+  | 11 | Midnight Route | guida notturna indaco, edifici 3D blu, nomi delle vie nei fumetti, luoghi colorati |
 
 - **Impostazioni** organizzate come Google Maps, in Liquid Glass:
   - *App e display*: tema della mappa, icona app, unità di distanza, bussola, scala, vista inclinata 3D, feedback aptico, accessibilità
@@ -62,6 +63,7 @@ Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfac
 - **Plus Code** nella scheda del luogo (copiabile), **ricerca per coordinate** ("40.85, 14.26")
 - **Ricerca vocale** in italiano (microfono nella barra di ricerca)
 - **Elenchi** (Preferiti, Da visitare, Luoghi speciali) e **note personali** sui luoghi; filtri nelle Posizioni salvate
+- **Avatar di guida** (Impostazioni → I tuoi veicoli): *Default* (freccia del tema) o *Alternative* (disco blu con freccia bianca), versione a blocchi in Pixel Land
 - **La tua posizione**: tocco sulla freccia → indirizzo, precisione, salva parcheggio, condividi, calibra bussola, nelle vicinanze
 
 Limiti (dati non disponibili gratuitamente fuori da Google): traffico in tempo reale, Street View, recensioni e foto dei luoghi,

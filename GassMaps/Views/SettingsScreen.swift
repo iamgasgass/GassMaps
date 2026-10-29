@@ -325,7 +325,9 @@ private struct NavigationSettings: View {
 // MARK: - I tuoi veicoli
 
 private struct VehicleSettings: View {
+    @EnvironmentObject var state: AppState
     @AppStorage(Prefs.engine) private var engine = "gas"
+    @AppStorage(Prefs.avatar) private var avatar = 0
 
     private let engines: [(String, String, String)] = [
         ("gas", "Benzina", "fuelpump"), ("diesel", "Diesel", "fuelpump.fill"), ("electric", "Elettrico", "bolt.car"),
@@ -349,11 +351,62 @@ private struct VehicleSettings: View {
                     .buttonStyle(.plain)
                 }
             }
+            SettingsSection(title: "Avatar di guida",
+                            footer: "Indica dove ti trovi sulla mappa. In Pixel Land entrambi gli avatar sono disegnati a blocchi.") {
+                avatarRow(0, "Default")
+                RowDivider()
+                avatarRow(1, "Alternative")
+            }
             SettingsSection(title: "Veicoli connessi",
                             footer: "GassMaps non è ancora disponibile su CarPlay: collegando l'iPhone all'auto la guida vocale passa dagli altoparlanti dell'auto tramite Bluetooth.") {
                 PrefRow(icon: "carplay", title: "CarPlay", subtitle: "Non disponibile")
             }
         }
+    }
+}
+
+extension VehicleSettings {
+    /// anteprima dell'avatar nello stile del tema attuale
+    fileprivate func avatarRow(_ value: Int, _ title: String) -> some View {
+        let pixel = state.theme.userMarker == 3
+        let kind = value == 1 ? (pixel ? 5 : 4) : (pixel ? 3 : 0)
+        return Button { avatar = value } label: {
+            HStack(spacing: 16) {
+                Group {
+                    if let img = UserArrowView.markerImage(kind) {
+                        Image(uiImage: img).interpolation(pixel ? .none : .high).resizable().scaledToFit()
+                    } else {
+                        DefaultArrowPreview(color: Color(state.theme.arrowColor))
+                    }
+                }
+                .frame(width: 44, height: 44)
+                Text(title).font(.system(size: 16, weight: .medium)).foregroundStyle(.white)
+                Spacer()
+                if avatar == value {
+                    Image(systemName: "checkmark").font(.system(size: 15, weight: .bold)).foregroundStyle(Color(hex: 0x2F8CFF))
+                }
+            }
+            .padding(.horizontal, 16).padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Anteprima della freccia standard (due metà, lato destro più scuro)
+private struct DefaultArrowPreview: View {
+    var color: Color
+    var body: some View {
+        Canvas { ctx, size in
+            let w = size.width, h = size.height
+            var l = Path(); l.move(to: CGPoint(x: w / 2, y: h * 0.07)); l.addLine(to: CGPoint(x: w * 0.18, y: h * 0.9))
+            l.addLine(to: CGPoint(x: w / 2, y: h * 0.7)); l.closeSubpath()
+            var r = Path(); r.move(to: CGPoint(x: w / 2, y: h * 0.07)); r.addLine(to: CGPoint(x: w * 0.82, y: h * 0.9))
+            r.addLine(to: CGPoint(x: w / 2, y: h * 0.7)); r.closeSubpath()
+            ctx.fill(l, with: .color(color))
+            ctx.fill(r, with: .color(color.opacity(0.75)))
+        }
+        .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
     }
 }
 
@@ -818,6 +871,7 @@ enum Prefs {
     static let parkingReminder = "gm.parkingReminder"
     static let parkingHours = "gm.parkingHours"
     static let tips = "gm.tips"
+    static let avatar = "gm.avatar"
     static let layerSatellite = "gm.layer.satellite"
     static let layerTransit = "gm.layer.transit"
     static let layerBike = "gm.layer.bike"

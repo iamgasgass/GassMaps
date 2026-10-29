@@ -111,6 +111,15 @@ THEMES = {
         halo="#000000", road_label="#ffffff", road_halo="#1a1a1a", house="#ffffff",
         water_label="#e8f4ff", shield="#2f7bff", oneway=0.0, transform="uppercase",
     ),
+    # mappa di guida notturna (ispirata alla foto allegata): indaco scuro, edifici 3D blu, strade chiare
+    "midnight": dict(
+        land="#3b4161", wood="#34474f", grass="#36494f", sand="#454a68", ice="#5a6088",
+        park="#35494e", water="#262e4c", waterway="#2c3557", building="#46548a",
+        building_top="#55639a", minor="#4a5280", major="#59639a", motor="#6a76b0",
+        path="#5c6590", rail="#6c7398", boundary="#8d97c6", label="#c9cde3",
+        halo="#1f2338", road_label="#ffffff", road_halo="#1f2338", house="#9aa2c8",
+        water_label="#8f9ad0", shield="#2f63d6", oneway=0.0, transform="none",
+    ),
 }
 
 
@@ -218,6 +227,25 @@ def _poi_expr():
 
 POI_ICON_EXPR = _poi_expr()
 
+# colori per famiglia di luoghi (tema Midnight Route): icona e nome dello stesso colore
+POI_FAMILY_COLORS = {
+    "#f0a04b": ["restaurant", "fastfood", "cafe", "bakery", "icecream", "bar", "nightclub"],
+    "#5e9cf2": ["supermarket", "shop", "clothes", "shoes", "jewelry", "hairdresser"],
+    "#9aa6f5": ["fuel", "charging", "parking", "car", "carrepair", "rail", "bus", "bicycle"],
+    "#5bb974": ["park", "garden", "playground", "dog", "camping", "sport", "swimming", "fitness"],
+    "#e8706a": ["pharmacy", "hospital", "clinic"],
+    "#e57fb6": ["lodging"],
+    "#2bb5a8": ["cinema", "theatre", "museum", "attraction", "monument", "library"],
+}
+
+
+def _poi_text_color(default):
+    expr = ["match", POI_ICON_EXPR]
+    for color, cats in POI_FAMILY_COLORS.items():
+        expr += [["gm-poi-" + c for c in cats], color]
+    expr.append("#aab1d2")
+    return expr
+
 
 # ---------------------------------------------------------------------------
 # Impostazioni di resa per tema, ricavate dalle schermate di riferimento.
@@ -275,6 +303,13 @@ EXTRA = {
                      road_label="#ffffff", road_halo="#4a4c4f", halo_width=1.1, transform="none", labels=True),
     # mappa allegata (isola): prato verde, boschi a chiome, sentieri sabbia, fiumi azzurri con riva chiara,
     # etichette bianche maiuscole con contorno nero spesso
+    # foto allegata: strade con bordo chiaro, edifici in rilievo blu, nomi delle vie in fumetti, POI colorati
+    "midnight": dict(road_mode="casing", casing="#8d97c6", inner="#4a5280", minor_solid=None,
+                     land="#3b4161", building="#46548a", building_mode="extrude", extrude_opacity=0.82,
+                     water="#262e4c", park="#35494e", wood="#34474f", grass="#36494f",
+                     path="#5c6590", rail="#6c7398", label="#c9cde3", halo="#1f2338",
+                     road_label="#ffffff", road_halo="#1f2338", road_callout=True, poi_text_colors=True,
+                     transform="none", labels=True),
     # replica della mappa allegata: prato verde saturo con texture, boschi a chiome scure,
     # sentieri sabbia larghi con bordo bruno, fiumi azzurri con schiuma bianca e fascia chiara,
     # rocce chiare, spiagge sabbia, edifici in pietra grigia, scritte bianche maiuscole con contorno nero
@@ -450,7 +485,7 @@ def map_style(tid, p):
                                           (["*", ["to-number", ["get", "render_height"], 8], x["extrude_scale"]]
                                            if "extrude_scale" in x else ["to-number", ["get", "render_height"], 8])],
                 "fill-extrusion-base": ["to-number", ["get", "render_min_height"], 0],
-                "fill-extrusion-opacity": 0.95,
+                "fill-extrusion-opacity": x.get("extrude_opacity", 0.95),
                 "fill-extrusion-vertical-gradient": True,
             },
         }
@@ -490,7 +525,20 @@ def map_style(tid, p):
             },
             "paint": {"text-color": "#ffffff"},
         })
-        layers.append({"id": "road-label", "type": "symbol", "source": "openmaptiles", "source-layer": "transportation_name",
+        if x.get("road_callout"):
+            # nomi delle vie dentro fumetti orizzontali (come nella navigazione della foto)
+            layers.append({"id": "road-label", "type": "symbol", "source": "openmaptiles", "source-layer": "transportation_name",
+                           "minzoom": 15, "filter": ["has", "name"],
+                           "layout": {"symbol-placement": "point", "text-field": NAME, "text-font": REG,
+                                      "text-size": interp([(15, 12), (18, 15)]), "text-max-width": 14,
+                                      "icon-image": "gm-callout", "icon-text-fit": "both",
+                                      "icon-text-fit-padding": [5, 10, 7, 10],
+                                      "text-rotation-alignment": "viewport", "icon-rotation-alignment": "viewport",
+                                      "text-pitch-alignment": "viewport", "icon-pitch-alignment": "viewport",
+                                      "symbol-spacing": 350, "text-padding": 6},
+                           "paint": {"text-color": "#ffffff"}})
+        else:
+          layers.append({"id": "road-label", "type": "symbol", "source": "openmaptiles", "source-layer": "transportation_name",
                        "minzoom": 14,
                        "layout": {"symbol-placement": "line", "text-field": NAME, "text-font": BOLD,
                                   "text-size": interp([(14, 10), (16, 12.5), (18, 16)]),
@@ -508,7 +556,8 @@ def map_style(tid, p):
             "text-transform": p["transform"], "text-anchor": "top", "text-offset": [0, 1.2],
             "text-max-width": 8, "text-optional": True,
         },
-        "paint": {"text-color": p["label"], "text-halo-color": p["halo"], "text-halo-width": x.get("halo_width", 1.3)},
+        "paint": {"text-color": _poi_text_color(p["label"]) if x.get("poi_text_colors") else p["label"],
+                  "text-halo-color": p["halo"], "text-halo-width": x.get("halo_width", 1.3)},
     })
 
     if labels:
@@ -542,6 +591,7 @@ GLOBE_COLORS = {
     "kingdom": ("#8a6f4a", "#6f7a62"),
     "contract": ("#c2c5c7", "#2e3033"),
     "storm": ("#4b7d35", "#3d8fe0"),
+    "midnight": ("#3b4161", "#262e4c"),
 }
 
 

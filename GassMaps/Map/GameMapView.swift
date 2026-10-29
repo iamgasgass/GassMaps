@@ -5,6 +5,7 @@ struct GameMapView: UIViewRepresentable {
     @ObservedObject var state: AppState
     @AppStorage(Prefs.showScale) private var showScale = false
     @AppStorage(Prefs.tilt3D) private var tilt3D = true
+    @AppStorage(Prefs.avatar) private var avatar = 0
 
     func makeCoordinator() -> MapCoordinator {
         MapCoordinator(state: state)
@@ -48,6 +49,10 @@ struct GameMapView: UIViewRepresentable {
     func updateUIView(_ map: MLNMapView, context: Context) {
         context.coordinator.state = state
         if map.showsScale != showScale { map.showsScale = showScale }
+        if UserArrowView.avatar != avatar {
+            UserArrowView.avatar = avatar
+            if let ul = map.userLocation, let v = map.view(for: ul) as? UserArrowView { v.update() }
+        }
         if context.coordinator.tilt3D != tilt3D {
             context.coordinator.tilt3D = tilt3D
             let cam = map.camera
@@ -79,6 +84,7 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         if state.measuring { state.updateMeasure() }
         UserArrowView.tint = state.theme.arrowColor
         UserArrowView.marker = state.theme.userMarker
+        UserArrowView.avatar = UserDefaults.standard.integer(forKey: Prefs.avatar)
         // inclinazione propria del tema (es. pergamena vista dall'alto, neon in 3D)
         let cam = mapView.camera
         cam.pitch = tilt3D ? state.theme.mapPitch : 0

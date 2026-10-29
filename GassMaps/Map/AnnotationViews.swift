@@ -13,6 +13,13 @@ final class UserArrowView: MLNUserLocationAnnotationView {
     static var tint: UIColor = .white
     /// tipo di indicatore per il tema attivo (0 freccia, 1 ingranaggio, 2 anello)
     static var marker: Int = 0
+    /// avatar di guida: 0 = Default (freccia del tema), 1 = Alternative (disco blu con freccia bianca)
+    static var avatar: Int = 0
+    /// indicatore effettivo: 4 = Alternative, 5 = Alternative a blocchi (Pixel Land)
+    static var effectiveMarker: Int {
+        guard avatar == 1 else { return marker }
+        return marker == 3 ? 5 : 4
+    }
     private var appliedTint: UIColor?
     private var appliedMarker: Int = -1
     private let markerLayer = CALayer()
@@ -27,8 +34,8 @@ final class UserArrowView: MLNUserLocationAnnotationView {
 
     override func update() {
         if !configured { configure() }
-        if appliedMarker != UserArrowView.marker {
-            appliedMarker = UserArrowView.marker
+        if appliedMarker != UserArrowView.effectiveMarker {
+            appliedMarker = UserArrowView.effectiveMarker
             let arrow = appliedMarker == 0
             arrowLeft.isHidden = !arrow
             arrowRight.isHidden = !arrow
@@ -39,8 +46,12 @@ final class UserArrowView: MLNUserLocationAnnotationView {
             markerLayer.contents = img?.cgImage
             markerLayer.contentsScale = img?.scale ?? 2
             // la freccia pixel ruota con la direzione come quella normale; nessuna sfumatura sui pixel
-            markerLayer.frame = appliedMarker == 3 ? CGRect(x: 6, y: 6, width: 32, height: 32)
-                                                   : container.bounds.insetBy(dx: -14, dy: -14)
+            switch appliedMarker {
+            case 3: markerLayer.frame = CGRect(x: 6, y: 6, width: 32, height: 32)
+            case 4: markerLayer.frame = container.bounds.insetBy(dx: -8, dy: -8)
+            case 5: markerLayer.frame = CGRect(x: 2, y: 2, width: 40, height: 40)
+            default: markerLayer.frame = container.bounds.insetBy(dx: -14, dy: -14)
+            }
         }
         if appliedTint != UserArrowView.tint {
             appliedTint = UserArrowView.tint
@@ -199,6 +210,74 @@ final class UserArrowView: MLNUserLocationAnnotationView {
 }
 
 extension UserArrowView {
+    /// Avatar "Alternative": disco blu appoggiato sulla mappa con freccia bianca (lato destro azzurrino)
+    static func discAvatar() -> UIImage {
+        let s: CGFloat = 60
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 3
+        return UIGraphicsImageRenderer(size: CGSize(width: s, height: s), format: fmt).image { ctx in
+            let c = ctx.cgContext
+            let disc = CGRect(x: 3, y: 3, width: s - 6, height: s - 6)
+            c.setShadow(offset: CGSize(width: 0, height: 2), blur: 5, color: UIColor.black.withAlphaComponent(0.45).cgColor)
+            c.setFillColor(UIColor(hex: 0x3B78F2).cgColor)
+            c.fillEllipse(in: disc)
+            c.setShadow(offset: .zero, blur: 0, color: nil)
+            c.setStrokeColor(UIColor(hex: 0x2A5FD0).cgColor)
+            c.setLineWidth(1.5)
+            c.strokeEllipse(in: disc.insetBy(dx: 0.75, dy: 0.75))
+            let top = CGPoint(x: s / 2, y: 15), notch = CGPoint(x: s / 2, y: 36)
+            let left = UIBezierPath()
+            left.move(to: top); left.addLine(to: CGPoint(x: 17, y: 42)); left.addLine(to: notch); left.close()
+            let right = UIBezierPath()
+            right.move(to: top); right.addLine(to: CGPoint(x: s - 17, y: 42)); right.addLine(to: notch); right.close()
+            c.setShadow(offset: CGSize(width: 0, height: 1), blur: 2, color: UIColor.black.withAlphaComponent(0.3).cgColor)
+            UIColor.white.setFill(); left.fill()
+            UIColor(hex: 0xD3E4FF).setFill(); right.fill()
+        }
+    }
+
+    /// Avatar "Alternative" a blocchi per Pixel Land: disco blu pixelato con freccia bianca a pixel
+    static func pixelDiscAvatar() -> UIImage {
+        let rows = [
+            "......KKKKKKKK......",
+            "....KKBBBBBBBBKK....",
+            "...KBBBBBBBBBBBBK...",
+            "..KBBBBBBWwBBBBBBK..",
+            ".KBBBBBBBWwBBBBBBBK.",
+            ".KBBBBBBWWwwBBBBBBK.",
+            "KBBBBBBBWWwwBBBBBBBK",
+            "KBBBBBBWWWwwwBBBBBBK",
+            "KBBBBBBWWWwwwBBBBBBK",
+            "KBBBBBWWWWwwwwBBBBBK",
+            "KBBBBBWWWBBwwwBBBBBK",
+            "KBBBBWWWBBBBwwwBBBBK",
+            "KBBBBWWBBBBBBwwBBBBK",
+            "KBBBBBBBBBBBBBBBBBBK",
+            ".KBBBBBBBBBBBBBBBBK.",
+            ".KBBBBBBBBBBBBBBBBK.",
+            "..KBBBBBBBBBBBBBBK..",
+            "...KBBBBBBBBBBBBK...",
+            "....KKBBBBBBBBKK....",
+            "......KKKKKKKK......"
+        ]
+        let colors: [Character: UIColor] = ["K": UIColor(hex: 0x1C3F8F), "B": UIColor(hex: 0x3B78F2),
+                                            "W": UIColor(hex: 0xF8F8F8), "w": UIColor(hex: 0xC9DCFF)]
+        let px: CGFloat = 2
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 3
+        return UIGraphicsImageRenderer(size: CGSize(width: 20 * px, height: 20 * px), format: fmt).image { ctx in
+            let c = ctx.cgContext
+            c.setShouldAntialias(false)
+            for (y, row) in rows.enumerated() {
+                for (x, ch) in row.enumerated() {
+                    guard let col = colors[ch] else { continue }
+                    c.setFillColor(col.cgColor)
+                    c.fill(CGRect(x: CGFloat(x) * px, y: CGFloat(y) * px, width: px, height: px))
+                }
+            }
+        }
+    }
+
     /// Freccia del giocatore in stile mappa a blocchi: punta bianca pixelata con lato in ombra e contorno scuro.
     static func pixelArrow() -> UIImage {
         let rows = [
@@ -247,6 +326,8 @@ extension UserArrowView {
     /// 1 = ingranaggio (Street Heat), 2 = anello-bussola marrone (Old Kingdom)
     static func markerImage(_ kind: Int) -> UIImage? {
         if kind == 3 { return pixelArrow() }
+        if kind == 4 { return discAvatar() }
+        if kind == 5 { return pixelDiscAvatar() }
         let size = CGSize(width: 72, height: 72)
         let fmt = UIGraphicsImageRendererFormat()
         fmt.scale = 3

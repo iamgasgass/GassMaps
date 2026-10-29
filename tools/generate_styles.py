@@ -308,7 +308,7 @@ EXTRA = {
                      land="#3b4161", building="#46548a", building_mode="extrude", extrude_opacity=0.82,
                      water="#262e4c", park="#35494e", wood="#34474f", grass="#36494f",
                      path="#5c6590", rail="#6c7398", label="#c9cde3", halo="#1f2338",
-                     road_label="#ffffff", road_halo="#1f2338", road_callout=True, poi_text_colors=True,
+                     road_label="#ffffff", road_halo="#1f2338", poi_text_colors=True,
                      transform="none", labels=True),
     # replica della mappa allegata: prato verde saturo con texture, boschi a chiome scure,
     # sentieri sabbia larghi con bordo bruno, fiumi azzurri con schiuma bianca e fascia chiara,

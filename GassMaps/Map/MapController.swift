@@ -260,10 +260,13 @@ final class MapController {
                                          ne: CLLocationCoordinate2D(latitude: maxLat, longitude: maxLon))
         m.setUserTrackingMode(.none, animated: false, completionHandler: nil)
         state?.tracking = .none
-        m.contentInset = .zero
+        m.setContentInset(.zero, animated: false)
         // Come nel video: vista dall'alto, nord in su, percorso intero nella parte alta sopra il pannello,
         // movimento rapido (~0,5 s) senza "volo".
-        let cam = m.cameraThatFitsCoordinateBounds(bounds, edgePadding: UIEdgeInsets(top: 150, left: 34, bottom: 380, right: 34))
+        // L'inquadratura si calcola già con vista dall'alto e nord in su: così basta un tocco anche
+        // partendo dalla vista inclinata della navigazione (prima serviva un secondo tocco).
+        let flat = MLNMapCamera(lookingAtCenter: m.centerCoordinate, altitude: m.camera.altitude, pitch: 0, heading: 0)
+        let cam = m.camera(flat, fitting: bounds, edgePadding: UIEdgeInsets(top: 150, left: 34, bottom: 380, right: 34))
         cam.pitch = 0
         cam.heading = 0
         m.setCamera(cam, withDuration: 0.5, animationTimingFunction: CAMediaTimingFunction(name: .easeOut))

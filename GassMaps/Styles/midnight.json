@@ -1177,13 +1177,9 @@
    "type": "symbol",
    "source": "openmaptiles",
    "source-layer": "transportation_name",
-   "minzoom": 15,
-   "filter": [
-    "has",
-    "name"
-   ],
+   "minzoom": 14,
    "layout": {
-    "symbol-placement": "point",
+    "symbol-placement": "line",
     "text-field": [
      "coalesce",
      [
@@ -1200,7 +1196,7 @@
      ]
     ],
     "text-font": [
-     "Noto Sans Regular"
+     "Noto Sans Bold"
     ],
     "text-size": [
      "interpolate",
@@ -1211,29 +1207,23 @@
      [
       "zoom"
      ],
-     15,
-     12,
-     18,
-     15
-    ],
-    "text-max-width": 14,
-    "icon-image": "gm-callout",
-    "icon-text-fit": "both",
-    "icon-text-fit-padding": [
-     5,
+     14,
      10,
-     7,
-     10
+     16,
+     12.5,
+     18,
+     16
     ],
-    "text-rotation-alignment": "viewport",
-    "icon-rotation-alignment": "viewport",
-    "text-pitch-alignment": "viewport",
-    "icon-pitch-alignment": "viewport",
-    "symbol-spacing": 350,
-    "text-padding": 6
+    "text-transform": "none",
+    "text-letter-spacing": 0.04,
+    "text-rotation-alignment": "map",
+    "text-pitch-alignment": "viewport"
    },
    "paint": {
-    "text-color": "#ffffff"
+    "text-color": "#ffffff",
+    "text-halo-color": "#1f2338",
+    "text-halo-width": 1.6,
+    "text-halo-blur": 0
    }
   },
   {

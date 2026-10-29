@@ -373,10 +373,10 @@ extension VehicleSettings {
         return Button { avatar = value } label: {
             HStack(spacing: 16) {
                 Group {
-                    if let img = UserArrowView.markerImage(kind) {
+                    if kind == 0 {
+                        Image(uiImage: UserArrowView.defaultArrowImage(tint: state.theme.arrowColor)).resizable().scaledToFit()
+                    } else if let img = UserArrowView.markerImage(kind) {
                         Image(uiImage: img).interpolation(pixel ? .none : .high).resizable().scaledToFit()
-                    } else {
-                        DefaultArrowPreview(color: Color(state.theme.arrowColor))
                     }
                 }
                 .frame(width: 44, height: 44)

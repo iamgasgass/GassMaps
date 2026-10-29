@@ -324,6 +324,25 @@ extension UserArrowView {
     }
 
     /// 1 = ingranaggio (Street Heat), 2 = anello-bussola marrone (Old Kingdom)
+    /// La freccia standard esattamente come sulla mappa (stessa forma, colori e ombra), per le anteprime
+    static func defaultArrowImage(tint: UIColor) -> UIImage {
+        let w: CGFloat = 44
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 3
+        return UIGraphicsImageRenderer(size: CGSize(width: w, height: w), format: fmt).image { ctx in
+            let c = ctx.cgContext
+            var h: CGFloat = 0, sat: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+            tint.getHue(&h, saturation: &sat, brightness: &b, alpha: &a)
+            let left = UIBezierPath()
+            left.move(to: CGPoint(x: w / 2, y: 3)); left.addLine(to: CGPoint(x: 8, y: 40)); left.addLine(to: CGPoint(x: w / 2, y: 31)); left.close()
+            let right = UIBezierPath()
+            right.move(to: CGPoint(x: w / 2, y: 3)); right.addLine(to: CGPoint(x: w - 8, y: 40)); right.addLine(to: CGPoint(x: w / 2, y: 31)); right.close()
+            c.setShadow(offset: CGSize(width: 0, height: 2), blur: 4, color: UIColor.black.withAlphaComponent(0.6).cgColor)
+            tint.setFill(); left.fill()
+            UIColor(hue: h, saturation: sat, brightness: b * 0.78, alpha: a).setFill(); right.fill()
+        }
+    }
+
     static func markerImage(_ kind: Int) -> UIImage? {
         if kind == 3 { return pixelArrow() }
         if kind == 4 { return discAvatar() }

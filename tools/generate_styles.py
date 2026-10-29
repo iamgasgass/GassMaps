@@ -111,6 +111,15 @@ THEMES = {
         halo="#000000", road_label="#ffffff", road_halo="#1a1a1a", house="#ffffff",
         water_label="#e8f4ff", shield="#2f7bff", oneway=0.0, transform="uppercase",
     ),
+    # come Street Heat ma rosso al posto del viola
+    "crimson": dict(
+        land="#a81f24", wood="#9a1c21", grass="#ad2228", sand="#b52a2f", ice="#ffb3b3",
+        park="#ad2228", water="#3d0a10", waterway="#55101a", building="#b52a30",
+        building_top="#c43a40", minor="#a8a8a8", major="#ababab", motor="#b4b4b4",
+        path="#6e6e6e", rail="#5c5c5c", boundary="#ffb8b8", label="#ffffff",
+        halo="#4a0f14", road_label="#ffffff", road_halo="#4a0f14", house="#ffc9c9",
+        water_label="#ff9c9c", shield="#2f47c9", oneway=0.8, transform="uppercase",
+    ),
     # mappa di guida notturna (ispirata alla foto allegata): indaco scuro, edifici 3D blu, strade chiare
     "midnight": dict(
         land="#3b4161", wood="#34474f", grass="#36494f", sand="#454a68", ice="#5a6088",
@@ -303,6 +312,12 @@ EXTRA = {
                      road_label="#ffffff", road_halo="#4a4c4f", halo_width=1.1, transform="none", labels=True),
     # mappa allegata (isola): prato verde, boschi a chiome, sentieri sabbia, fiumi azzurri con riva chiara,
     # etichette bianche maiuscole con contorno nero spesso
+    # Street Heat in rosso: satellite in scala di grigi su fondo rosso, strade e icone di Vice Noir
+    "crimson": dict(road_mode="casing", casing="#b8b8b8", inner="#6a6a6a", minor_solid="#a8a8a8",
+                    land="#d2373a", satellite=True, building="#ffb0a8", building_mode="flat", building_opacity=0.18,
+                    water="#4a0d12", park="#d2373a", wood="#d2373a", grass="#d2373a",
+                    path="#6e6e6e", rail="#5c5c5c", label="#ffffff", halo="#4a0f14",
+                    road_label="#ffffff", road_halo="#4a0f14", labels=True),
     # foto allegata: strade con bordo chiaro, edifici in rilievo blu, nomi delle vie in fumetti, POI colorati
     "midnight": dict(road_mode="casing", casing="#8d97c6", inner="#4a5280", minor_solid=None,
                      land="#3b4161", building="#46548a", building_mode="extrude", extrude_opacity=0.82,
@@ -592,6 +607,7 @@ GLOBE_COLORS = {
     "contract": ("#c2c5c7", "#2e3033"),
     "storm": ("#4b7d35", "#3d8fe0"),
     "midnight": ("#3b4161", "#262e4c"),
+    "crimson": ("#d84a4a", "#3d0a10"),
 }
 
 

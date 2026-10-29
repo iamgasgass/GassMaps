@@ -212,6 +212,15 @@ enum Themes {
             polar: UIColor(hex: 0x5A6088), buttonTint: .white,
             markers: [],
             globeFont: "AvenirNext-DemiBold", globeUppercase: false, globeLabel: UIColor(hex: 0xC9CDE3), globeLabelHalo: UIColor(hex: 0x1F2338),
-            haze: UIColor(hex: 0x4A5280), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 55, vignette: 0)
+            haze: UIColor(hex: 0x4A5280), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 55, vignette: 0),
+        // come Street Heat ma in rosso, con le icone e le strade di Vice Noir
+        MapTheme(
+            id: "crimson", name: "Crimson Heat",
+            backgroundTop: Color(hex: 0x200B0D), backgroundBottom: Color(hex: 0x200B0D),
+            accent: UIColor(hex: 0x8840D8), iconColor: .white, iconHalo: .black,
+            polar: UIColor(hex: 0xFFB3B3), buttonTint: .white,
+            markers: [],
+            globeFont: "AvenirNextCondensed-HeavyItalic", globeUppercase: true, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x4A0F14),
+            haze: UIColor(hex: 0x601616), glow: UIColor(hex: 0xFF4D4D), glowCore: UIColor(hex: 0xF2D9D9), mapPitch: 0, vignette: 0.25)
     ]
 }

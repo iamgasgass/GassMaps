@@ -108,7 +108,7 @@ enum MapIcons {
     static func iconSet(for theme: MapTheme) -> ThemeIconSet {
         let w = UIColor.white
         switch theme.id {
-        case "noir": // icone nere con contorno bianco
+        case "noir", "crimson": // icone nere con contorno bianco (Crimson Heat usa le stesse di Vice Noir)
             return ThemeIconSet(frame: .outline(halo: .white), tint: .black,
                                 glyphs: [.shop: "basket.fill", .police: "star.circle.fill"],
                                 cloverDefault: true)

@@ -356,19 +356,57 @@ struct CategoryChips: View {
 struct CompassButton: View {
     @EnvironmentObject var state: AppState
 
+    /// lettera del punto cardinale verso cui guarda la parte alta della mappa
+    private var letter: String {
+        let names = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"]
+        var h = state.mapHeading.truncatingRemainder(dividingBy: 360)
+        if h < 0 { h += 360 }
+        return names[Int((h + 22.5) / 45) % 8]
+    }
+
     var body: some View {
         Button { state.map.resetNorth() } label: {
-            GlassCircle(size: 44) {
-                Image(systemName: "location.north.line.fill")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(Color(hex: 0xFF3B4E), .white)
-                    .rotationEffect(.degrees(-state.mapHeading))
+            ZStack {
+                // quadrante: tacche che ruotano con la mappa, le principali più chiare
+                Canvas { ctx, size in
+                    let c = CGPoint(x: size.width / 2, y: size.height / 2)
+                    let outer = size.width / 2 - 4.5, inner = outer - 4.5
+                    let rot = -state.mapHeading * .pi / 180
+                    for i in 0..<24 where i != 0 {
+                        let a = rot + Double(i) * .pi / 12 - .pi / 2
+                        let major = i % 3 == 0
+                        var p = Path()
+                        p.move(to: CGPoint(x: c.x + cos(a) * inner, y: c.y + sin(a) * inner))
+                        p.addLine(to: CGPoint(x: c.x + cos(a) * outer, y: c.y + sin(a) * outer))
+                        ctx.stroke(p, with: .color(.white.opacity(major ? 0.85 : 0.35)),
+                                   style: StrokeStyle(lineWidth: major ? 2 : 1.6, lineCap: .round))
+                    }
+                    // triangolo rosso del nord sul bordo
+                    let a = rot - .pi / 2
+                    let tip = CGPoint(x: c.x + cos(a) * (outer + 0.5), y: c.y + sin(a) * (outer + 0.5))
+                    let base = outer - 6
+                    let perp = a + .pi / 2
+                    let bc = CGPoint(x: c.x + cos(a) * base, y: c.y + sin(a) * base)
+                    var tri = Path()
+                    tri.move(to: tip)
+                    tri.addLine(to: CGPoint(x: bc.x + cos(perp) * 4, y: bc.y + sin(perp) * 4))
+                    tri.addLine(to: CGPoint(x: bc.x - cos(perp) * 4, y: bc.y - sin(perp) * 4))
+                    tri.closeSubpath()
+                    ctx.fill(tri, with: .color(Color(hex: 0xFF3B30)))
+                }
+                Text(letter)
+                    .font(.system(size: letter.count > 1 ? 13 : 17, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .contentTransition(.opacity)
             }
+            .frame(width: 48, height: 48)
+            .background(Circle().fill(Color.black.opacity(0.35)))
+            .overlay(Circle().strokeBorder(Color.white.opacity(0.25), lineWidth: 1))
+            .glassEffect(.regular.interactive(), in: Circle())
         }
         .buttonStyle(.plain)
     }
 }
-
 
 // MARK: - Livelli
 

@@ -139,6 +139,14 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         state.pin(Place(mapItem: item), item: item)
     }
 
+    /// la bussola ruota insieme alla mappa anche durante il gesto
+    func mapViewRegionIsChanging(_ mapView: MLNMapView) {
+        let h = mapView.direction
+        if abs(h - state.mapHeading) > 0.5 {
+            state.mapHeading = h
+        }
+    }
+
     func mapView(_ mapView: MLNMapView, regionDidChangeAnimated animated: Bool) {
         let h = mapView.direction
         if abs(h - state.mapHeading) > 1 {

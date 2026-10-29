@@ -101,6 +101,13 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         if annotation is MLNUserLocation {
             return UserArrowView()
         }
+        if let alt = annotation as? AltLabelAnnotation {
+            let rid = "gm-alt-label"
+            let v = (mapView.dequeueReusableAnnotationView(withIdentifier: rid) as? AltLabelView)
+                ?? AltLabelView(reuseIdentifier: rid)
+            v.configure(text: alt.title ?? "", color: state.theme.accent)
+            return v
+        }
         if annotation is ResultAnnotation {
             let rid = "gm-result"
             let v = (mapView.dequeueReusableAnnotationView(withIdentifier: rid) as? ResultMarkerView)
@@ -121,6 +128,11 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
     }
 
     func mapView(_ mapView: MLNMapView, didSelect annotation: MLNAnnotation) {
+        if let alt = annotation as? AltLabelAnnotation {
+            mapView.deselectAnnotation(annotation, animated: false)
+            state.switchToNavAlternative(alt.index)
+            return
+        }
         guard let r = annotation as? ResultAnnotation, state.searchResults.indices.contains(r.index) else { return }
         let item = state.searchResults[r.index]
         mapView.deselectAnnotation(annotation, animated: false)
@@ -168,6 +180,12 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
                 state.openMyLocation()
                 return
             }
+        }
+
+        // durante la navigazione: tocco su un percorso alternativo → si passa a quello
+        if state.panel == .navigating, !state.navAlternatives.isEmpty, let i = state.map.alternativeIndex(near: point) {
+            state.switchToNavAlternative(i)
+            return
         }
 
         // scelta di un percorso alternativo

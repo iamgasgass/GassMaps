@@ -489,3 +489,47 @@ final class ResultMarkerView: MLNAnnotationView {
         }
     }
 }
+
+
+/// Fumetto sopra un percorso alternativo: bordo e testo nel colore del percorso, fondo scuro
+final class AltLabelView: MLNAnnotationView {
+    private let label = UILabel()
+    private let bubble = UIView()
+
+    override init(reuseIdentifier: String?) {
+        super.init(reuseIdentifier: reuseIdentifier)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        backgroundColor = .clear
+        scalesWithViewingDistance = false
+        bubble.layer.cornerRadius = 10
+        bubble.layer.borderWidth = 2
+        bubble.layer.shadowColor = UIColor.black.cgColor
+        bubble.layer.shadowOpacity = 0.4
+        bubble.layer.shadowRadius = 4
+        bubble.layer.shadowOffset = CGSize(width: 0, height: 2)
+        addSubview(bubble)
+        label.font = .systemFont(ofSize: 14, weight: .bold)
+        label.textAlignment = .center
+        bubble.addSubview(label)
+    }
+
+    func configure(text: String, color: UIColor) {
+        label.text = text
+        label.textColor = .white
+        bubble.backgroundColor = UIColor(hex: 0x10162A).withAlphaComponent(0.92)
+        bubble.layer.borderColor = color.cgColor
+        let w = label.intrinsicContentSize.width + 22
+        frame = CGRect(x: 0, y: 0, width: w, height: 32)
+        bubble.frame = bounds
+        label.frame = bounds
+        centerOffset = CGVector(dx: w / 2 - 6, dy: -18)
+    }
+}

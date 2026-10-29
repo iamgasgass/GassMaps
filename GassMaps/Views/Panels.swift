@@ -499,6 +499,24 @@ struct NavigationPanel: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack(alignment: .bottom) {
+                // "Riposiziona" (come Google Maps): compare quando la mappa non segue più la guida,
+                // ad esempio dopo la vista dall'alto o spostando la mappa con le dita
+                if state.tracking == .none {
+                    Button { state.repositionNavigation() } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "location.north.fill").font(.system(size: 17, weight: .bold))
+                            Text("Riposiziona").font(.system(size: 17, weight: .semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 20)
+                        .frame(height: 54)
+                        .contentShape(Capsule())
+                        .glassEffect(.regular.interactive(), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, 16)
+                    .transition(.scale(scale: 0.85).combined(with: .opacity))
+                } else
                 // velocità attuale (tachimetro disattivabile dalle impostazioni)
                 if Prefs.bool(Prefs.showSpeed, default: true) {
                 VStack(spacing: 0) {
@@ -526,6 +544,18 @@ struct NavigationPanel: View {
                             GlassCircle(size: 46) {
                                 Image(systemName: "map.fill")
                                     .font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        // percorsi alternativi da qui alla destinazione (come Google Maps)
+                        Button { state.showNavAlternatives() } label: {
+                            GlassCircle(size: 46) {
+                                if state.isLoadingAlternatives {
+                                    ProgressView().tint(.white)
+                                } else {
+                                    Image(systemName: "arrow.triangle.branch")
+                                        .font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
+                                }
                             }
                         }
                         .buttonStyle(.plain)

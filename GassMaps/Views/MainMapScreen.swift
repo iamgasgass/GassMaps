@@ -145,6 +145,7 @@ struct MainMapScreen: View {
                 .presentationDetents([.height(330)])
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: state.measuring)
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: state.tracking)
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: state.showSearchArea)
         .animation(.easeInOut(duration: 0.3), value: state.isLoadingRoute)
         .alert("Indicazioni", isPresented: Binding(get: { state.routeError != nil },

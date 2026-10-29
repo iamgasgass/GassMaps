@@ -8,6 +8,11 @@ final class ResultAnnotation: MLNPointAnnotation {
     var index = 0
 }
 
+/// Etichetta sopra un percorso alternativo durante la navigazione ("4 min in più", "Durata simile")
+final class AltLabelAnnotation: MLNPointAnnotation {
+    var index = 0
+}
+
 /// Ponte tra SwiftUI e MLNMapView.
 final class MapController {
     weak var mapView: MLNMapView?
@@ -138,6 +143,29 @@ final class MapController {
         } else if let l = style.layer(withIdentifier: MapController.bikeLayerID) {
             style.removeLayer(l)
         }
+    }
+
+    // MARK: - Alternative durante la navigazione
+
+    private var altLabels: [AltLabelAnnotation] = []
+
+    func showAltLabels(_ items: [(coordinate: CLLocationCoordinate2D, text: String, index: Int)]) {
+        clearAltLabels()
+        guard let m = mapView else { return }
+        altLabels = items.map { item in
+            let a = AltLabelAnnotation()
+            a.coordinate = item.coordinate
+            a.title = item.text
+            a.index = item.index
+            return a
+        }
+        m.addAnnotations(altLabels)
+    }
+
+    func clearAltLabels() {
+        guard !altLabels.isEmpty else { return }
+        mapView?.removeAnnotations(altLabels)
+        altLabels = []
     }
 
     // MARK: - Misura distanza

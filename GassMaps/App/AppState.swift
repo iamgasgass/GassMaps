@@ -83,6 +83,9 @@ final class AppState: ObservableObject {
     @Published var measurePoints: [CLLocationCoordinate2D] = []
     @Published var measureDistance: Double = 0
     @Published var showLayers = false
+    /// percorsi alternativi mostrati durante la navigazione (pulsante "percorsi" come Google Maps)
+    @Published var navAlternatives: [RouteInfo] = []
+    @Published var isLoadingAlternatives = false
     @Published var origin: Place? = nil
     @Published var stop: Place? = nil
     @Published var departure: Date? = nil
@@ -586,6 +589,7 @@ final class AppState: ObservableObject {
     }
 
     func endNavigation() {
+        clearNavAlternatives()
         location.setNavigating(false)
         UIApplication.shared.isIdleTimerDisabled = false
         VoiceGuide.shared.stop()
@@ -807,7 +811,65 @@ final class AppState: ObservableObject {
 
     func showRouteOverview() {
         guard let r = route else { return }
+        clearNavAlternatives()
         map.showRoute(r.coordinates, alternatives: [], overview: true)
+    }
+
+    /// "Riposiziona": torna alla vista di guida che segue la posizione
+    func repositionNavigation() {
+        clearNavAlternatives()
+        if let r = route { map.showRoute(r.coordinates, alternatives: [], overview: false) }
+        map.startNavigation()
+    }
+
+    /// Pulsante percorsi durante la navigazione (come Google Maps): calcola i percorsi da qui alla destinazione,
+    /// li mostra dall'alto con il tempo in più/in meno rispetto a quello attuale; toccandone uno si passa a quello.
+    func showNavAlternatives() {
+        guard panel == .navigating, let loc = location.location, let dest = pinnedPlace, let current = route else { return }
+        isLoadingAlternatives = true
+        let remaining = progress.remainingTime
+        DirectionsService.routes(from: loc.coordinate, to: dest.coordinate, destinationItem: destinationItem,
+                                 mode: current.mode, options: routeOptions, alternatives: true, departure: nil) { [weak self] infos in
+            guard let self = self, self.panel == .navigating else { return }
+            self.isLoadingAlternatives = false
+            // si scartano i percorsi uguali a quello che stai già seguendo
+            let currentLeft = max(0, (self.cumulative.last ?? current.distance) - self.progress.traveled)
+            let alts = infos.filter { abs($0.distance - currentLeft) > max(150, currentLeft * 0.03) && !$0.etaOnly }
+            guard !alts.isEmpty else {
+                self.routeError = "Nessun percorso alternativo disponibile al momento."
+                return
+            }
+            self.navAlternatives = Array(alts.prefix(3))
+            self.map.showRoute(current.coordinates, alternatives: self.navAlternatives.map { $0.coordinates }, overview: true)
+            let labels: [(coordinate: CLLocationCoordinate2D, text: String, index: Int)] = self.navAlternatives.enumerated().map { i, alt in
+                let cum = RouteMath.cumulative(alt.coordinates)
+                let mid = RouteMath.point(at: (cum.last ?? 0) * 0.5, on: alt.coordinates, cumulative: cum)
+                let diff = (alt.travelTime - remaining) / 60
+                let text: String
+                if abs(diff) < 1 { text = "Durata simile" }
+                else if diff > 0 { text = "\(Int(diff.rounded())) min in più" }
+                else { text = "\(Int((-diff).rounded())) min in meno" }
+                return (mid.coordinate, text, i)
+            }
+            self.map.showAltLabels(labels)
+        }
+    }
+
+    /// Passa al percorso alternativo scelto e riprende la guida
+    func switchToNavAlternative(_ index: Int) {
+        guard navAlternatives.indices.contains(index) else { return }
+        let chosen = navAlternatives[index]
+        clearNavAlternatives()
+        routes = [chosen]
+        selectedRoute = 0
+        startNavigation()
+        VoiceGuide.shared.speak("Percorso aggiornato")
+    }
+
+    func clearNavAlternatives() {
+        navAlternatives = []
+        isLoadingAlternatives = false
+        map.clearAltLabels()
     }
 
     /// Pulsante posizione come Google Maps:

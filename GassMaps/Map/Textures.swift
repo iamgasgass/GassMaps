@@ -3,7 +3,7 @@ import UIKit
 /// Texture ripetibili usate come "background-pattern" / "fill-pattern" negli stili mappa.
 /// Disegnate interamente dall'app (nessuna immagine esterna).
 enum Textures {
-    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof", "gm-trees", "gm-meadow"]
+    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof", "gm-trees", "gm-meadow", "gm-camo"]
 
     private static var cache: [String: UIImage] = [:]
 
@@ -19,6 +19,7 @@ enum Textures {
         case "gm-roof": img = roof()
         case "gm-trees": img = trees()
         case "gm-meadow": img = meadow()
+        case "gm-camo": img = camo()
         default: img = nil
         }
         if let img = img { cache[name] = img }
@@ -148,6 +149,46 @@ enum Textures {
                         c.fillEllipse(in: CGRect(x: x + dx - w / 2, y: y + dy - h / 2, width: w, height: h))
                     }
                 }
+            }
+        }
+    }
+
+    /// Mimetico turchese con macchie chiare e segni a "X" (quartieri della mappa Canyon Run), ripetibile senza giunte
+    private static func camo() -> UIImage {
+        let side: CGFloat = 128
+        var rng = SeededGenerator(seed: 0x5AA6A2)
+        return renderer(side).image { ctx in
+            let c = ctx.cgContext
+            c.setFillColor(UIColor(hex: 0x4F9B97).cgColor)
+            c.fill(CGRect(x: 0, y: 0, width: side, height: side))
+            func wrap(_ draw: (CGFloat, CGFloat) -> Void) {
+                for dx in [-side, 0, side] { for dy in [-side, 0, side] { draw(dx, dy) } }
+            }
+            // macchie scure e chiare a "pixel" irregolari
+            for (tone, count) in [(UInt32(0x3C807D), 16), (UInt32(0x7CC9C4), 14), (UInt32(0xA6EEE8), 9)] {
+                c.setFillColor(UIColor(hex: tone).cgColor)
+                for _ in 0..<count {
+                    let x = CGFloat.random(in: 0..<side, using: &rng), y = CGFloat.random(in: 0..<side, using: &rng)
+                    let w = CGFloat.random(in: 6...18, using: &rng), h = CGFloat.random(in: 4...12, using: &rng)
+                    let w2 = w * CGFloat.random(in: 0.4...0.8, using: &rng), off = CGFloat.random(in: -5...5, using: &rng)
+                    wrap { dx, dy in
+                        c.fill(CGRect(x: x + dx, y: y + dy, width: w, height: h))
+                        c.fill(CGRect(x: x + dx + off, y: y + dy + h, width: w2, height: h * 0.7))
+                    }
+                }
+            }
+            // segni a X chiari di varie misure
+            c.setStrokeColor(UIColor(hex: 0xBDF7F2).cgColor)
+            c.setLineCap(.round)
+            for _ in 0..<12 {
+                let x = CGFloat.random(in: 0..<side, using: &rng), y = CGFloat.random(in: 0..<side, using: &rng)
+                let r = CGFloat.random(in: 2.5...9, using: &rng)
+                c.setLineWidth(r > 6 ? 2.6 : 1.5)
+                wrap { dx, dy in
+                    c.move(to: CGPoint(x: x + dx - r, y: y + dy - r)); c.addLine(to: CGPoint(x: x + dx + r, y: y + dy + r))
+                    c.move(to: CGPoint(x: x + dx + r, y: y + dy - r)); c.addLine(to: CGPoint(x: x + dx - r, y: y + dy + r))
+                }
+                c.strokePath()
             }
         }
     }

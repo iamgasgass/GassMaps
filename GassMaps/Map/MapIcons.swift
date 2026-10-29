@@ -108,6 +108,16 @@ enum MapIcons {
     static func iconSet(for theme: MapTheme) -> ThemeIconSet {
         let w = UIColor.white
         switch theme.id {
+        case "canyon": // stesse icone di Vice Noir, ma gialle, blu e rosse con contorno nero
+            let yellow = UIColor(hex: 0xF2D21B), blue = UIColor(hex: 0x2F7BFF), red = UIColor(hex: 0xE8322E)
+            var colors: [POICategory: UIColor] = [:]
+            for c in [POICategory.police, .fire, .hospital, .clinic, .pharmacy, .carrepair, .fuel, .nightclub, .bar] { colors[c] = red }
+            for c in [POICategory.rail, .bus, .parking, .car, .charging, .bicycle, .swimming, .atm, .bank, .post,
+                      .lodging, .school, .university, .library] { colors[c] = blue }
+            return ThemeIconSet(frame: .outline(halo: .black), tint: yellow, colors: colors,
+                                glyphs: [.shop: "basket.fill", .police: "star.circle.fill"],
+                                cloverDefault: true)
+
         case "noir", "crimson": // icone nere con contorno bianco (Crimson Heat usa le stesse di Vice Noir)
             return ThemeIconSet(frame: .outline(halo: .white), tint: .black,
                                 glyphs: [.shop: "basket.fill", .police: "star.circle.fill"],
@@ -275,7 +285,7 @@ enum MapIcons {
         let set = iconSet(for: theme)
         if cat == .default && set.cloverDefault {
             // Palm Coast: bordi e pallino centrale nel colore del contorno delle altre icone del tema
-            if case .outline(let halo) = set.frame, theme.id == "palm" {
+            if case .outline(let halo) = set.frame, theme.id == "palm" || theme.id == "canyon" {
                 return clover(color: theme.accent, size: pointSize * 1.45, border: halo, center: halo)
             }
             return clover(color: theme.accent, size: pointSize * 1.45)

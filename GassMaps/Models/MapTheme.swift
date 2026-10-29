@@ -221,6 +221,15 @@ enum Themes {
             polar: UIColor(hex: 0xFFB3B3), buttonTint: .white,
             markers: [],
             globeFont: "AvenirNextCondensed-HeavyItalic", globeUppercase: true, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x4A0F14),
-            haze: UIColor(hex: 0x601616), glow: UIColor(hex: 0xFF4D4D), glowCore: UIColor(hex: 0xF2D9D9), mapPitch: 0, vignette: 0.25)
+            haze: UIColor(hex: 0x601616), glow: UIColor(hex: 0xFF4D4D), glowCore: UIColor(hex: 0xF2D9D9), mapPitch: 0, vignette: 0.25),
+        // mappa notturna da corse: quartieri a mimetico turchese bordati di nero, strade kaki, icone gialle/blu/rosse
+        MapTheme(
+            id: "canyon", name: "Canyon Run",
+            backgroundTop: Color(hex: 0x121819), backgroundBottom: Color(hex: 0x121819),
+            accent: UIColor(hex: 0xF2D21B), iconColor: UIColor(hex: 0xF2D21B), iconHalo: .black,
+            polar: UIColor(hex: 0x3A4546), buttonTint: .white,
+            markers: [],
+            globeFont: "AvenirNextCondensed-Bold", globeUppercase: true, globeLabel: UIColor(hex: 0x6F908B), globeLabelHalo: UIColor(hex: 0x0D1213),
+            haze: UIColor(hex: 0x2B5560), glow: UIColor(hex: 0x4FB3AE), glowCore: UIColor(hex: 0xD7F5F2), mapPitch: 0, vignette: 0.35)
     ]
 }

@@ -111,6 +111,15 @@ THEMES = {
         halo="#000000", road_label="#ffffff", road_halo="#1a1a1a", house="#ffffff",
         water_label="#e8f4ff", shield="#2f7bff", oneway=0.0, transform="uppercase",
     ),
+    # mappa notturna da corse (ispirata alla foto): fondo antracite, quartieri a mimetico turchese, strade kaki
+    "canyon": dict(
+        land="#1f2627", wood="#283132", grass="#252d2e", sand="#2b3334", ice="#3a4546",
+        park="#273031", water="#0f1e24", waterway="#16303a", building="#4d9592",
+        building_top="#5aa6a2", minor="#8a8670", major="#959078", motor="#a19c82",
+        path="#6f6c5c", rail="#4f5b5c", boundary="#5f7f7a", label="#6f908b",
+        halo="#0d1213", road_label="#c9d6d3", road_halo="#0d1213", house="#9fbcb8",
+        water_label="#3f7480", shield="#2f47c9", oneway=0.0, transform="uppercase",
+    ),
     # come Street Heat ma rosso al posto del viola
     "crimson": dict(
         land="#a81f24", wood="#9a1c21", grass="#ad2228", sand="#b52a2f", ice="#ffb3b3",
@@ -312,6 +321,15 @@ EXTRA = {
                      road_label="#ffffff", road_halo="#4a4c4f", halo_width=1.1, transform="none", labels=True),
     # mappa allegata (isola): prato verde, boschi a chiome, sentieri sabbia, fiumi azzurri con riva chiara,
     # etichette bianche maiuscole con contorno nero spesso
+    # foto allegata: quartieri con texture mimetica turchese bordata di nero, strade kaki con bordo scuro,
+    # acqua blu notte con riva luminosa, campagna antracite, scritte turchesi spente
+    "canyon": dict(road_mode="casing", casing="#0e1314", inner="#8a8670", minor_solid=None,
+                   land="#1f2627", urban_pattern="gm-camo", urban_outline="#050708",
+                   building="#2e6664", building_mode="flat", building_opacity=0.35,
+                   water="#0f1e24", water_outline="#2b5560", water_outline_width=[(8, 1.5), (12, 3.5), (16, 6)],
+                   park="#273031", wood="#283132", grass="#252d2e",
+                   path="#6f6c5c", rail="#4f5b5c", label="#6f908b", halo="#0d1213",
+                   road_label="#c9d6d3", road_halo="#0d1213", halo_width=1.6, labels=True),
     # Street Heat in rosso: satellite in scala di grigi su fondo rosso, strade e icone di Vice Noir
     "crimson": dict(road_mode="casing", casing="#b8b8b8", inner="#6a6a6a", minor_solid="#a8a8a8",
                     land="#d2373a", satellite=True, building="#ffb0a8", building_mode="flat", building_opacity=0.18,
@@ -386,11 +404,17 @@ def map_style(tid, p):
         layers.append({"id": "satellite", "type": "raster", "source": "satellite",
                        "paint": {"raster-saturation": -1, "raster-contrast": 0.3, "raster-opacity": 0.5}})
 
-    if x.get("urban"):
+    if x.get("urban") or x.get("urban_pattern"):
+        urban_cls = cls("residential", "commercial", "industrial", "retail", "railway", "suburb",
+                        "neighbourhood", "quarter")
         layers.append({"id": "landuse-urban", "type": "fill", "source": "openmaptiles", "source-layer": "landuse",
-                       "filter": cls("residential", "commercial", "industrial", "retail", "railway", "suburb",
-                                     "neighbourhood", "quarter"),
-                       "paint": {"fill-color": x["urban"]}})
+                       "filter": urban_cls,
+                       "paint": {"fill-pattern": x["urban_pattern"]} if x.get("urban_pattern")
+                                else {"fill-color": x["urban"]}})
+        if x.get("urban_outline"):
+            layers.append({"id": "landuse-urban-outline", "type": "line", "source": "openmaptiles", "source-layer": "landuse",
+                           "filter": urban_cls,
+                           "paint": {"line-color": x["urban_outline"], "line-width": interp([(10, 1.2), (14, 3), (18, 5)])}})
 
     for lid, classes, key, op in [("landcover-ice", ["ice"], "ice", 1), ("landcover-sand", ["sand"], "sand", 1),
                                   ("landcover-wood", ["wood", "forest"], "wood", 0.95),
@@ -608,6 +632,7 @@ GLOBE_COLORS = {
     "storm": ("#4b7d35", "#3d8fe0"),
     "midnight": ("#3b4161", "#262e4c"),
     "crimson": ("#d84a4a", "#3d0a10"),
+    "canyon": ("#232b2c", "#0f1e24"),
 }
 
 

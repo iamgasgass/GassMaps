@@ -325,10 +325,11 @@ EXTRA = {
     # acqua blu notte con riva luminosa, campagna antracite, scritte turchesi spente
     "canyon": dict(road_mode="casing", casing="#0e1314", inner="#8a8670", minor_solid=None,
                    land="#1f2627", urban_pattern="gm-camo", urban_outline="#050708",
-                   building="#2e6664", building_mode="flat", building_opacity=0.35,
+                   building="#46548a", building_mode="extrude", extrude_opacity=0.82,
                    water="#0f1e24", water_outline="#2b5560", water_outline_width=[(8, 1.5), (12, 3.5), (16, 6)],
                    park="#273031", wood="#283132", grass="#252d2e",
-                   path="#6f6c5c", rail="#4f5b5c", label="#6f908b", halo="#0d1213",
+                   path="#6f6c5c", rail="#4f5b5c", label="#c9d6d3", halo="#0d1213",
+                   urban_all=True,
                    road_label="#c9d6d3", road_halo="#0d1213", halo_width=1.6, labels=True),
     # Street Heat in rosso: satellite in scala di grigi su fondo rosso, strade e icone di Vice Noir
     "crimson": dict(road_mode="casing", casing="#b8b8b8", inner="#6a6a6a", minor_solid="#a8a8a8",
@@ -407,6 +408,13 @@ def map_style(tid, p):
     if x.get("urban") or x.get("urban_pattern"):
         urban_cls = cls("residential", "commercial", "industrial", "retail", "railway", "suburb",
                         "neighbourhood", "quarter")
+        if x.get("urban_all"):
+            # tutte le aree costruite delle città, non solo le residenziali
+            urban_cls = cls("residential", "commercial", "industrial", "retail", "railway", "suburb",
+                            "neighbourhood", "quarter", "garages", "school", "university", "college",
+                            "kindergarten", "library", "hospital", "stadium", "bus_station", "military",
+                            "theme_park", "zoo", "place_of_worship", "parking", "construction",
+                            "brownfield", "farmyard", "village", "town", "city")
         layers.append({"id": "landuse-urban", "type": "fill", "source": "openmaptiles", "source-layer": "landuse",
                        "filter": urban_cls,
                        "paint": {"fill-pattern": x["urban_pattern"]} if x.get("urban_pattern")

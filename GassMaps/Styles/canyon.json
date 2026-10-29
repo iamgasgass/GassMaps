@@ -35,7 +35,27 @@
      "railway",
      "suburb",
      "neighbourhood",
-     "quarter"
+     "quarter",
+     "garages",
+     "school",
+     "university",
+     "college",
+     "kindergarten",
+     "library",
+     "hospital",
+     "stadium",
+     "bus_station",
+     "military",
+     "theme_park",
+     "zoo",
+     "place_of_worship",
+     "parking",
+     "construction",
+     "brownfield",
+     "farmyard",
+     "village",
+     "town",
+     "city"
     ],
     true,
     false
@@ -63,7 +83,27 @@
      "railway",
      "suburb",
      "neighbourhood",
-     "quarter"
+     "quarter",
+     "garages",
+     "school",
+     "university",
+     "college",
+     "kindergarten",
+     "library",
+     "hospital",
+     "stadium",
+     "bus_station",
+     "military",
+     "theme_park",
+     "zoo",
+     "place_of_worship",
+     "parking",
+     "construction",
+     "brownfield",
+     "farmyard",
+     "village",
+     "town",
+     "city"
     ],
     true,
     false
@@ -364,17 +404,6 @@
      12,
      2.4
     ]
-   }
-  },
-  {
-   "id": "building",
-   "type": "fill",
-   "source": "openmaptiles",
-   "source-layer": "building",
-   "minzoom": 13,
-   "paint": {
-    "fill-color": "#2e6664",
-    "fill-opacity": 0.35
    }
   },
   {
@@ -1077,6 +1106,46 @@
      39.68
     ],
     "line-opacity": 1.0
+   }
+  },
+  {
+   "id": "building-3d",
+   "type": "fill-extrusion",
+   "source": "openmaptiles",
+   "source-layer": "building",
+   "minzoom": 14,
+   "paint": {
+    "fill-extrusion-color": "#46548a",
+    "fill-extrusion-height": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     14,
+     0,
+     15.5,
+     [
+      "to-number",
+      [
+       "get",
+       "render_height"
+      ],
+      8
+     ]
+    ],
+    "fill-extrusion-base": [
+     "to-number",
+     [
+      "get",
+      "render_min_height"
+     ],
+     0
+    ],
+    "fill-extrusion-opacity": 0.82,
+    "fill-extrusion-vertical-gradient": true
    }
   },
   {
@@ -1809,7 +1878,7 @@
     "text-optional": true
    },
    "paint": {
-    "text-color": "#6f908b",
+    "text-color": "#c9d6d3",
     "text-halo-color": "#0d1213",
     "text-halo-width": 1.6
    }
@@ -1872,7 +1941,7 @@
     "text-max-width": 8
    },
    "paint": {
-    "text-color": "#6f908b",
+    "text-color": "#c9d6d3",
     "text-halo-color": "#0d1213",
     "text-halo-width": 1.5
    }
@@ -1931,7 +2000,7 @@
     "text-max-width": 8
    },
    "paint": {
-    "text-color": "#6f908b",
+    "text-color": "#c9d6d3",
     "text-halo-color": "#0d1213",
     "text-halo-width": 1.5
    }
@@ -1990,7 +2059,7 @@
     "text-max-width": 8
    },
    "paint": {
-    "text-color": "#6f908b",
+    "text-color": "#c9d6d3",
     "text-halo-color": "#0d1213",
     "text-halo-width": 1.5
    }
@@ -2050,7 +2119,7 @@
     "text-max-width": 7
    },
    "paint": {
-    "text-color": "#6f908b",
+    "text-color": "#c9d6d3",
     "text-halo-color": "#0d1213",
     "text-halo-width": 1.6
    }

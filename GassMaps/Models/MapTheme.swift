@@ -229,7 +229,7 @@ enum Themes {
             accent: UIColor(hex: 0xF2D21B), iconColor: UIColor(hex: 0xF2D21B), iconHalo: .black,
             polar: UIColor(hex: 0x3A4546), buttonTint: .white,
             markers: [],
-            globeFont: "AvenirNextCondensed-Bold", globeUppercase: true, globeLabel: UIColor(hex: 0x6F908B), globeLabelHalo: UIColor(hex: 0x0D1213),
+            globeFont: "AvenirNextCondensed-Bold", globeUppercase: true, globeLabel: UIColor(hex: 0xC9D6D3), globeLabelHalo: UIColor(hex: 0x0D1213),
             haze: UIColor(hex: 0x2B5560), glow: UIColor(hex: 0x4FB3AE), glowCore: UIColor(hex: 0xD7F5F2), mapPitch: 0, vignette: 0.35)
     ]
 }

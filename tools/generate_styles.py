@@ -654,7 +654,7 @@ GLOBE_COLORS = {
     "contract": ("#c2c5c7", "#2e3033"),
     "storm": ("#4b7d35", "#3d8fe0"),
     "midnight": ("#3b4161", "#262e4c"),
-    "crimson": ("#d84a4a", "#3d0a10"),
+    "crimson": ("#34363a", "#4a0d12"),
     "canyon": ("#232b2c", "#0f1e24"),
 }
 

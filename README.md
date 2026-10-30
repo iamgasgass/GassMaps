@@ -1,104 +1,128 @@
-# GassMaps
+<div align="center">
 
-Mappa del mondo reale in stile videogioco per iOS (SwiftUI + MapLibre), interfaccia interamente in **Liquid Glass nativo** (iOS 26).
+# 🗺️ GassMaps
 
-## Funzioni
+**Il mondo reale in stile videogioco, con le funzioni di un navigatore vero.**
 
-- **Splash** che mostra l'app: città animata nei colori del tema scelto, percorso che si disegna, icone dei luoghi, freccia utente, logo GassMaps su vetro e barra di caricamento
-- **Mappa 3D** inclinata con edifici estrusi, nomi delle vie in maiuscolo, frecce dei sensi unici, numeri civici, scudi stradali (SS18…) e icone dei luoghi
-- **Freccia utente** uguale in tutti i temi (croce di mira, rotazione secondo bussola o direzione di marcia); in Pixel Land è una freccia pixelata a blocchi
-- **Intestazione** all'avvio con giorno, ora e "Città, Provincia", poi barra superiore con:
-  - 🌍 Selezione mappa · 🔍 Ricerca · ◉ Impostazioni
-- **Ricerca** con suggerimenti in tempo reale, *Cronologia* (con "Cancella") e *Trova nelle vicinanze* (stazione di servizio, ristorante, caffè, hotel, parcheggio, farmacia, supermercato, ospedale, bancomat, palestra)
-- **Posizione fissata**: fumetto sulla mappa, indirizzo, scheda "Nessuno ha ancora esplorato questo posto", pulsanti *Salva* e *Ottieni indicazioni*
-  - pulsante centrale blu = fissa la posizione attuale · pressione prolungata sulla mappa = fissa un punto
-- **Indicazioni**: percorso viola, "La mia posizione → Posizione fissata", minuti, ETA, km, *Inizia ora*
-- **Navigazione**: vista 3D che segue la marcia, arrivo / min / km aggiornati, *Termina percorso*. Arrivando a destinazione il luogo diventa "esplorato"
-- **Posizioni salvate** (icona segnalibro)
-- **Selezione mappa**: globo 3D che ruota, sfondo stellato, frecce, puntini e *Continua*. 8 temi:
+![iOS](https://img.shields.io/badge/iOS-26%2B-black?logo=apple)
+![Swift](https://img.shields.io/badge/Swift-5-orange?logo=swift)
+![SwiftUI](https://img.shields.io/badge/UI-SwiftUI%20%C2%B7%20Liquid%20Glass-0A84FF)
+![MapLibre](https://img.shields.io/badge/Mappa-MapLibre%20Native-396CB2)
+![Build](https://img.shields.io/badge/IPA-non%20firmata-6E40C9)
 
-  | # | Tema | Stile |
-  |---|------|-------|
-  | 1 | Dust Valley | seppia western |
-  | 2 | **Vice Noir** (predefinito) | noir urbano grigio |
-  | 3 | Bunker OS | terminale verde |
-  | 4 | Pixel Land | mondo a blocchi |
-  | 5 | Neon District | neon magenta/ciano |
-  | 6 | Palm Coast | costa verde soleggiata |
-  | 7 | Street Heat | viola notturno |
-  | 8 | Old Kingdom | pergamena medievale |
-  | 9 | Silent Contract | mappa tattica grigia, icone quadrate nere |
-  | 10 | Storm Isle | isola cartoon: prati, boschi, sentieri di sabbia, fiumi |
-  | 13 | Canyon Run | notte da corse: quartieri a mimetico turchese bordati di nero, strade kaki, icone gialle/blu/rosse |
-  | 12 | Crimson Heat | come Street Heat ma rosso, icone e strade di Vice Noir |
-  | 11 | Midnight Route | guida notturna indaco, edifici 3D blu, nomi delle vie nei fumetti, luoghi colorati |
+</div>
 
-- **Impostazioni** organizzate come Google Maps, in Liquid Glass:
-  - *App e display*: tema della mappa, icona app, unità di distanza, bussola, scala, vista inclinata 3D, feedback aptico, accessibilità
-  - *Navigazione*: indicazioni vocali, volume e velocità della voce, prova voce, evita autostrade/pedaggi, tachimetro, schermo acceso, modalità predefinita
-  - *I tuoi veicoli*: tipo di motore (con auto elettrica/plug-in i pulsanti rapidi propongono la ricarica), veicoli connessi
-  - *Posizione e privacy*: stato e precisione della posizione, luoghi esplorati, parcheggio, cronologia (salvataggio e cancellazione), Casa/Lavoro, cancella i miei dati
-  - *Mappe offline*: scarica la zona visibile con il tema attuale, avanzamento, aggiorna, elimina, svuota cache
-  - *Notifiche*: promemoria parcheggio (1–8 ore), consigli settimanali
-  - *Informazioni e termini*: versione, termini, privacy, note legali, valuta l'app, condividi, Discord, contattaci, ripristina acquisti
+GassMaps è un'app iOS (SwiftUI + MapLibre) che mostra la mappa reale in **13 temi ispirati ai videogiochi**,
+con navigazione svolta per svolta, ricerca, percorsi alternativi e guida vocale in italiano.
+L'interfaccia è interamente in **Liquid Glass nativo** di iOS 26.
 
-## Funzioni stile Google Maps
+---
 
-- **Scheda del luogo**: nome, categoria, indirizzo, distanza e tempi in auto/a piedi; pulsanti *Indicazioni*, *Avvia*, *Chiama*, *Salva*, *Condividi*, *Sito web*; menu ••• con *Imposta come Casa/Lavoro*, copia coordinate e indirizzo
-- **Tocco sulle icone della mappa** → si apre la scheda del luogo (telefono e sito recuperati automaticamente)
-- **Indicazioni**: schede *Auto / A piedi / Mezzi* con i tempi, **percorsi alternativi** (grigi, toccabili sulla mappa o nell'elenco) con "Più veloce", via, pedaggi, autostrade e avvisi; **opzioni** *Evita pedaggi* / *Evita autostrade*; elenco **Passaggi**
-- **Navigazione svolta per svolta**: banner con freccia della manovra, distanza e istruzione, "Poi…" per la manovra successiva, **guida vocale in italiano** (disattivabile), **ricalcolo automatico** se esci dal percorso, velocità attuale, tempo/km/orario di arrivo aggiornati, vista d'insieme, ricentra, arrivo a destinazione; funziona anche **a schermo spento**
-- **Ricerca**: suggerimenti, invio → elenco risultati sulla mappa con segnaposto; **chip rapidi** (Ristoranti, Benzina, Caffè, Supermercati, Hotel, Farmacie, Parcheggi, Bancomat, Ospedali)
-- **Casa e Lavoro** con indicazioni in un tocco; cronologia; posizioni salvate
-- **Bussola**: compare quando ruoti la mappa, tocco per tornare al nord
-- **Partenza modificabile**, **inverti partenza/destinazione**, **aggiungi tappa** e **orario di partenza** (parti ora o scegli data/ora)
-- **Cerca in questa zona** quando sposti la mappa sui risultati; la ricerca usa l'area visibile della mappa
-- **Cerca lungo il percorso** durante la navigazione (benzinai, ristoranti, caffè, supermercati, parcheggi, ricarica) con aggiunta della tappa
-- **Condividi orario di arrivo** durante la navigazione
-- **Salva parcheggio**: ricorda dove hai lasciato l'auto e ti ci riporta
-- **Posizione in tempo reale ottimizzata**: Core Location alla massima precisione ("per la navigazione": GPS, Galileo, GLONASS, BeiDou, Wi-Fi, celle), richiesta di precisione completa se è attiva quella approssimativa, filtro di Kalman contro i salti, direzione di marcia calcolata anche senza bussola; la freccia sulla mappa usa la stessa posizione filtrata della navigazione.
-  Nota: su iPhone non esiste un "GPS di Google" separato: anche Google Maps per iOS riceve la posizione da Core Location.
+## Indice
 
-- **Navigazione come Google Maps**: freccia posizionata in basso così da vedere più strada davanti, tratto già percorso che sparisce, zoom automatico secondo la velocità
-- **Livelli**: mappa del tema o satellite (con strade ed etichette sopra), trasporti pubblici, piste ciclabili
-- **Misura distanza** (menu ••• di un luogo): mirino al centro, aggiungi punti, annulla, distanza totale
-- **Plus Code** nella scheda del luogo (copiabile), **ricerca per coordinate** ("40.85, 14.26")
-- **Ricerca vocale** in italiano (microfono nella barra di ricerca)
-- **Elenchi** (Preferiti, Da visitare, Luoghi speciali) e **note personali** sui luoghi; filtri nelle Posizioni salvate
-- **Avatar di guida** (Impostazioni → I tuoi veicoli): *Default* (freccia del tema) o *Alternative* (disco blu con freccia bianca), versione a blocchi in Pixel Land
-- **La tua posizione**: tocco sulla freccia → indirizzo, precisione, salva parcheggio, condividi, calibra bussola, nelle vicinanze
+- [Temi](#-temi)
+- [Funzioni](#-funzioni)
+- [Impostazioni](#️-impostazioni)
+- [Compilare l'IPA con GitHub Actions](#-compilare-lipa-con-github-actions)
+- [Compilare in locale](#-compilare-in-locale)
+- [Struttura del progetto](#-struttura-del-progetto)
+- [Personalizzazione](#-personalizzazione)
+- [Font della splash](#-font-della-splash)
+- [Dati, licenze e limiti](#-dati-licenze-e-limiti)
 
-Limiti (dati non disponibili gratuitamente fuori da Google): traffico in tempo reale, Street View, recensioni e foto dei luoghi,
-orari di apertura, tracciato dei mezzi pubblici (per i mezzi l'app mostra il tempo e apre linee e orari in Mappe di Apple), mappe offline.
+---
 
-## Font di GTA San Andreas (Pricedown)
+## 🎨 Temi
 
-La scritta **GassMaps** della splash usa il font *Pricedown* (quello di GTA San Andreas).
-Per licenza non può essere incluso nel repo: scaricalo gratis da Typodermic
-(https://typodermicfonts.com/pricedown/) e copia il file `.ttf`/`.otf` in `GassMaps/Fonts/`.
-L'app lo trova da sola (nessuna modifica necessaria) e lo usa anche per le etichette del globo dei temi GTA.
-Senza il file viene usato un sostituto simile.
+Si scelgono dal **globo 3D** (pulsante 🌍): ogni tema ha la sua mappa, le sue icone dei luoghi, il suo globo e la sua splash.
 
-## Contenuti di ogni mappa
+| # | Tema | Stile |
+|---|------|-------|
+| 1 | Dust Valley | pergamena seppia western, edifici a inchiostro |
+| 2 | **Vice Noir** *(predefinito)* | noir urbano scuro, strade a doppia linea, icone nere con contorno bianco |
+| 3 | Bunker OS | terminale verde fosforescente, icone esagonali |
+| 4 | Pixel Land | mondo a blocchi: erba, acqua e tetti pixelati, icone pixel art, freccia a blocchi |
+| 5 | Neon District | nero con strade ciano, edifici 3D cremisi, icone esagonali |
+| 6 | Palm Coast | campagna verde, città grigie, strade nere, icone colorate |
+| 7 | Street Heat | satellite tinto di viola, strade grigio-azzurre |
+| 8 | Old Kingdom | medievale, tetti di coppi in 3D |
+| 9 | Silent Contract | mappa tattica grigia, icone quadrate nere |
+| 10 | Storm Isle | isola cartoon: prati, boschi, fiumi con schiuma, sentieri di sabbia |
+| 11 | Midnight Route | guida notturna indaco, edifici 3D blu, luoghi colorati per tipo |
+| 12 | Crimson Heat | fondo antracite, quartieri a pennellate rosse bordati di nero, edifici 3D, strade e icone di Vice Noir |
+| 13 | Canyon Run | notte da corse: quartieri a mimetico turchese bordati di nero, edifici 3D, icone gialle/blu/rosse |
 
-Ogni tema ha il proprio set di icone sulla mappa e sul globo, nello stile del gioco a cui si ispira:
-Vice Noir (radar GTA V, quadrifoglio viola), Palm Coast (icone colorate GTA SA), Dust Valley (badge western),
-Bunker OS (esagoni verdi), Pixel Land (oggetti pixelati), Neon District (esagoni neon), Street Heat (corse),
-Old Kingdom (medievale). Le categorie: parchi, cinema/teatri, stazioni, biblioteche, carburante, ristoranti,
-caffè, bar, negozi, abbigliamento, salute, polizia, banche, alloggi, scuole, parcheggi, sport, luoghi di culto,
-musei/attrazioni, auto.
+> Gli stili sono ispirati ai videogiochi ma **disegnati da zero**: nessuna mappa, icona o grafica originale è inclusa.
 
-## Compilare l'IPA non firmata (GitHub Actions)
+---
 
-1. Crea un repository su GitHub e carica **tutto il contenuto** di questa cartella (compresa la cartella nascosta `.github`).
-2. Il workflow `.github/workflows/build.yml` parte da solo a ogni push su `main` (oppure da **Actions → Build unsigned IPA → Run workflow**).
-3. Al termine scarica l'artifact **GassMaps-unsigned-ipa** → contiene `GassMaps-unsigned.ipa`.
-4. Firmala/installala con il tuo strumento (Feather, Sideloadly, AltStore, ESign, TrollStore…).
-5. Se crei un tag `v1.0.0`, l'IPA viene pubblicata anche come **Release**.
+## ✨ Funzioni
 
-Se la build fallisce, scarica l'artifact `xcodebuild-log` per vedere l'errore.
+### Mappa
+- Vista 3D inclinata (per tema), nomi delle vie, sensi unici, numeri civici, sigle stradali (SS18…)
+- **Freccia della posizione** che segue la bussola da fermo e la direzione di marcia in movimento, con cono di precisione
+- **Bussola** sempre visibile sotto *Livelli*: tacche, nord in rosso e lettera N / E / S / O; tocco per tornare al nord
+- **Livelli**: tema o satellite, trasporti pubblici, piste ciclabili
+- **Pulsante posizione** come Google Maps: centra → modalità bussola → nord in alto
 
-## Compilare in locale (Mac)
+### Ricerca
+- Suggerimenti in tempo reale, cronologia, *Trova nelle vicinanze*, chip rapidi (Ristoranti, Benzina, Caffè…)
+- **Ricerca vocale** in italiano, **ricerca per coordinate** (`40.85, 14.26`)
+- *Cerca in questa zona* quando sposti la mappa sui risultati
+
+### Luoghi
+- Scheda del luogo con categoria, indirizzo, **Plus Code**, tempi in auto e a piedi, chiama, sito web, condividi
+- Menu ••• : Casa, Lavoro, **parcheggio auto**, elenchi, **note personali**, **misura distanza**, copia coordinate
+- **Elenchi** *Preferiti / Da visitare / Luoghi speciali* con filtri
+- Tocco sulla freccia → **La tua posizione**: indirizzo, precisione, salva parcheggio, condividi, calibra bussola
+
+### Indicazioni e navigazione
+- Auto / A piedi / Mezzi, **percorsi alternativi**, evita pedaggi o autostrade, tappa intermedia, orario di partenza
+- **Navigazione svolta per svolta**: freccia della manovra, “Poi…”, guida vocale, ricalcolo automatico, tachimetro
+- Destra/sinistra **verificate sulla forma reale della strada** (rotonde comprese) e avvisi vocali in base alla velocità
+- Vista con molta strada davanti, tratto percorso che sparisce, zoom secondo la velocità
+- **Vista dall'alto**, **Riposiziona**, **percorsi alternativi durante la guida** (“4 min in più”, “Durata simile”)
+- Cerca lungo il percorso, condividi l'orario di arrivo, funziona anche a schermo spento
+- **Avatar di guida**: *Default* (freccia del tema) o *Alternative* (disco blu con freccia bianca)
+
+### Posizione
+- Core Location alla massima precisione, filtro anti-salti, precisione completa richiesta se è attiva quella approssimativa
+
+---
+
+## ⚙️ Impostazioni
+
+Organizzate come Google Maps:
+
+| Sezione | Contenuto |
+|---------|-----------|
+| App e display | tema, icona app, unità, bussola, scala, vista 3D, feedback aptico, accessibilità |
+| Navigazione | voce, volume, velocità della voce, evita autostrade/pedaggi, tachimetro, schermo acceso, modalità predefinita |
+| I tuoi veicoli | tipo di motore (con elettrico propone la ricarica), avatar di guida |
+| Posizione e privacy | permessi, luoghi esplorati, parcheggio, cronologia, Casa/Lavoro, cancella i miei dati |
+| Mappe offline | scarica la zona visibile, aggiorna, elimina, svuota cache |
+| Notifiche | promemoria parcheggio, consigli settimanali |
+| Informazioni e termini | versione, termini, privacy, note legali, valuta l'app, condividi, contatti |
+
+---
+
+## 📦 Compilare l'IPA con GitHub Actions
+
+1. Carica **tutto** il contenuto della cartella nel repository, compresa la cartella nascosta **`.github`**.
+2. Il workflow [`build.yml`](.github/workflows/build.yml) parte a ogni push su `main`
+   (oppure da **Actions → Build unsigned IPA → Run workflow**).
+3. A build verde scarica l'artifact **`GassMaps-unsigned-ipa`** → `GassMaps-unsigned.ipa`.
+4. Firmala e installala con il tuo strumento (Sideloadly, AltStore, Feather, ESign, TrollStore…).
+5. Con un tag `v1.0.0` l'IPA viene pubblicata anche come **Release**.
+
+Se la compilazione fallisce il workflow **si ferma** (nessuna IPA rotta) e mostra gli errori nel riepilogo;
+il log completo è nell'artifact **`xcodebuild-log`**.
+
+**Requisiti:** runner `macos-26`, Xcode 26, iOS 26+ su iPhone.
+
+---
+
+## 💻 Compilare in locale
 
 ```bash
 brew install xcodegen
@@ -106,18 +130,60 @@ xcodegen generate
 open GassMaps.xcodeproj
 ```
 
-## Personalizzazione
+---
 
-- Link (Discord, privacy, termini, email): `GassMaps/App/AppConfig.swift`
-- Colori dei temi mappa: `tools/generate_styles.py` → poi `python3 tools/generate_styles.py`
-- Nomi, sfondi e icone del globo dei temi: `GassMaps/Models/MapTheme.swift`
-- Icone app: `tools/generate_icons.py`
+## 🗂️ Struttura del progetto
 
-## Dati mappa
+```
+GassMaps/
+├── App/            avvio, stato dell'app, configurazione, font
+├── Models/         temi, luoghi, percorsi
+├── Services/       posizione, ricerca, percorsi, navigazione, ricerca vocale
+├── Map/            mappa MapLibre, icone, texture, freccia, segnaposto
+├── Globe/          globo 3D della selezione dei temi
+├── Views/          schermate SwiftUI (mappa, pannelli, ricerca, impostazioni, splash)
+├── Styles/         stili MapLibre generati (un file per tema + uno per il globo)
+├── Fonts/          qui va il font della splash (non incluso)
+└── Assets.xcassets icone dell'app e colori
+tools/
+├── generate_styles.py   genera gli stili dei temi
+└── generate_icons.py    genera le icone dell'app
+project.yml               progetto XcodeGen
+.github/workflows/        build dell'IPA non firmata
+```
 
-Il tema Street Heat usa le immagini satellitari Esri World Imagery (© Esri, Maxar, Earthstar Geographics),
-gratuite con attribuzione: per un uso commerciale verifica i termini Esri.
-Tile vettoriali gratuiti di [OpenFreeMap](https://openfreemap.org) (nessuna API key), dati © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, rendering con [MapLibre Native](https://maplibre.org). Ricerca e percorsi tramite Apple MapKit.
-L'attribuzione OSM resta visibile (pulsante ⓘ in basso a sinistra) come richiesto dalla licenza ODbL.
+---
 
-Requisiti: iOS 26+ (Liquid Glass nativo), iPhone. La build richiede Xcode 26 (il workflow usa il runner macos-26).
+## 🛠️ Personalizzazione
+
+| Cosa | Dove |
+|------|------|
+| Link (Discord, privacy, termini, email) | `GassMaps/App/AppConfig.swift` |
+| Colori e stile delle mappe | `tools/generate_styles.py` → poi `python3 tools/generate_styles.py` |
+| Nomi, colori del globo, freccia e inclinazione dei temi | `GassMaps/Models/MapTheme.swift` |
+| Icone dei luoghi per tema | `GassMaps/Map/MapIcons.swift` |
+| Texture (pergamena, blocchi, mimetico…) | `GassMaps/Map/Textures.swift` |
+| Icone dell'app | `tools/generate_icons.py` |
+
+---
+
+## 🔤 Font della splash
+
+La scritta **GassMaps** usa il font *Pricedown*, che per licenza non può stare nel repository.
+Scaricalo gratis da [Typodermic](https://typodermicfonts.com/pricedown/) e copia il file `.ttf`/`.otf` in `GassMaps/Fonts/`:
+l'app lo trova da sola. Senza il file viene usato un sostituto simile.
+
+---
+
+## 📄 Dati, licenze e limiti
+
+- Mappe: tile vettoriali gratuiti di [OpenFreeMap](https://openfreemap.org), dati © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL; attribuzione sempre visibile con il pulsante ⓘ)
+- Rendering: [MapLibre Native](https://maplibre.org)
+- Ricerca, indirizzi e percorsi: Apple MapKit
+- Satellite (Street Heat e livello *Satellite*): Esri World Imagery © Esri, Maxar, Earthstar Geographics — per un uso commerciale verifica i termini Esri
+
+**Non disponibili** (dati non accessibili gratuitamente): traffico in tempo reale, Street View, corsie e limiti di velocità,
+orari, recensioni e foto dei luoghi, percorsi dettagliati dei mezzi pubblici, condivisione della posizione in tempo reale, CarPlay.
+Le mappe offline mostrano la mappa senza rete, ma ricerca e percorsi richiedono internet.
+
+GassMaps è un progetto indipendente e non è affiliato ai produttori dei giochi a cui si ispirano i temi.

@@ -10,7 +10,7 @@ final class GlobeTextureProvider {
     private var memory: [String: UIImage] = [:]
     private var pending: [String: [(UIImage?) -> Void]] = [:]
     private var snapshotters: [String: MLNMapSnapshotter] = [:]
-    private let version = "v5"
+    private let version = "v6"
 
     private var cacheDir: URL {
         let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]

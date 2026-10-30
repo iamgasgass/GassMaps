@@ -218,10 +218,10 @@ enum Themes {
             id: "crimson", name: "Crimson Heat",
             backgroundTop: Color(hex: 0x200B0D), backgroundBottom: Color(hex: 0x200B0D),
             accent: UIColor(hex: 0x8840D8), iconColor: .white, iconHalo: .black,
-            polar: UIColor(hex: 0xFFB3B3), buttonTint: .white,
+            polar: UIColor(hex: 0x4A4C50), buttonTint: .white,
             markers: [],
             globeFont: "AvenirNextCondensed-HeavyItalic", globeUppercase: true, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x4A0F14),
-            haze: UIColor(hex: 0x601616), glow: UIColor(hex: 0xFF4D4D), glowCore: UIColor(hex: 0xF2D9D9), mapPitch: 0, vignette: 0.25),
+            haze: UIColor(hex: 0x45474C), glow: UIColor(hex: 0xFF4D4D), glowCore: UIColor(hex: 0xF2D9D9), mapPitch: 0, vignette: 0.25),
         // mappa notturna da corse: quartieri a mimetico turchese bordati di nero, strade kaki, icone gialle/blu/rosse
         MapTheme(
             id: "canyon", name: "Canyon Run",

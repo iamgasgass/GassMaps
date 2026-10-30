@@ -32,6 +32,7 @@ enum DestinationMarker {
             case "kingdom": heraldicShield(c, s)
             case "contract": tacticalPin(c, s)
             case "storm": balloonPin(c, s, color: theme.accent)   // stesso colore del percorso
+            case "crimson": pinkStar(c, s)
             default: cloverClassic(c, s, color: theme.accent)   // Street Heat: invariato
             }
         }
@@ -300,6 +301,29 @@ enum DestinationMarker {
         c.strokePath()
     }
 
+    // MARK: Crimson Heat — stella rosa a cinque punte con contorno nero spesso
+
+    private static func pinkStar(_ c: CGContext, _ s: CGFloat) {
+        let m = CGPoint(x: s / 2, y: s * 0.53)
+        let outer = s * 0.4, inner = s * 0.19
+        let star = UIBezierPath()
+        for i in 0..<10 {
+            let a = -CGFloat.pi / 2 + CGFloat(i) * .pi / 5
+            let r = i % 2 == 0 ? outer : inner
+            let pt = CGPoint(x: m.x + cos(a) * r, y: m.y + sin(a) * r)
+            if i == 0 { star.move(to: pt) } else { star.addLine(to: pt) }
+        }
+        star.close()
+        c.setLineJoin(.round)
+        c.setShadow(offset: CGSize(width: 0, height: 1), blur: 2, color: UIColor.black.withAlphaComponent(0.5).cgColor)
+        c.setStrokeColor(UIColor(hex: 0x0A0A0A).cgColor)
+        c.setLineWidth(s * 0.13)
+        c.addPath(star.cgPath); c.strokePath()
+        c.setShadow(offset: .zero, blur: 0, color: nil)
+        c.setFillColor(UIColor(hex: 0xE46BB0).cgColor)
+        c.addPath(star.cgPath); c.fillPath()
+    }
+
     // MARK: Canyon Run — due bandiere a scacchi incrociate
 
     private static func checkeredFlags(_ c: CGContext, _ s: CGFloat) {
@@ -365,9 +389,8 @@ enum DestinationMarker {
         path.addLine(to: CGPoint(x: m, y: s * 0.95))
         path.close()
         c.setLineJoin(.round)
+        // solo contorno nero (niente bordo bianco)
         c.setStrokeColor(UIColor(hex: 0x111111).cgColor); c.setLineWidth(s * 0.1)
-        c.addPath(path.cgPath); c.strokePath()
-        c.setStrokeColor(UIColor.white.cgColor); c.setLineWidth(s * 0.05)
         c.addPath(path.cgPath); c.strokePath()
         c.setFillColor(color.cgColor)
         c.addPath(path.cgPath); c.fillPath()

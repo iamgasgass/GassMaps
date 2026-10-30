@@ -334,6 +334,7 @@ EXTRA = {
     # Street Heat in rosso: satellite in scala di grigi su fondo rosso, strade e icone di Vice Noir
     "crimson": dict(road_mode="casing", casing="#b8b8b8", inner="#6a6a6a", minor_solid="#a8a8a8",
                     urban_pattern="gm-swirl", urban_outline="#050708", urban_all=True, urban_buildings=True,
+                    landcover_overlay=True,
                     land="#34363a", building="#7d1d22", building_mode="extrude", extrude_opacity=0.85,
                     water="#4a0d12", park="#34363a", wood="#34363a", grass="#34363a",
                     path="#6e6e6e", rail="#5c5c5c", label="#ffffff", halo="#4a0f14",
@@ -451,13 +452,27 @@ def map_style(tid, p):
         layers.append({"id": "landcover-rock", "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
                        "filter": cls("rock", "bare_rock", "scree"),
                        "paint": {"fill-color": x["rock"], "fill-outline-color": x.get("rock_outline", x["rock"])}})
+    if x.get("landcover_overlay"):
+        # prati, boschi, rocce e spiagge come velature sopra il fondo e il pattern rosso:
+        # boschi più scuri, prati appena più chiari, rocce/montagne e sabbia chiare
+        overlay = {"landcover-wood": ("#000000", 0.28), "landcover-grass": ("#ffffff", 0.07),
+                   "landcover-sand": ("#ffffff", 0.14), "landcover-ice": ("#ffffff", 0.22)}
+        for l in layers:
+            if l["id"] in overlay:
+                col, op = overlay[l["id"]]
+                l["paint"] = {"fill-color": col, "fill-opacity": op}
+        layers.append({"id": "landcover-rock", "type": "fill", "source": "openmaptiles", "source-layer": "landcover",
+                       "filter": cls("rock", "bare_rock", "scree"),
+                       "paint": {"fill-color": "#ffffff", "fill-opacity": 0.16}})
     if x.get("satellite"):
         layers = [l for l in layers if not l["id"].startswith("landcover")]
     layers.append({"id": "park", "type": "fill", "source": "openmaptiles", "source-layer": "park",
-                   "paint": {"fill-color": p["park"], "fill-opacity": 0 if x.get("satellite") else 0.95}})
+                   "paint": ({"fill-color": "#000000", "fill-opacity": 0.14} if x.get("landcover_overlay") else
+                             {"fill-color": p["park"], "fill-opacity": 0 if x.get("satellite") else 0.95})})
     layers.append({"id": "landuse-grass", "type": "fill", "source": "openmaptiles", "source-layer": "landuse",
                    "filter": cls("grass", "cemetery", "pitch", "playground"),
-                   "paint": {"fill-color": p["park"], "fill-opacity": 0 if x.get("satellite") else 0.9}})
+                   "paint": ({"fill-color": "#ffffff", "fill-opacity": 0.08} if x.get("landcover_overlay") else
+                             {"fill-color": p["park"], "fill-opacity": 0 if x.get("satellite") else 0.9})})
 
     water = {"id": "water", "type": "fill", "source": "openmaptiles", "source-layer": "water",
              "paint": {"fill-color": p["water"], "fill-antialias": True}}

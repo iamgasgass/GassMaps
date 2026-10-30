@@ -59,11 +59,25 @@ final class GlobeInteraction {
     }
 
     private var intro: (lat: Double, lon: Double)?
+    private var introScaleValue: Float?
 
-    /// Avvia l'animazione d'ingresso: il globo parte ingrandito sul punto GPS e si allontana fino alla vista normale
-    func startIntro(lat: Double, lon: Double) {
+    /// Avvia l'ingresso: il globo si orienta con il punto GPS davanti alla camera e smette di ruotare
+    func startIntro(lat: Double, lon: Double, scale: Float) {
         lock.lock(); defer { lock.unlock() }
         intro = (lat, lon)
+        introScaleValue = scale
+    }
+
+    /// Ingrandimento del globo durante l'ingresso (aggiornato a ogni fotogramma da GlobeIntroDriver)
+    func setIntroScale(_ s: Float) {
+        lock.lock(); defer { lock.unlock() }
+        introScaleValue = s
+    }
+
+    /// Fine dell'ingresso: il globo torna alla dimensione normale e riprende la rotazione
+    func endIntro() {
+        lock.lock(); defer { lock.unlock() }
+        introScaleValue = nil
     }
 
     func consumeIntro() -> (lat: Double, lon: Double)? {
@@ -71,6 +85,11 @@ final class GlobeInteraction {
         let i = intro
         intro = nil
         return i
+    }
+
+    var currentIntroScale: Float? {
+        lock.lock(); defer { lock.unlock() }
+        return introScaleValue
     }
 
     /// Restituisce e azzera lo spostamento accumulato.
@@ -106,9 +125,6 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
     private var tiltVelocity: Float = 0
     private var lastTime: TimeInterval?
     private var introStart: TimeInterval?
-    /// ingrandimento iniziale del globo (vista quasi radente sul punto GPS) e durata del ritorno alla vista normale
-    static let introScale: Float = 2.35
-    static let introDuration: Double = 1.05
 
     private let earth = SCNNode()
     private let labelsNode = SCNNode()
@@ -425,19 +441,15 @@ final class GlobeCoordinator: NSObject, SCNSceneRendererDelegate {
             tilt = Float((start.lat - GlobeCoordinator.targetLat) * .pi / 180)
             yawVelocity = 0
             tiltVelocity = 0
-            introStart = time
-            earth.simdScale = SIMD3<Float>(repeating: GlobeCoordinator.introScale)
         }
-        if let t0 = introStart {
-            let p = Float(min(max((time - t0) / GlobeCoordinator.introDuration, 0), 1))
-            let e = 1 - pow(1 - p, 3)      // rallenta alla fine
-            earth.simdScale = SIMD3<Float>(repeating: 1 + (GlobeCoordinator.introScale - 1) * (1 - e))
-            if p >= 1 {
-                introStart = nil
-                earth.simdScale = SIMD3<Float>(repeating: 1)
-            }
+        let introScale = interaction.currentIntroScale
+        let wasIntro = introStart != nil
+        introStart = introScale == nil ? nil : time
+        earth.simdScale = SIMD3<Float>(repeating: introScale ?? 1)
+        if wasIntro && introScale == nil {
+            yawVelocity = 0     // riparte dolcemente verso la rotazione automatica
         }
-        if introStart != nil {
+        if introScale != nil {
             _ = interaction.consume()      // durante l'ingresso il globo non ruota
             applyOrientation()
         } else {

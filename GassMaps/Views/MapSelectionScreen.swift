@@ -16,6 +16,8 @@ struct MapSelectionScreen: View {
     @State private var introCenter: CLLocationCoordinate2D?
     @State private var introZoom: Double = 15
     @State private var glowVisible = false
+    @State private var introHolder = IntroMapHolder()
+    @State private var introDriver: GlobeIntroDriver?
 
     private var theme: MapTheme { Themes.all[index] }
 
@@ -86,7 +88,8 @@ struct MapSelectionScreen: View {
                     .opacity(didAppear ? 1 : 0)
                     // la mappa del tema dal tuo punto GPS che si allontana (prima parte dell'ingresso)
                     if introMapVisible, let c = introCenter {
-                        IntroZoomMap(theme: state.theme, center: c, startZoom: introZoom)
+                        IntroZoomMap(theme: state.theme, center: c, startZoom: introZoom, holder: introHolder,
+                                     topInset: GlobeIntroDriver.gpsOffset(height: fullHeight) * 2)
                             .frame(width: geo.size.width, height: fullHeight)
                             .transition(.opacity)
                     }
@@ -118,8 +121,10 @@ struct MapSelectionScreen: View {
         }
     }
 
-    /// Ingresso come nel video: la mappa parte dal punto GPS e si allontana fino a vedere l'Italia,
-    /// poi lascia il posto al globo centrato sulla posizione, che si allontana a sua volta fino alla vista normale.
+    /// Ingresso come nel video, in un unico movimento continuo:
+    /// la mappa del tema parte dal punto GPS e si allontana sempre più veloce; quando arriva alla scala di una nazione
+    /// si dissolve nel globo, che ha la stessa scala e il punto GPS nello stesso punto dello schermo,
+    /// e il globo continua ad allontanarsi rallentando fino alla vista normale.
     private func startIntro() {
         guard let c = state.location.location?.coordinate ?? state.map.centerCoordinate else {
             introMapVisible = false
@@ -131,21 +136,22 @@ struct MapSelectionScreen: View {
         introZoom = min(max(state.map.mapView?.zoomLevel ?? 15, 12), 17)
         introMapVisible = true
         didAppear = false
+        glowVisible = false
         transitioning = true
-        // 1) la mappa si allontana (IntroZoomMap, ~0,75 s)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            // 2) compare il globo ingrandito sul punto GPS e la mappa sfuma
-            globeInteraction.startIntro(lat: c.latitude, lon: c.longitude)
-            withAnimation(.easeInOut(duration: 0.3)) {
+        let driver = GlobeIntroDriver(holder: introHolder, interaction: globeInteraction, center: c, startZoom: introZoom)
+        driver.onCrossfade = {
+            withAnimation(.easeInOut(duration: 0.28)) {
                 didAppear = true
                 introMapVisible = false
             }
-            // 3) a globo assestato: bagliore dell'orizzonte e "Continua" attivo
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.85) {
-                withAnimation(.easeOut(duration: 0.45)) { glowVisible = true }
-                transitioning = false
-            }
         }
+        driver.onFinish = {
+            withAnimation(.easeOut(duration: 0.5)) { glowVisible = true }
+            transitioning = false
+            introDriver = nil
+        }
+        introDriver = driver
+        driver.start()
     }
 
     private func arrowButton(_ icon: String, action: @escaping () -> Void) -> some View {
@@ -237,12 +243,98 @@ struct SeededGenerator: RandomNumberGenerator {
 }
 
 
+/// Riferimento alla mappa dell'ingresso (creata da SwiftUI, animata da GlobeIntroDriver)
+final class IntroMapHolder {
+    weak var map: MLNMapView?
+}
+
+/// Anima l'ingresso fotogramma per fotogramma (60/120 Hz) con CADisplayLink: zoom della mappa e scala del globo
+/// sono la stessa curva continua, così il passaggio mappa → globo non ha salti.
+final class GlobeIntroDriver {
+    /// livello di zoom a cui il globo, alla scala 1, ha la stessa dimensione della vista normale (dal video)
+    static let globeZoom = GlobeCoordinator.zoom
+    /// zoom a cui la mappa lascia il posto al globo
+    static let handoffZoom = 4.35
+    static let mapDuration: CFTimeInterval = 0.95
+    static let globeDuration: CFTimeInterval = 1.1
+
+    /// il punto guardato dal globo sta 150 pt (su 852) sotto il centro: anche la mappa mette lì il punto GPS
+    static func gpsOffset(height: CGFloat) -> CGFloat {
+        CGFloat(GlobeCoordinator.targetOffsetPt / GlobeCoordinator.screenRefHeight) * height
+    }
+
+    private let holder: IntroMapHolder
+    private let interaction: GlobeInteraction
+    private let center: CLLocationCoordinate2D
+    private let startZoom: Double
+    private var link: CADisplayLink?
+    private var startTime: CFTimeInterval = 0
+    private var crossfaded = false
+    var onCrossfade: (() -> Void)?
+    var onFinish: (() -> Void)?
+
+    init(holder: IntroMapHolder, interaction: GlobeInteraction, center: CLLocationCoordinate2D, startZoom: Double) {
+        self.holder = holder
+        self.interaction = interaction
+        self.center = center
+        self.startZoom = startZoom
+    }
+
+    func start() {
+        // il globo si prepara subito (invisibile) già orientato sul punto GPS e alla scala d'incontro
+        interaction.startIntro(lat: center.latitude, lon: center.longitude,
+                               scale: Float(min(pow(2, startZoom - GlobeIntroDriver.globeZoom), 2.8)))
+        startTime = CACurrentMediaTime() + 0.08      // un attimo per far apparire la mappa
+        let l = CADisplayLink(target: self, selector: #selector(tick))
+        l.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
+        l.add(to: .main, forMode: .common)
+        link = l
+    }
+
+    @objc private func tick() {
+        let t = CACurrentMediaTime() - startTime
+        guard t >= 0 else { return }
+        let md = GlobeIntroDriver.mapDuration
+        if t < md {
+            // mappa: si allontana accelerando (zoom in scala logaritmica, come il video)
+            let p = t / md
+            let e = p * p * (3 - 2 * p) * 0.35 + p * p * 0.65      // partenza dolce, poi accelera
+            let z = startZoom + (GlobeIntroDriver.handoffZoom - startZoom) * e
+            holder.map?.setZoomLevel(z, animated: false)
+            // oltre ~2,8 volte la camera entrerebbe nella sfera: finché è nascosto il globo resta a quella scala
+            interaction.setIntroScale(Float(min(pow(2, z - GlobeIntroDriver.globeZoom), 2.8)))
+            if !crossfaded && p > 0.93 {
+                crossfaded = true
+                onCrossfade?()
+            }
+        } else {
+            if !crossfaded { crossfaded = true; onCrossfade?() }
+            // globo: continua ad allontanarsi alla stessa velocità e poi rallenta fino alla scala 1
+            let q = min((t - md) / GlobeIntroDriver.globeDuration, 1)
+            let e = 1 - pow(1 - q, 3)
+            let z = GlobeIntroDriver.handoffZoom + (GlobeIntroDriver.globeZoom - GlobeIntroDriver.handoffZoom) * e
+            interaction.setIntroScale(Float(pow(2, z - GlobeIntroDriver.globeZoom)))
+            if q >= 1 {
+                interaction.endIntro()
+                link?.invalidate()
+                link = nil
+                onFinish?()
+            }
+        }
+    }
+
+    deinit { link?.invalidate() }
+}
+
 /// Mappa del tema centrata sul punto GPS che si allontana fino alla scala di una nazione
 /// (prima parte dell'animazione d'ingresso nella Selezione mappa).
 struct IntroZoomMap: UIViewRepresentable {
     let theme: MapTheme
     let center: CLLocationCoordinate2D
     let startZoom: Double
+    let holder: IntroMapHolder
+    /// il punto GPS va nella stessa posizione dello schermo del punto guardato dal globo
+    let topInset: CGFloat
 
     func makeCoordinator() -> Coordinator { Coordinator(theme: theme) }
 
@@ -254,11 +346,13 @@ struct IntroZoomMap: UIViewRepresentable {
         map.compassView.isHidden = true
         map.isUserInteractionEnabled = false
         map.backgroundColor = .black
+        map.contentInset = UIEdgeInsets(top: topInset, left: 0, bottom: 0, right: 0)
         map.setCenter(center, zoomLevel: startZoom, direction: 0, animated: false)
-        let target = MLNMapCamera(lookingAtCenter: center, acrossDistance: 1_800_000, pitch: 0, heading: 0)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            map.setCamera(target, withDuration: 0.75, animationTimingFunction: CAMediaTimingFunction(name: .easeIn))
-        }
+        // stessa inclinazione della camera del globo: il passaggio è continuo
+        let cam = map.camera
+        cam.pitch = CGFloat(GlobeCoordinator.pitchDeg)
+        map.setCamera(cam, animated: false)
+        holder.map = map
         return map
     }
 

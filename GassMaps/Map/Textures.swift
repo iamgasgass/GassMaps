@@ -3,7 +3,7 @@ import UIKit
 /// Texture ripetibili usate come "background-pattern" / "fill-pattern" negli stili mappa.
 /// Disegnate interamente dall'app (nessuna immagine esterna).
 enum Textures {
-    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof", "gm-trees", "gm-meadow", "gm-camo", "gm-swirl"]
+    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof", "gm-trees", "gm-meadow", "gm-camo", "gm-swirl", "gm-greycamo"]
 
     private static var cache: [String: UIImage] = [:]
 
@@ -21,6 +21,7 @@ enum Textures {
         case "gm-meadow": img = meadow()
         case "gm-camo": img = camo()
         case "gm-swirl": img = swirl()
+        case "gm-greycamo": img = greyCamo()
         default: img = nil
         }
         if let img = img { cache[name] = img }
@@ -217,6 +218,37 @@ enum Textures {
                             c.addArc(center: CGPoint(x: x + dx, y: y + dy), radius: r,
                                      startAngle: start, endAngle: start + sweep, clockwise: false)
                             c.strokePath()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Mimetico grigio e bianco a macchie arrotondate (quartieri di Ghost Run), ripetibile senza giunte
+    private static func greyCamo() -> UIImage {
+        let side: CGFloat = 160
+        var rng = SeededGenerator(seed: 0xC8C8C8)
+        return renderer(side).image { ctx in
+            let c = ctx.cgContext
+            c.setFillColor(UIColor(hex: 0xD3D3D3).cgColor)
+            c.fill(CGRect(x: 0, y: 0, width: side, height: side))
+            for (tone, count) in [(UInt32(0xEDEDED), 10), (UInt32(0xA9A9A9), 11), (UInt32(0x8A8A8A), 7)] {
+                c.setFillColor(UIColor(hex: tone).cgColor)
+                for _ in 0..<count {
+                    // macchia: gruppo di ellissi sovrapposte
+                    let x = CGFloat.random(in: 0..<side, using: &rng), y = CGFloat.random(in: 0..<side, using: &rng)
+                    var blobs: [CGRect] = []
+                    var cx = x, cy = y
+                    for _ in 0..<4 {
+                        let w = CGFloat.random(in: 10...24, using: &rng), h = CGFloat.random(in: 6...14, using: &rng)
+                        blobs.append(CGRect(x: cx - w / 2, y: cy - h / 2, width: w, height: h))
+                        cx += CGFloat.random(in: -11...11, using: &rng)
+                        cy += CGFloat.random(in: -6...6, using: &rng)
+                    }
+                    for dx in [-side, 0, side] {
+                        for dy in [-side, 0, side] {
+                            for b in blobs { c.fillEllipse(in: b.offsetBy(dx: dx, dy: dy)) }
                         }
                     }
                 }

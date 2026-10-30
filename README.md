@@ -12,7 +12,7 @@
 
 </div>
 
-GassMaps è un'app iOS (SwiftUI + MapLibre) che mostra la mappa reale in **13 temi ispirati ai videogiochi**,
+GassMaps è un'app iOS (SwiftUI + MapLibre) che mostra la mappa reale in **14 temi ispirati ai videogiochi**,
 con navigazione svolta per svolta, ricerca, percorsi alternativi e guida vocale in italiano.
 L'interfaccia è interamente in **Liquid Glass nativo** di iOS 26.
 
@@ -51,6 +51,7 @@ Si scelgono dal **globo 3D** (pulsante 🌍): ogni tema ha la sua mappa, le sue 
 | 11 | Midnight Route | guida notturna indaco, edifici 3D blu, luoghi colorati per tipo |
 | 12 | Crimson Heat | fondo antracite, quartieri a pennellate rosse bordati di nero, edifici 3D, strade e icone di Vice Noir |
 | 13 | Canyon Run | notte da corse: quartieri a mimetico turchese bordati di nero, edifici 3D, icone gialle/blu/rosse |
+| 14 | Ghost Run | come Canyon Run, ma con quartieri a mimetico grigio e le icone di Crimson Heat |
 
 > Gli stili sono ispirati ai videogiochi ma **disegnati da zero**: nessuna mappa, icona o grafica originale è inclusa.
 

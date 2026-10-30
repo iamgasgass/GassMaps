@@ -118,7 +118,7 @@ enum MapIcons {
                                 glyphs: [.shop: "basket.fill", .police: "star.circle.fill"],
                                 cloverDefault: true)
 
-        case "noir", "crimson": // icone nere con contorno bianco (Crimson Heat usa le stesse di Vice Noir)
+        case "noir", "crimson", "ghost": // icone nere con contorno bianco (Crimson Heat e Ghost Run usano le stesse di Vice Noir)
             return ThemeIconSet(frame: .outline(halo: .white), tint: .black,
                                 glyphs: [.shop: "basket.fill", .police: "star.circle.fill"],
                                 cloverDefault: true)
@@ -283,6 +283,13 @@ enum MapIcons {
     private static func rawPoiIcon(_ cat: POICategory, theme: MapTheme) -> UIImage? {
         let pointSize: CGFloat = 30
         let set = iconSet(for: theme)
+        // Crimson Heat / Ghost Run: stemma rosa con stella; Canyon Run: stesso stemma nel colore delle sue icone
+        if cat == .default && ["crimson", "ghost"].contains(theme.id) {
+            return starShield(fill: UIColor(hex: 0xE46BB0), size: pointSize * 1.4)
+        }
+        if cat == .default && theme.id == "canyon" {
+            return starShield(fill: set.tint, size: pointSize * 1.4)
+        }
         if cat == .default && set.cloverDefault {
             // Palm Coast: bordi e pallino centrale nel colore del contorno delle altre icone del tema
             if case .outline(let halo) = set.frame, theme.id == "palm" || theme.id == "canyon" {
@@ -545,6 +552,51 @@ enum MapIcons {
                 haloImg.draw(in: r.offsetBy(dx: cos(a) * o, dy: sin(a) * o))
             }
             base.withTintColor(color, renderingMode: .alwaysOriginal).draw(in: r)
+        }
+    }
+
+    /// Stemma (scudo a punta) con stella nera al centro e fascia chiara, contorno nero spesso
+    static func starShield(fill: UIColor, size: CGFloat) -> UIImage {
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 2
+        let w = size * 0.9, h = size
+        return UIGraphicsImageRenderer(size: CGSize(width: w + 6, height: h + 6), format: fmt).image { ctx in
+            let c = ctx.cgContext
+            let o = CGPoint(x: 3, y: 3)
+            let shield = UIBezierPath()
+            shield.move(to: CGPoint(x: o.x, y: o.y))
+            shield.addLine(to: CGPoint(x: o.x + w, y: o.y))
+            shield.addLine(to: CGPoint(x: o.x + w, y: o.y + h * 0.68))
+            shield.addLine(to: CGPoint(x: o.x + w / 2, y: o.y + h))
+            shield.addLine(to: CGPoint(x: o.x, y: o.y + h * 0.68))
+            shield.close()
+            c.setLineJoin(.round)
+            c.setStrokeColor(UIColor(hex: 0x0A0A0A).cgColor)
+            c.setLineWidth(size * 0.12)
+            c.addPath(shield.cgPath); c.strokePath()
+            c.saveGState()
+            c.addPath(shield.cgPath); c.clip()
+            c.setFillColor(fill.cgColor)
+            c.fill(CGRect(x: 0, y: 0, width: w + 6, height: h + 6))
+            // fascia centrale più chiara
+            var hh: CGFloat = 0, ss: CGFloat = 0, bb: CGFloat = 0, aa: CGFloat = 0
+            fill.getHue(&hh, saturation: &ss, brightness: &bb, alpha: &aa)
+            c.setFillColor(UIColor(hue: hh, saturation: ss * 0.45, brightness: min(1, bb * 1.12), alpha: 1).cgColor)
+            c.fill(CGRect(x: 0, y: o.y + h * 0.22, width: w + 6, height: h * 0.42))
+            c.restoreGState()
+            // stella nera
+            let m = CGPoint(x: o.x + w / 2, y: o.y + h * 0.43)
+            let outer = size * 0.27, inner = size * 0.12
+            let star = UIBezierPath()
+            for i in 0..<10 {
+                let a = -CGFloat.pi / 2 + CGFloat(i) * .pi / 5
+                let r = i % 2 == 0 ? outer : inner
+                let pt = CGPoint(x: m.x + cos(a) * r, y: m.y + sin(a) * r)
+                if i == 0 { star.move(to: pt) } else { star.addLine(to: pt) }
+            }
+            star.close()
+            c.setFillColor(UIColor(hex: 0x0A0A0A).cgColor)
+            c.addPath(star.cgPath); c.fillPath()
         }
     }
 

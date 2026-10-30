@@ -33,6 +33,7 @@ enum DestinationMarker {
             case "contract": tacticalPin(c, s)
             case "storm": balloonPin(c, s, color: theme.accent)   // stesso colore del percorso
             case "crimson": pinkStar(c, s)
+            case "ghost": pinkStar(c, s, color: UIColor(hex: 0x9D8DF1))   // stella lilla come nella foto
             default: cloverClassic(c, s, color: theme.accent)   // Street Heat: invariato
             }
         }
@@ -303,7 +304,7 @@ enum DestinationMarker {
 
     // MARK: Crimson Heat — stella rosa a cinque punte con contorno nero spesso
 
-    private static func pinkStar(_ c: CGContext, _ s: CGFloat) {
+    private static func pinkStar(_ c: CGContext, _ s: CGFloat, color: UIColor = UIColor(hex: 0xE46BB0)) {
         let m = CGPoint(x: s / 2, y: s * 0.53)
         let outer = s * 0.4, inner = s * 0.19
         let star = UIBezierPath()
@@ -320,7 +321,7 @@ enum DestinationMarker {
         c.setLineWidth(s * 0.13)
         c.addPath(star.cgPath); c.strokePath()
         c.setShadow(offset: .zero, blur: 0, color: nil)
-        c.setFillColor(UIColor(hex: 0xE46BB0).cgColor)
+        c.setFillColor(color.cgColor)
         c.addPath(star.cgPath); c.fillPath()
     }
 

@@ -1,4 +1,6 @@
 import SwiftUI
+import MapLibre
+import CoreLocation
 
 struct MapSelectionScreen: View {
     @EnvironmentObject var state: AppState
@@ -9,6 +11,11 @@ struct MapSelectionScreen: View {
     @State private var didAppear = false
     @State private var globeInteraction = GlobeInteraction()
     @State private var lastDrag: CGSize = .zero
+    /// animazione d'ingresso dal punto GPS: mappa che si allontana → globo
+    @State private var introMapVisible = true
+    @State private var introCenter: CLLocationCoordinate2D?
+    @State private var introZoom: Double = 15
+    @State private var glowVisible = false
 
     private var theme: MapTheme { Themes.all[index] }
 
@@ -72,10 +79,17 @@ struct MapSelectionScreen: View {
                         GlobeView(theme: globeTheme, height: fullHeight, interaction: globeInteraction)
                         GlobeGlow(size: CGSize(width: geo.size.width, height: fullHeight),
                                   glow: Color(globeTheme.glow), core: Color(globeTheme.glowCore))
+                            .opacity(glowVisible ? 1 : 0)
                     }
                     .frame(width: geo.size.width, height: fullHeight)
                     .offset(y: globeOffset)
                     .opacity(didAppear ? 1 : 0)
+                    // la mappa del tema dal tuo punto GPS che si allontana (prima parte dell'ingresso)
+                    if introMapVisible, let c = introCenter {
+                        IntroZoomMap(theme: state.theme, center: c, startZoom: introZoom)
+                            .frame(width: geo.size.width, height: fullHeight)
+                            .transition(.opacity)
+                    }
                 }
                 .animation(.easeInOut(duration: 0.5), value: index)
                 .ignoresSafeArea()
@@ -100,7 +114,37 @@ struct MapSelectionScreen: View {
         .onAppear {
             index = state.themeIndex
             globeTheme = state.theme
+            startIntro()
+        }
+    }
+
+    /// Ingresso come nel video: la mappa parte dal punto GPS e si allontana fino a vedere l'Italia,
+    /// poi lascia il posto al globo centrato sulla posizione, che si allontana a sua volta fino alla vista normale.
+    private func startIntro() {
+        guard let c = state.location.location?.coordinate ?? state.map.centerCoordinate else {
+            introMapVisible = false
+            glowVisible = true
             withAnimation(.easeOut(duration: 0.5)) { didAppear = true }
+            return
+        }
+        introCenter = c
+        introZoom = min(max(state.map.mapView?.zoomLevel ?? 15, 12), 17)
+        introMapVisible = true
+        didAppear = false
+        transitioning = true
+        // 1) la mappa si allontana (IntroZoomMap, ~0,75 s)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            // 2) compare il globo ingrandito sul punto GPS e la mappa sfuma
+            globeInteraction.startIntro(lat: c.latitude, lon: c.longitude)
+            withAnimation(.easeInOut(duration: 0.3)) {
+                didAppear = true
+                introMapVisible = false
+            }
+            // 3) a globo assestato: bagliore dell'orizzonte e "Continua" attivo
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.85) {
+                withAnimation(.easeOut(duration: 0.45)) { glowVisible = true }
+                transitioning = false
+            }
         }
     }
 
@@ -189,5 +233,47 @@ struct SeededGenerator: RandomNumberGenerator {
         z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
         z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
         return z ^ (z >> 31)
+    }
+}
+
+
+/// Mappa del tema centrata sul punto GPS che si allontana fino alla scala di una nazione
+/// (prima parte dell'animazione d'ingresso nella Selezione mappa).
+struct IntroZoomMap: UIViewRepresentable {
+    let theme: MapTheme
+    let center: CLLocationCoordinate2D
+    let startZoom: Double
+
+    func makeCoordinator() -> Coordinator { Coordinator(theme: theme) }
+
+    func makeUIView(context: Context) -> MLNMapView {
+        let map = MLNMapView(frame: .zero, styleURL: theme.styleURL)
+        map.delegate = context.coordinator
+        map.logoView.isHidden = true
+        map.attributionButton.isHidden = true
+        map.compassView.isHidden = true
+        map.isUserInteractionEnabled = false
+        map.backgroundColor = .black
+        map.setCenter(center, zoomLevel: startZoom, direction: 0, animated: false)
+        let target = MLNMapCamera(lookingAtCenter: center, acrossDistance: 1_800_000, pitch: 0, heading: 0)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            map.setCamera(target, withDuration: 0.75, animationTimingFunction: CAMediaTimingFunction(name: .easeIn))
+        }
+        return map
+    }
+
+    func updateUIView(_ map: MLNMapView, context: Context) {}
+
+    final class Coordinator: NSObject, MLNMapViewDelegate {
+        let theme: MapTheme
+        init(theme: MapTheme) { self.theme = theme }
+
+        func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
+            MapIcons.install(in: style, theme: theme)
+        }
+
+        func mapView(_ mapView: MLNMapView, didFailToLoadImage imageName: String) -> UIImage? {
+            MapIcons.image(named: imageName, theme: theme)
+        }
     }
 }

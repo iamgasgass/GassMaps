@@ -24,13 +24,14 @@ enum DestinationMarker {
             switch theme.id {
             case "noir": cloverInk(c, s, color: theme.accent)
             case "palm": compassStar(c, s)
-            case "dust": treasureX(c, s)
+            case "dust": sketchCircleX(c, s)
+            case "canyon": checkeredFlags(c, s)
             case "bunker": terminalDiamond(c, s)
             case "pixel": pixelX(c, s)
             case "neon": neonDiamond(c, s)
             case "kingdom": heraldicShield(c, s)
             case "contract": tacticalPin(c, s)
-            case "storm": balloonPin(c, s)
+            case "storm": balloonPin(c, s, color: theme.accent)   // stesso colore del percorso
             default: cloverClassic(c, s, color: theme.accent)   // Street Heat: invariato
             }
         }
@@ -263,9 +264,99 @@ enum DestinationMarker {
         }
     }
 
+    // MARK: Dust Valley — cerchio rosso con X, tratto a mano con contorno nero
+
+    private static func sketchCircleX(_ c: CGContext, _ s: CGFloat) {
+        let m = s / 2
+        let r = s * 0.34
+        let red = UIColor(hex: 0xD8262B)
+        c.setLineCap(.round)
+        c.setLineJoin(.round)
+        // anello leggermente irregolare (due passate come uno schizzo)
+        func ring(_ dr: CGFloat, _ rot: CGFloat) -> UIBezierPath {
+            let p = UIBezierPath()
+            for i in 0...36 {
+                let a = CGFloat(i) / 36 * 2 * .pi + rot
+                let wobble = 1 + 0.035 * sin(a * 3 + rot * 5)
+                let pt = CGPoint(x: m + cos(a) * (r + dr) * wobble, y: m + sin(a) * (r + dr) * wobble * 0.97)
+                if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+            }
+            return p
+        }
+        let x1 = UIBezierPath()
+        x1.move(to: CGPoint(x: m - r * 0.95, y: m - r * 1.05)); x1.addLine(to: CGPoint(x: m + r * 0.9, y: m + r * 1.0))
+        let x2 = UIBezierPath()
+        x2.move(to: CGPoint(x: m + r * 0.95, y: m - r * 1.0)); x2.addLine(to: CGPoint(x: m - r * 0.9, y: m + r * 1.05))
+        let shapes = [ring(0, 0), ring(-s * 0.02, 0.6), x1, x2]
+        // contorno nero
+        c.setStrokeColor(UIColor(hex: 0x111111).cgColor)
+        c.setLineWidth(s * 0.16)
+        for p in shapes { c.addPath(p.cgPath) }
+        c.strokePath()
+        // tratto rosso
+        c.setStrokeColor(red.cgColor)
+        c.setLineWidth(s * 0.09)
+        for p in shapes { c.addPath(p.cgPath) }
+        c.strokePath()
+    }
+
+    // MARK: Canyon Run — due bandiere a scacchi incrociate
+
+    private static func checkeredFlags(_ c: CGContext, _ s: CGFloat) {
+        func flag(mirrored: Bool) {
+            c.saveGState()
+            if mirrored {
+                c.translateBy(x: s, y: 0)
+                c.scaleBy(x: -1, y: 1)
+            }
+            // asta inclinata
+            // le due aste partono dagli angoli in basso e si incrociano al centro
+            c.translateBy(x: s * 0.3, y: s * 0.9)
+            c.rotate(by: 0.42)
+            let pole = CGRect(x: -s * 0.025, y: -s * 0.78, width: s * 0.05, height: s * 0.8)
+            c.setFillColor(UIColor(hex: 0x111111).cgColor)
+            c.fill(pole.insetBy(dx: -s * 0.015, dy: -s * 0.015))
+            c.setFillColor(UIColor(hex: 0xBDBDBD).cgColor)
+            c.fill(pole)
+            // telo ondulato a scacchi 4×3
+            let w = s * 0.36, h = s * 0.26
+            let origin = CGPoint(x: s * 0.025, y: -s * 0.78)
+            let cols = 4, rows = 3
+            func wave(_ x: CGFloat) -> CGFloat { sin(x / w * .pi * 1.6) * s * 0.025 }
+            let outline = UIBezierPath()
+            outline.move(to: CGPoint(x: origin.x, y: origin.y + wave(0)))
+            for i in 1...12 { let x = w * CGFloat(i) / 12; outline.addLine(to: CGPoint(x: origin.x + x, y: origin.y + wave(x))) }
+            for i in stride(from: 12, through: 0, by: -1) { let x = w * CGFloat(i) / 12; outline.addLine(to: CGPoint(x: origin.x + x, y: origin.y + h + wave(x))) }
+            outline.close()
+            c.setStrokeColor(UIColor(hex: 0x111111).cgColor)
+            c.setLineWidth(s * 0.035)
+            c.setLineJoin(.round)
+            c.addPath(outline.cgPath); c.strokePath()
+            c.setFillColor(UIColor.white.cgColor)
+            c.addPath(outline.cgPath); c.fillPath()
+            c.setFillColor(UIColor(hex: 0x111111).cgColor)
+            for col in 0..<cols {
+                for row in 0..<rows where (col + row) % 2 == 0 {
+                    let x0 = w * CGFloat(col) / CGFloat(cols), x1 = w * CGFloat(col + 1) / CGFloat(cols)
+                    let y0 = h * CGFloat(row) / CGFloat(rows), y1 = h * CGFloat(row + 1) / CGFloat(rows)
+                    let cell = UIBezierPath()
+                    cell.move(to: CGPoint(x: origin.x + x0, y: origin.y + y0 + wave(x0)))
+                    cell.addLine(to: CGPoint(x: origin.x + x1, y: origin.y + y0 + wave(x1)))
+                    cell.addLine(to: CGPoint(x: origin.x + x1, y: origin.y + y1 + wave(x1)))
+                    cell.addLine(to: CGPoint(x: origin.x + x0, y: origin.y + y1 + wave(x0)))
+                    cell.close()
+                    c.addPath(cell.cgPath); c.fillPath()
+                }
+            }
+            c.restoreGState()
+        }
+        flag(mirrored: true)
+        flag(mirrored: false)
+    }
+
     // MARK: Storm Isle — segnaposto a palloncino giallo con contorno nero e bordo bianco
 
-    private static func balloonPin(_ c: CGContext, _ s: CGFloat) {
+    private static func balloonPin(_ c: CGContext, _ s: CGFloat, color: UIColor) {
         let m = s / 2
         let r = s * 0.3
         let cy = s * 0.36
@@ -278,7 +369,7 @@ enum DestinationMarker {
         c.addPath(path.cgPath); c.strokePath()
         c.setStrokeColor(UIColor.white.cgColor); c.setLineWidth(s * 0.05)
         c.addPath(path.cgPath); c.strokePath()
-        c.setFillColor(UIColor(hex: 0xF7D51D).cgColor)
+        c.setFillColor(color.cgColor)
         c.addPath(path.cgPath); c.fillPath()
         c.setFillColor(UIColor(hex: 0x111111).cgColor)
         let d = s * 0.11

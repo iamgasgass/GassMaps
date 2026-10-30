@@ -334,8 +334,8 @@ EXTRA = {
     # Street Heat in rosso: satellite in scala di grigi su fondo rosso, strade e icone di Vice Noir
     "crimson": dict(road_mode="casing", casing="#b8b8b8", inner="#6a6a6a", minor_solid="#a8a8a8",
                     urban_pattern="gm-swirl", urban_outline="#050708", urban_all=True, urban_buildings=True,
-                    land="#d2373a", building="#7d1d22", building_mode="extrude", extrude_opacity=0.85,
-                    water="#4a0d12", park="#d2373a", wood="#d2373a", grass="#d2373a",
+                    land="#34363a", building="#7d1d22", building_mode="extrude", extrude_opacity=0.85,
+                    water="#4a0d12", park="#34363a", wood="#34363a", grass="#34363a",
                     path="#6e6e6e", rail="#5c5c5c", label="#ffffff", halo="#4a0f14",
                     road_label="#ffffff", road_halo="#4a0f14", labels=True),
     # foto allegata: strade con bordo chiaro, edifici in rilievo blu, nomi delle vie in fumetti, POI colorati

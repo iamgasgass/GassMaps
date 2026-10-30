@@ -13,7 +13,7 @@
    "id": "background",
    "type": "background",
    "paint": {
-    "background-color": "#d2373a"
+    "background-color": "#34363a"
    }
   },
   {
@@ -277,7 +277,7 @@
     false
    ],
    "paint": {
-    "fill-color": "#d2373a",
+    "fill-color": "#34363a",
     "fill-opacity": 0.95
    }
   },
@@ -301,7 +301,7 @@
     false
    ],
    "paint": {
-    "fill-color": "#d2373a",
+    "fill-color": "#34363a",
     "fill-opacity": 0.9
    }
   },
@@ -311,7 +311,7 @@
    "source": "openmaptiles",
    "source-layer": "park",
    "paint": {
-    "fill-color": "#d2373a",
+    "fill-color": "#34363a",
     "fill-opacity": 0.95
    }
   },
@@ -336,7 +336,7 @@
     false
    ],
    "paint": {
-    "fill-color": "#d2373a",
+    "fill-color": "#34363a",
     "fill-opacity": 0.9
    }
   },

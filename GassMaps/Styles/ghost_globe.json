@@ -13,7 +13,7 @@
    "id": "background",
    "type": "background",
    "paint": {
-    "background-color": "#232b2c"
+    "background-color": "#3a3a3c"
    }
   },
   {
@@ -77,7 +77,7 @@
     false
    ],
    "paint": {
-    "fill-color": "#283132",
+    "fill-color": "#343436",
     "fill-opacity": 0.8
    }
   },

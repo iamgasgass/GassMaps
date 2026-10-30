@@ -284,8 +284,12 @@ enum MapIcons {
         let pointSize: CGFloat = 30
         let set = iconSet(for: theme)
         // Crimson Heat / Ghost Run: stemma rosa con stella; Canyon Run: stesso stemma nel colore delle sue icone
-        if cat == .default && ["crimson", "ghost"].contains(theme.id) {
+        if cat == .default && theme.id == "crimson" {
             return starShield(fill: UIColor(hex: 0xE46BB0), size: pointSize * 1.4)
+        }
+        if cat == .default && theme.id == "ghost" {
+            // stesso lilla dell'indicatore di destinazione di Ghost Run
+            return starShield(fill: UIColor(hex: 0x9D8DF1), size: pointSize * 1.4)
         }
         if cat == .default && theme.id == "canyon" {
             return starShield(fill: set.tint, size: pointSize * 1.4)
@@ -574,19 +578,11 @@ enum MapIcons {
             c.setStrokeColor(UIColor(hex: 0x0A0A0A).cgColor)
             c.setLineWidth(size * 0.12)
             c.addPath(shield.cgPath); c.strokePath()
-            c.saveGState()
-            c.addPath(shield.cgPath); c.clip()
+            // stemma tutto di un colore (nessuna fascia) con la stella nera grande che lo riempie
             c.setFillColor(fill.cgColor)
-            c.fill(CGRect(x: 0, y: 0, width: w + 6, height: h + 6))
-            // fascia centrale più chiara
-            var hh: CGFloat = 0, ss: CGFloat = 0, bb: CGFloat = 0, aa: CGFloat = 0
-            fill.getHue(&hh, saturation: &ss, brightness: &bb, alpha: &aa)
-            c.setFillColor(UIColor(hue: hh, saturation: ss * 0.45, brightness: min(1, bb * 1.12), alpha: 1).cgColor)
-            c.fill(CGRect(x: 0, y: o.y + h * 0.22, width: w + 6, height: h * 0.42))
-            c.restoreGState()
-            // stella nera
-            let m = CGPoint(x: o.x + w / 2, y: o.y + h * 0.43)
-            let outer = size * 0.27, inner = size * 0.12
+            c.addPath(shield.cgPath); c.fillPath()
+            let m = CGPoint(x: o.x + w / 2, y: o.y + h * 0.46)
+            let outer = size * 0.36, inner = size * 0.155
             let star = UIBezierPath()
             for i in 0..<10 {
                 let a = -CGFloat.pi / 2 + CGFloat(i) * .pi / 5

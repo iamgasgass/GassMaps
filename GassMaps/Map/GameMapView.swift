@@ -81,7 +81,6 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         MapIcons.install(in: style, theme: state.theme)
         state.map.installRoute(in: style)
         state.map.applyLayers()
-        state.map.resetUrbanBuffers()
         if state.measuring { state.updateMeasure() }
         UserArrowView.tint = state.theme.arrowColor
         UserArrowView.marker = state.theme.userMarker
@@ -138,11 +137,6 @@ final class MapCoordinator: NSObject, MLNMapViewDelegate {
         let item = state.searchResults[r.index]
         mapView.deselectAnnotation(annotation, animated: false)
         state.pin(Place(mapItem: item), item: item)
-    }
-
-    /// mappa ferma e disegnata: si aggiornano le zone urbane attorno ai palazzi
-    func mapViewDidBecomeIdle(_ mapView: MLNMapView) {
-        state.map.updateUrbanBuffers()
     }
 
     /// la bussola ruota insieme alla mappa anche durante il gesto

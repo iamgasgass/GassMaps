@@ -5,15 +5,6 @@
   "openmaptiles": {
    "type": "vector",
    "url": "https://tiles.openfreemap.org/planet"
-  },
-  "satellite": {
-   "type": "raster",
-   "tileSize": 256,
-   "maxzoom": 19,
-   "tiles": [
-    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-   ],
-   "attribution": "Imagery \u00a9 Esri, Maxar, Earthstar Geographics"
   }
  },
  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
@@ -26,13 +17,216 @@
    }
   },
   {
-   "id": "satellite",
-   "type": "raster",
-   "source": "satellite",
+   "id": "urban-buildings-fill",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "building",
+   "minzoom": 13,
    "paint": {
-    "raster-saturation": -1,
-    "raster-contrast": 0.3,
-    "raster-opacity": 0.5
+    "fill-pattern": "gm-swirl"
+   }
+  },
+  {
+   "id": "landuse-urban",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "landuse",
+   "filter": [
+    "match",
+    [
+     "get",
+     "class"
+    ],
+    [
+     "residential",
+     "commercial",
+     "industrial",
+     "retail",
+     "railway",
+     "suburb",
+     "neighbourhood",
+     "quarter",
+     "garages",
+     "school",
+     "university",
+     "college",
+     "kindergarten",
+     "library",
+     "hospital",
+     "stadium",
+     "bus_station",
+     "military",
+     "theme_park",
+     "zoo",
+     "place_of_worship",
+     "parking",
+     "construction",
+     "brownfield",
+     "farmyard",
+     "village",
+     "town",
+     "city"
+    ],
+    true,
+    false
+   ],
+   "paint": {
+    "fill-pattern": "gm-swirl"
+   }
+  },
+  {
+   "id": "landuse-urban-outline",
+   "type": "line",
+   "source": "openmaptiles",
+   "source-layer": "landuse",
+   "filter": [
+    "match",
+    [
+     "get",
+     "class"
+    ],
+    [
+     "residential",
+     "commercial",
+     "industrial",
+     "retail",
+     "railway",
+     "suburb",
+     "neighbourhood",
+     "quarter",
+     "garages",
+     "school",
+     "university",
+     "college",
+     "kindergarten",
+     "library",
+     "hospital",
+     "stadium",
+     "bus_station",
+     "military",
+     "theme_park",
+     "zoo",
+     "place_of_worship",
+     "parking",
+     "construction",
+     "brownfield",
+     "farmyard",
+     "village",
+     "town",
+     "city"
+    ],
+    true,
+    false
+   ],
+   "paint": {
+    "line-color": "#050708",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.5
+     ],
+     [
+      "zoom"
+     ],
+     10,
+     1.2,
+     14,
+     3,
+     18,
+     5
+    ]
+   }
+  },
+  {
+   "id": "landcover-ice",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "landcover",
+   "filter": [
+    "match",
+    [
+     "get",
+     "class"
+    ],
+    [
+     "ice"
+    ],
+    true,
+    false
+   ],
+   "paint": {
+    "fill-color": "#ffb3b3",
+    "fill-opacity": 1
+   }
+  },
+  {
+   "id": "landcover-sand",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "landcover",
+   "filter": [
+    "match",
+    [
+     "get",
+     "class"
+    ],
+    [
+     "sand"
+    ],
+    true,
+    false
+   ],
+   "paint": {
+    "fill-color": "#b52a2f",
+    "fill-opacity": 1
+   }
+  },
+  {
+   "id": "landcover-wood",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "landcover",
+   "filter": [
+    "match",
+    [
+     "get",
+     "class"
+    ],
+    [
+     "wood",
+     "forest"
+    ],
+    true,
+    false
+   ],
+   "paint": {
+    "fill-color": "#d2373a",
+    "fill-opacity": 0.95
+   }
+  },
+  {
+   "id": "landcover-grass",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "landcover",
+   "filter": [
+    "match",
+    [
+     "get",
+     "class"
+    ],
+    [
+     "grass",
+     "farmland",
+     "scrub"
+    ],
+    true,
+    false
+   ],
+   "paint": {
+    "fill-color": "#d2373a",
+    "fill-opacity": 0.9
    }
   },
   {
@@ -42,7 +236,7 @@
    "source-layer": "park",
    "paint": {
     "fill-color": "#d2373a",
-    "fill-opacity": 0
+    "fill-opacity": 0.95
    }
   },
   {
@@ -67,7 +261,7 @@
    ],
    "paint": {
     "fill-color": "#d2373a",
-    "fill-opacity": 0
+    "fill-opacity": 0.9
    }
   },
   {

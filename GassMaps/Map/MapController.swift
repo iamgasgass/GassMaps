@@ -168,6 +168,92 @@ final class MapController {
         altLabels = []
     }
 
+    // MARK: - Zone urbane attorno ai palazzi (Canyon Run, Crimson Heat)
+
+    static let urbanBufferSourceID = "gm-urban-buffer"
+    private var urbanBufferKeys = Set<String>()
+    private var urbanBufferPolys: [MLNPolygon] = []
+    private var urbanOutlinePolys: [MLNPolygon] = []
+    private var urbanBufferTheme = ""
+
+    /// Dove OpenStreetMap non segna l'area urbana, la zona del tema si allarga attorno ai palazzi:
+    /// ogni edificio ha un riquadro ~12 m più largo riempito con la STESSA texture dell'urbano ("fill-pattern"),
+    /// e sotto un riquadro nero un po' più grande che fa da bordo. I riquadri vicini si fondono in un'unica zona.
+    func updateUrbanBuffers() {
+        guard let m = mapView, let style = m.style, let theme = state?.theme, let pattern = theme.urbanPattern else { return }
+        if urbanBufferTheme != theme.id {
+            urbanBufferTheme = theme.id
+            urbanBufferKeys = []
+            urbanBufferPolys = []
+            urbanOutlinePolys = []
+        }
+        guard m.zoomLevel >= 13.5, style.layer(withIdentifier: "urban-buildings-fill") != nil else { return }
+        let features = m.visibleFeatures(in: m.bounds, styleLayerIdentifiers: ["urban-buildings-fill"])
+        let lat = m.centerCoordinate.latitude
+        let border = max(1.5, m.metersPerPoint(atLatitude: lat) * 3)   // bordo nero di ~3 pt
+        var added = false
+        for f in features {
+            guard let shape = f as? MLNOverlay else { continue }
+            let b = shape.overlayBounds
+            let key = String(format: "%.6f,%.6f,%.6f,%.6f", b.sw.latitude, b.sw.longitude, b.ne.latitude, b.ne.longitude)
+            guard !urbanBufferKeys.contains(key) else { continue }
+            urbanBufferKeys.insert(key)
+            urbanBufferPolys.append(MapController.box(b, meters: 12))
+            urbanOutlinePolys.append(MapController.box(b, meters: 12 + border))
+            added = true
+        }
+        // limite di memoria: si tengono gli ultimi 25.000 palazzi
+        if urbanBufferPolys.count > 25_000 {
+            urbanBufferPolys.removeFirst(urbanBufferPolys.count - 25_000)
+            urbanOutlinePolys.removeFirst(urbanOutlinePolys.count - 25_000)
+        }
+        guard added || style.source(withIdentifier: MapController.urbanBufferSourceID) == nil else { return }
+        let fillShape = MLNMultiPolygonFeature(polygons: urbanBufferPolys)
+        let outlineShape = MLNMultiPolygonFeature(polygons: urbanOutlinePolys)
+        if let src = style.source(withIdentifier: MapController.urbanBufferSourceID) as? MLNShapeSource,
+           let out = style.source(withIdentifier: MapController.urbanBufferSourceID + "-outline") as? MLNShapeSource {
+            src.shape = fillShape
+            out.shape = outlineShape
+            return
+        }
+        let src = MLNShapeSource(identifier: MapController.urbanBufferSourceID, shape: fillShape, options: nil)
+        let out = MLNShapeSource(identifier: MapController.urbanBufferSourceID + "-outline", shape: outlineShape, options: nil)
+        style.addSource(src)
+        style.addSource(out)
+        let outline = MLNFillStyleLayer(identifier: MapController.urbanBufferSourceID + "-outline-fill", source: out)
+        outline.fillColor = NSExpression(forConstantValue: UIColor(hex: 0x050708))
+        let fill = MLNFillStyleLayer(identifier: MapController.urbanBufferSourceID + "-fill", source: src)
+        fill.fillPattern = NSExpression(forConstantValue: pattern)
+        // sotto le aree urbane vere (che le coprono senza bordi doppi) e sopra lo sfondo
+        if let above = style.layer(withIdentifier: "landuse-urban") {
+            style.insertLayer(outline, below: above)
+            style.insertLayer(fill, below: above)
+        } else if let above = style.layer(withIdentifier: "urban-buildings-fill") {
+            style.insertLayer(outline, below: above)
+            style.insertLayer(fill, below: above)
+        }
+    }
+
+    /// Nuovo stile caricato: le sorgenti aggiunte dall'app vanno ricreate
+    func resetUrbanBuffers() {
+        urbanBufferKeys = []
+        urbanBufferPolys = []
+        urbanOutlinePolys = []
+        urbanBufferTheme = ""
+    }
+
+    private static func box(_ b: MLNCoordinateBounds, meters: Double) -> MLNPolygon {
+        let lat = (b.sw.latitude + b.ne.latitude) / 2
+        let dLat = meters / 111_320
+        let dLon = meters / (111_320 * max(0.2, cos(lat * .pi / 180)))
+        var c = [CLLocationCoordinate2D(latitude: b.sw.latitude - dLat, longitude: b.sw.longitude - dLon),
+                 CLLocationCoordinate2D(latitude: b.sw.latitude - dLat, longitude: b.ne.longitude + dLon),
+                 CLLocationCoordinate2D(latitude: b.ne.latitude + dLat, longitude: b.ne.longitude + dLon),
+                 CLLocationCoordinate2D(latitude: b.ne.latitude + dLat, longitude: b.sw.longitude - dLon),
+                 CLLocationCoordinate2D(latitude: b.sw.latitude - dLat, longitude: b.sw.longitude - dLon)]
+        return MLNPolygon(coordinates: &c, count: UInt(c.count))
+    }
+
     // MARK: - Misura distanza
 
     static let measureSourceID = "gm-measure"

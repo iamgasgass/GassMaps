@@ -333,7 +333,8 @@ EXTRA = {
                    road_label="#c9d6d3", road_halo="#0d1213", halo_width=1.6, labels=True),
     # Street Heat in rosso: satellite in scala di grigi su fondo rosso, strade e icone di Vice Noir
     "crimson": dict(road_mode="casing", casing="#b8b8b8", inner="#6a6a6a", minor_solid="#a8a8a8",
-                    land="#d2373a", satellite=True, building="#ffb0a8", building_mode="flat", building_opacity=0.18,
+                    urban_pattern="gm-swirl", urban_outline="#050708", urban_all=True, urban_buildings=True,
+                    land="#d2373a", building="#ffb0a8", building_mode="flat", building_opacity=0.18,
                     water="#4a0d12", park="#d2373a", wood="#d2373a", grass="#d2373a",
                     path="#6e6e6e", rail="#5c5c5c", label="#ffffff", halo="#4a0f14",
                     road_label="#ffffff", road_halo="#4a0f14", labels=True),
@@ -406,17 +407,8 @@ def map_style(tid, p):
                        "paint": {"raster-saturation": -1, "raster-contrast": 0.3, "raster-opacity": 0.5}})
 
     if x.get("urban_buildings"):
-        # dove OpenStreetMap non disegna l'area urbana (es. i centri storici) la texture segue i palazzi:
-        # una fascia larga attorno a ogni edificio unisce gli isolati in una sola zona mimetica bordata di nero
-        # (la fascia si allarga con lo zoom per restare ~10-12 m attorno ai palazzi)
-        halo = [(13, 3), (14, 6), (15, 12), (16, 24), (17, 48), (18, 96), (19, 192)]
-        layers.append({"id": "urban-buildings-outline", "type": "line", "source": "openmaptiles", "source-layer": "building",
-                       "minzoom": 13, "layout": {"line-join": "round", "line-cap": "round"},
-                       "paint": {"line-color": x.get("urban_outline", "#000000"),
-                                 "line-width": interp([(z, w + (2 if z < 15 else 5)) for z, w in halo], base=2)}})
-        layers.append({"id": "urban-buildings-halo", "type": "line", "source": "openmaptiles", "source-layer": "building",
-                       "minzoom": 13, "layout": {"line-join": "round", "line-cap": "round"},
-                       "paint": {"line-pattern": x["urban_pattern"], "line-width": interp(halo, base=2)}})
+        # la zona mimetica attorno ai palazzi viene aggiunta dall'app (MapController.updateUrbanBuffers)
+        # con la stessa texture "fill-pattern" dell'urbano, così il disegno è identico
         layers.append({"id": "urban-buildings-fill", "type": "fill", "source": "openmaptiles", "source-layer": "building",
                        "minzoom": 13, "paint": {"fill-pattern": x["urban_pattern"]}})
     if x.get("urban") or x.get("urban_pattern"):

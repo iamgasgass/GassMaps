@@ -3,7 +3,7 @@ import UIKit
 /// Texture ripetibili usate come "background-pattern" / "fill-pattern" negli stili mappa.
 /// Disegnate interamente dall'app (nessuna immagine esterna).
 enum Textures {
-    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof", "gm-trees", "gm-meadow", "gm-camo"]
+    static let names = ["gm-paper", "gm-grass", "gm-water", "gm-planks", "gm-stone", "gm-roof", "gm-trees", "gm-meadow", "gm-camo", "gm-swirl"]
 
     private static var cache: [String: UIImage] = [:]
 
@@ -20,6 +20,7 @@ enum Textures {
         case "gm-trees": img = trees()
         case "gm-meadow": img = meadow()
         case "gm-camo": img = camo()
+        case "gm-swirl": img = swirl()
         default: img = nil
         }
         if let img = img { cache[name] = img }
@@ -189,6 +190,36 @@ enum Textures {
                     c.move(to: CGPoint(x: x + dx + r, y: y + dy - r)); c.addLine(to: CGPoint(x: x + dx - r, y: y + dy + r))
                 }
                 c.strokePath()
+            }
+        }
+    }
+
+    /// Rosso a pennellate curve intrecciate (quartieri di Crimson Heat), ripetibile senza giunte
+    private static func swirl() -> UIImage {
+        let side: CGFloat = 160
+        var rng = SeededGenerator(seed: 0x9A4A4F)
+        return renderer(side).image { ctx in
+            let c = ctx.cgContext
+            c.setFillColor(UIColor(hex: 0x93474C).cgColor)
+            c.fill(CGRect(x: 0, y: 0, width: side, height: side))
+            c.setLineCap(.round)
+            let tones: [(UInt32, CGFloat)] = [(0x7E3A3F, 0.9), (0xB0656A, 0.75), (0xC98A8D, 0.55)]
+            for (tone, alpha) in tones {
+                c.setStrokeColor(UIColor(hex: tone).withAlphaComponent(alpha).cgColor)
+                for _ in 0..<7 {
+                    let x = CGFloat.random(in: 0..<side, using: &rng), y = CGFloat.random(in: 0..<side, using: &rng)
+                    let r = CGFloat.random(in: 18...60, using: &rng)
+                    let start = CGFloat.random(in: 0...(2 * .pi), using: &rng)
+                    let sweep = CGFloat.random(in: 1.2...2.6, using: &rng)
+                    c.setLineWidth(CGFloat.random(in: 4...10, using: &rng))
+                    for dx in [-side, 0, side] {
+                        for dy in [-side, 0, side] {
+                            c.addArc(center: CGPoint(x: x + dx, y: y + dy), radius: r,
+                                     startAngle: start, endAngle: start + sweep, clockwise: false)
+                            c.strokePath()
+                        }
+                    }
+                }
             }
         }
     }

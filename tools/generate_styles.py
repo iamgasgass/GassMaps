@@ -329,7 +329,7 @@ EXTRA = {
                    water="#0f1e24", water_outline="#2b5560", water_outline_width=[(8, 1.5), (12, 3.5), (16, 6)],
                    park="#273031", wood="#283132", grass="#252d2e",
                    path="#6f6c5c", rail="#4f5b5c", label="#c9d6d3", halo="#0d1213",
-                   urban_all=True,
+                   urban_all=True, urban_buildings=True,
                    road_label="#c9d6d3", road_halo="#0d1213", halo_width=1.6, labels=True),
     # Street Heat in rosso: satellite in scala di grigi su fondo rosso, strade e icone di Vice Noir
     "crimson": dict(road_mode="casing", casing="#b8b8b8", inner="#6a6a6a", minor_solid="#a8a8a8",
@@ -405,6 +405,20 @@ def map_style(tid, p):
         layers.append({"id": "satellite", "type": "raster", "source": "satellite",
                        "paint": {"raster-saturation": -1, "raster-contrast": 0.3, "raster-opacity": 0.5}})
 
+    if x.get("urban_buildings"):
+        # dove OpenStreetMap non disegna l'area urbana (es. i centri storici) la texture segue i palazzi:
+        # una fascia larga attorno a ogni edificio unisce gli isolati in una sola zona mimetica bordata di nero
+        # (la fascia si allarga con lo zoom per restare ~10-12 m attorno ai palazzi)
+        halo = [(13, 3), (14, 6), (15, 12), (16, 24), (17, 48), (18, 96), (19, 192)]
+        layers.append({"id": "urban-buildings-outline", "type": "line", "source": "openmaptiles", "source-layer": "building",
+                       "minzoom": 13, "layout": {"line-join": "round", "line-cap": "round"},
+                       "paint": {"line-color": x.get("urban_outline", "#000000"),
+                                 "line-width": interp([(z, w + (2 if z < 15 else 5)) for z, w in halo], base=2)}})
+        layers.append({"id": "urban-buildings-halo", "type": "line", "source": "openmaptiles", "source-layer": "building",
+                       "minzoom": 13, "layout": {"line-join": "round", "line-cap": "round"},
+                       "paint": {"line-pattern": x["urban_pattern"], "line-width": interp(halo, base=2)}})
+        layers.append({"id": "urban-buildings-fill", "type": "fill", "source": "openmaptiles", "source-layer": "building",
+                       "minzoom": 13, "paint": {"fill-pattern": x["urban_pattern"]}})
     if x.get("urban") or x.get("urban_pattern"):
         urban_cls = cls("residential", "commercial", "industrial", "retail", "railway", "suburb",
                         "neighbourhood", "quarter")

@@ -17,6 +17,92 @@
    }
   },
   {
+   "id": "urban-buildings-outline",
+   "type": "line",
+   "source": "openmaptiles",
+   "source-layer": "building",
+   "minzoom": 13,
+   "layout": {
+    "line-join": "round",
+    "line-cap": "round"
+   },
+   "paint": {
+    "line-color": "#050708",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      2
+     ],
+     [
+      "zoom"
+     ],
+     13,
+     5,
+     14,
+     8,
+     15,
+     17,
+     16,
+     29,
+     17,
+     53,
+     18,
+     101,
+     19,
+     197
+    ]
+   }
+  },
+  {
+   "id": "urban-buildings-halo",
+   "type": "line",
+   "source": "openmaptiles",
+   "source-layer": "building",
+   "minzoom": 13,
+   "layout": {
+    "line-join": "round",
+    "line-cap": "round"
+   },
+   "paint": {
+    "line-pattern": "gm-camo",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      2
+     ],
+     [
+      "zoom"
+     ],
+     13,
+     3,
+     14,
+     6,
+     15,
+     12,
+     16,
+     24,
+     17,
+     48,
+     18,
+     96,
+     19,
+     192
+    ]
+   }
+  },
+  {
+   "id": "urban-buildings-fill",
+   "type": "fill",
+   "source": "openmaptiles",
+   "source-layer": "building",
+   "minzoom": 13,
+   "paint": {
+    "fill-pattern": "gm-camo"
+   }
+  },
+  {
    "id": "landuse-urban",
    "type": "fill",
    "source": "openmaptiles",

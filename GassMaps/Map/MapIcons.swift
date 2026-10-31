@@ -581,8 +581,9 @@ enum MapIcons {
             // stemma tutto di un colore (nessuna fascia) con la stella nera grande che lo riempie
             c.setFillColor(fill.cgColor)
             c.addPath(shield.cgPath); c.fillPath()
-            let m = CGPoint(x: o.x + w / 2, y: o.y + h * 0.46)
-            let outer = size * 0.36, inner = size * 0.155
+            // stella che riempie tutto lo stemma: le punte arrivano ai bordi (tagliate dal contorno)
+            let m = CGPoint(x: o.x + w / 2, y: o.y + h * 0.5)
+            let outer = size * 0.53, inner = size * 0.215
             let star = UIBezierPath()
             for i in 0..<10 {
                 let a = -CGFloat.pi / 2 + CGFloat(i) * .pi / 5
@@ -591,8 +592,15 @@ enum MapIcons {
                 if i == 0 { star.move(to: pt) } else { star.addLine(to: pt) }
             }
             star.close()
+            c.saveGState()
+            c.addPath(shield.cgPath); c.clip()
             c.setFillColor(UIColor(hex: 0x0A0A0A).cgColor)
             c.addPath(star.cgPath); c.fillPath()
+            c.restoreGState()
+            // contorno ridisegnato sopra: bordi netti dove la stella tocca lo scudo
+            c.setStrokeColor(UIColor(hex: 0x0A0A0A).cgColor)
+            c.setLineWidth(size * 0.08)
+            c.addPath(shield.cgPath); c.strokePath()
         }
     }
 

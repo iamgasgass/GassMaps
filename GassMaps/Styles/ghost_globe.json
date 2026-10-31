@@ -87,7 +87,7 @@
    "source": "openmaptiles",
    "source-layer": "water",
    "paint": {
-    "fill-color": "#0f1e24"
+    "fill-color": "#050505"
    }
   },
   {

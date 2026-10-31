@@ -118,7 +118,7 @@ enum MapIcons {
                                 glyphs: [.shop: "basket.fill", .police: "star.circle.fill"],
                                 cloverDefault: true)
 
-        case "noir", "crimson", "ghost": // icone nere con contorno bianco (Crimson Heat e Ghost Run usano le stesse di Vice Noir)
+        case "noir", "crimson": // icone nere con contorno bianco (Crimson Ghost usa le stesse di Vice Noir)
             return ThemeIconSet(frame: .outline(halo: .white), tint: .black,
                                 glyphs: [.shop: "basket.fill", .police: "star.circle.fill"],
                                 cloverDefault: true)
@@ -283,13 +283,9 @@ enum MapIcons {
     private static func rawPoiIcon(_ cat: POICategory, theme: MapTheme) -> UIImage? {
         let pointSize: CGFloat = 30
         let set = iconSet(for: theme)
-        // Crimson Heat / Ghost Run: stemma rosa con stella; Canyon Run: stesso stemma nel colore delle sue icone
+        // Crimson Ghost: stemma rosa con stella; Canyon Run: stesso stemma nel colore delle sue icone
         if cat == .default && theme.id == "crimson" {
             return starShield(fill: UIColor(hex: 0xE46BB0), size: pointSize * 1.4)
-        }
-        if cat == .default && theme.id == "ghost" {
-            // stesso lilla dell'indicatore di destinazione di Ghost Run
-            return starShield(fill: UIColor(hex: 0x9D8DF1), size: pointSize * 1.4)
         }
         if cat == .default && theme.id == "canyon" {
             return starShield(fill: set.tint, size: pointSize * 1.4)

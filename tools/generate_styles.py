@@ -120,15 +120,6 @@ THEMES = {
         halo="#0d1213", road_label="#c9d6d3", road_halo="#0d1213", house="#9fbcb8",
         water_label="#3f7480", shield="#2f47c9", oneway=0.0, transform="uppercase",
     ),
-    # come Canyon Run ma con mimetico grigio
-    "ghost": dict(
-        land="#050505", wood="#0b0b0b", grass="#080808", sand="#2b3334", ice="#3a4546",
-        park="#090909", water="#3a3a3c", waterway="#3a3a3c", building="#4d9592",
-        building_top="#5aa6a2", minor="#8a8670", major="#959078", motor="#a19c82",
-        path="#6f6c5c", rail="#4f5b5c", boundary="#5f7f7a", label="#6f908b",
-        halo="#0d1213", road_label="#c9d6d3", road_halo="#0d1213", house="#9fbcb8",
-        water_label="#3f7480", shield="#2f47c9", oneway=0.0, transform="uppercase",
-    ),
     # come Street Heat ma rosso al posto del viola
     "crimson": dict(
         land="#a81f24", wood="#9a1c21", grass="#ad2228", sand="#b52a2f", ice="#ffb3b3",
@@ -337,15 +328,6 @@ EXTRA = {
                    building="#46548a", building_mode="extrude", extrude_opacity=0.82,
                    water="#0f1e24", water_outline="#2b5560", water_outline_width=[(8, 1.5), (12, 3.5), (16, 6)],
                    park="#273031", wood="#283132", grass="#252d2e",
-                   path="#6f6c5c", rail="#4f5b5c", label="#c9d6d3", halo="#0d1213",
-                   urban_all=True, urban_buildings=True,
-                   road_label="#c9d6d3", road_halo="#0d1213", halo_width=1.6, labels=True),
-    # come Canyon Run, quartieri a mimetico grigio
-    "ghost": dict(road_mode="casing", casing="#0e1314", inner="#8a8670", minor_solid=None,
-                   land="#050505", urban_pattern="gm-greycamo", urban_outline="#050708",
-                   building="#46548a", building_mode="extrude", extrude_opacity=0.82,
-                   water="#3a3a3c", water_outline="#2b5560", water_outline_width=[(8, 1.5), (12, 3.5), (16, 6)],
-                   park="#090909", wood="#0b0b0b", grass="#080808",
                    path="#6f6c5c", rail="#4f5b5c", label="#c9d6d3", halo="#0d1213",
                    urban_all=True, urban_buildings=True,
                    road_label="#c9d6d3", road_halo="#0d1213", halo_width=1.6, labels=True),
@@ -689,7 +671,6 @@ GLOBE_COLORS = {
     "midnight": ("#3b4161", "#262e4c"),
     "crimson": ("#34363a", "#4a0d12"),
     "canyon": ("#232b2c", "#0f1e24"),
-    "ghost": ("#050505", "#3a3a3c"),
 }
 
 

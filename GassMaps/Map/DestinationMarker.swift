@@ -33,7 +33,6 @@ enum DestinationMarker {
             case "contract": tacticalPin(c, s)
             case "storm": balloonPin(c, s, color: theme.accent)   // stesso colore del percorso
             case "crimson": pinkStar(c, s)
-            case "ghost": pinkStar(c, s, color: UIColor(hex: 0x9D8DF1))   // stella lilla come nella foto
             default: cloverClassic(c, s, color: theme.accent)   // Street Heat: invariato
             }
         }
@@ -302,7 +301,7 @@ enum DestinationMarker {
         c.strokePath()
     }
 
-    // MARK: Crimson Heat — stella rosa a cinque punte con contorno nero spesso
+    // MARK: Crimson Ghost — stella rosa a cinque punte con contorno nero spesso
 
     private static func pinkStar(_ c: CGContext, _ s: CGFloat, color: UIColor = UIColor(hex: 0xE46BB0)) {
         let m = CGPoint(x: s / 2, y: s * 0.53)

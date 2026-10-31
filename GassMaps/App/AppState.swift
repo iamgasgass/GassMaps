@@ -582,6 +582,12 @@ final class AppState: ObservableObject {
         location.setNavigating(true)
         UIApplication.shared.isIdleTimerDisabled = Prefs.bool(Prefs.keepAwake, default: true)
         map.startNavigation()
+        // a percorso avviato si rifà l'inquadratura di "Riposiziona" quando le animazioni d'avvio
+        // (pannello e margini della mappa) sono finite: vista inclinata e ravvicinata fin da subito
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak self] in
+            guard let self = self, self.panel == .navigating, self.navAlternatives.isEmpty else { return }
+            self.map.startNavigation()
+        }
         if let first = r.steps.first?.instruction {
             VoiceGuide.shared.speak(first)
         }

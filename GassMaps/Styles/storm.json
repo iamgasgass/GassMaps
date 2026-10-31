@@ -369,42 +369,6 @@
    }
   },
   {
-   "id": "building",
-   "type": "fill",
-   "source": "openmaptiles",
-   "source-layer": "building",
-   "minzoom": 13,
-   "paint": {
-    "fill-color": "#a3a6a9"
-   }
-  },
-  {
-   "id": "building-ink",
-   "type": "line",
-   "source": "openmaptiles",
-   "source-layer": "building",
-   "minzoom": 14,
-   "paint": {
-    "line-color": "#5d6064",
-    "line-width": [
-     "interpolate",
-     [
-      "exponential",
-      1.5
-     ],
-     [
-      "zoom"
-     ],
-     14,
-     0.6,
-     16,
-     1.6,
-     18,
-     2.6
-    ]
-   }
-  },
-  {
    "id": "road-path-casing",
    "type": "line",
    "source": "openmaptiles",
@@ -859,6 +823,46 @@
      64
     ],
     "line-opacity": 1.0
+   }
+  },
+  {
+   "id": "building-3d",
+   "type": "fill-extrusion",
+   "source": "openmaptiles",
+   "source-layer": "building",
+   "minzoom": 14,
+   "paint": {
+    "fill-extrusion-color": "#a3a6a9",
+    "fill-extrusion-height": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     14,
+     0,
+     15.5,
+     [
+      "to-number",
+      [
+       "get",
+       "render_height"
+      ],
+      8
+     ]
+    ],
+    "fill-extrusion-base": [
+     "to-number",
+     [
+      "get",
+      "render_min_height"
+     ],
+     0
+    ],
+    "fill-extrusion-opacity": 0.95,
+    "fill-extrusion-vertical-gradient": true
    }
   },
   {

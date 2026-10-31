@@ -122,8 +122,8 @@ THEMES = {
     ),
     # come Canyon Run ma con mimetico grigio
     "ghost": dict(
-        land="#3a3a3c", wood="#343436", grass="#38383a", sand="#2b3334", ice="#3a4546",
-        park="#363638", water="#050505", waterway="#050505", building="#4d9592",
+        land="#050505", wood="#0b0b0b", grass="#080808", sand="#2b3334", ice="#3a4546",
+        park="#090909", water="#3a3a3c", waterway="#3a3a3c", building="#4d9592",
         building_top="#5aa6a2", minor="#8a8670", major="#959078", motor="#a19c82",
         path="#6f6c5c", rail="#4f5b5c", boundary="#5f7f7a", label="#6f908b",
         halo="#0d1213", road_label="#c9d6d3", road_halo="#0d1213", house="#9fbcb8",
@@ -342,10 +342,10 @@ EXTRA = {
                    road_label="#c9d6d3", road_halo="#0d1213", halo_width=1.6, labels=True),
     # come Canyon Run, quartieri a mimetico grigio
     "ghost": dict(road_mode="casing", casing="#0e1314", inner="#8a8670", minor_solid=None,
-                   land="#3a3a3c", urban_pattern="gm-greycamo", urban_outline="#050708",
+                   land="#050505", urban_pattern="gm-greycamo", urban_outline="#050708",
                    building="#46548a", building_mode="extrude", extrude_opacity=0.82,
-                   water="#050505", water_outline="#2b5560", water_outline_width=[(8, 1.5), (12, 3.5), (16, 6)],
-                   park="#363638", wood="#343436", grass="#38383a",
+                   water="#3a3a3c", water_outline="#2b5560", water_outline_width=[(8, 1.5), (12, 3.5), (16, 6)],
+                   park="#090909", wood="#0b0b0b", grass="#080808",
                    path="#6f6c5c", rail="#4f5b5c", label="#c9d6d3", halo="#0d1213",
                    urban_all=True, urban_buildings=True,
                    road_label="#c9d6d3", road_halo="#0d1213", halo_width=1.6, labels=True),
@@ -372,7 +372,7 @@ EXTRA = {
                   sand="#e3c78a", rock="#cfc9bd", rock_outline="#8d877b",
                   water="#3a88e2", water_outline="#eaf6ff", water_outline_width=[(10, 1.2), (14, 3), (18, 6)],
                   water_inner="#64aef0", waterway_casing="#eaf6ff",
-                  building="#a3a6a9", building_mode="ink", ink="#5d6064",
+                  building="#a3a6a9", building_mode="extrude",
                   path="#e8cb8c", path_solid=True, path_casing="#a07e45", rail="#5a4a3a",
                   label="#ffffff", halo="#000000", road_label="#ffffff", road_halo="#111111",
                   halo_width=2.2, labels=True),
@@ -689,7 +689,7 @@ GLOBE_COLORS = {
     "midnight": ("#3b4161", "#262e4c"),
     "crimson": ("#34363a", "#4a0d12"),
     "canyon": ("#232b2c", "#0f1e24"),
-    "ghost": ("#3a3a3c", "#050505"),
+    "ghost": ("#050505", "#3a3a3c"),
 }
 
 

@@ -235,9 +235,41 @@ final class MapController {
         m.fly(to: cam, withDuration: 1.1, completionHandler: nil)
     }
 
+    /// Orizzontale: come Google Maps i pannelli stanno in una colonna a sinistra invece che in basso
+    var isLandscape: Bool {
+        guard let m = mapView else { return false }
+        return m.bounds.width > m.bounds.height
+    }
+
+    static func sidePanelWidth(for width: CGFloat) -> CGFloat { min(420, width * 0.42) }
+
+    private var lastBottomInset: CGFloat = 0
+
     func setBottomInset(_ bottom: CGFloat) {
         guard let m = mapView else { return }
-        m.setContentInset(UIEdgeInsets(top: 0, left: 0, bottom: bottom, right: 0), animated: true)
+        lastBottomInset = bottom
+        if isLandscape {
+            // il pannello occupa la colonna di sinistra: la mappa si centra nello spazio libero a destra
+            let left = bottom > 0 ? MapController.sidePanelWidth(for: m.bounds.width) + 8 : 0
+            m.setContentInset(UIEdgeInsets(top: 0, left: left, bottom: 0, right: 0), animated: true)
+        } else {
+            m.setContentInset(UIEdgeInsets(top: 0, left: 0, bottom: bottom, right: 0), animated: true)
+        }
+    }
+
+    /// Rotazione del telefono: si riapplicano i margini adatti al nuovo orientamento
+    func orientationChanged(navigating: Bool) {
+        if navigating {
+            if state?.tracking != TrackingState.none { applyNavigationInsets(animated: false) }
+        } else {
+            setBottomInset(lastBottomInset)
+        }
+    }
+
+    /// Margini per inquadrare un percorso intero sopra/accanto al pannello
+    private var overviewPadding: UIEdgeInsets {
+        guard let m = mapView, isLandscape else { return UIEdgeInsets(top: 150, left: 34, bottom: 380, right: 34) }
+        return UIEdgeInsets(top: 40, left: MapController.sidePanelWidth(for: m.bounds.width) + 40, bottom: 30, right: 80)
     }
 
     // MARK: - Pin
@@ -294,7 +326,7 @@ final class MapController {
         // L'inquadratura si calcola già con vista dall'alto e nord in su: così basta un tocco anche
         // partendo dalla vista inclinata della navigazione (prima serviva un secondo tocco).
         let flat = MLNMapCamera(lookingAtCenter: m.centerCoordinate, altitude: m.camera.altitude, pitch: 0, heading: 0)
-        let cam = m.camera(flat, fitting: bounds, edgePadding: UIEdgeInsets(top: 150, left: 34, bottom: 380, right: 34))
+        let cam = m.camera(flat, fitting: bounds, edgePadding: overviewPadding)
         cam.pitch = 0
         cam.heading = 0
         m.setCamera(cam, withDuration: 0.5, animationTimingFunction: CAMediaTimingFunction(name: .easeOut))
@@ -432,7 +464,9 @@ final class MapController {
         let pad = 0.002
         let bounds = MLNCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat - pad, longitude: minLon - pad),
                                          ne: CLLocationCoordinate2D(latitude: maxLat + pad, longitude: maxLon + pad))
-        let cam = m.cameraThatFitsCoordinateBounds(bounds, edgePadding: UIEdgeInsets(top: 170, left: 40, bottom: 400, right: 40))
+        let cam = m.cameraThatFitsCoordinateBounds(bounds, edgePadding: isLandscape
+            ? UIEdgeInsets(top: 60, left: MapController.sidePanelWidth(for: m.bounds.width) + 40, bottom: 40, right: 80)
+            : UIEdgeInsets(top: 170, left: 40, bottom: 400, right: 40))
         cam.pitch = min(pitch, 30)
         m.setCamera(cam, withDuration: 0.6, animationTimingFunction: CAMediaTimingFunction(name: .easeInEaseOut))
     }
@@ -473,7 +507,13 @@ final class MapController {
     func applyNavigationInsets(animated: Bool = true) {
         guard let m = mapView else { return }
         let h = m.bounds.height
-        m.setContentInset(UIEdgeInsets(top: h * 0.46, left: 0, bottom: 150, right: 0), animated: animated)
+        if isLandscape {
+            // freccia in basso a destra della colonna dei pannelli, molta strada davanti
+            m.setContentInset(UIEdgeInsets(top: h * 0.4, left: MapController.sidePanelWidth(for: m.bounds.width), bottom: 20, right: 0),
+                              animated: animated)
+        } else {
+            m.setContentInset(UIEdgeInsets(top: h * 0.46, left: 0, bottom: 150, right: 0), animated: animated)
+        }
     }
 
     /// Zoom in base alla velocità (più lontano in autostrada, più vicino in città), come Google Maps

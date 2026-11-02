@@ -285,7 +285,8 @@ enum MapIcons {
         let set = iconSet(for: theme)
         // Crimson Ghost: stemma rosa con stella; Canyon Run: stesso stemma nel colore delle sue icone
         if cat == .default && theme.id == "crimson" {
-            return starShield(fill: UIColor(hex: 0xE46BB0), size: pointSize * 1.4)
+            // stesso blu del percorso (barra di caricamento)
+            return starShield(fill: UIColor(hex: 0x1784FF), size: pointSize * 1.4)
         }
         if cat == .default && theme.id == "canyon" {
             return starShield(fill: set.tint, size: pointSize * 1.4)

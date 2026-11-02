@@ -217,7 +217,7 @@ enum Themes {
         MapTheme(
             id: "crimson", name: "Crimson Ghost",
             backgroundTop: Color(hex: 0x200B0D), backgroundBottom: Color(hex: 0x200B0D),
-            accent: UIColor(hex: 0x8840D8), iconColor: .white, iconHalo: .black,
+            accent: UIColor(hex: 0x1784FF), iconColor: .white, iconHalo: .black,
             polar: UIColor(hex: 0x4A4C50), buttonTint: .white,
             markers: [],
             globeFont: "AvenirNextCondensed-HeavyItalic", globeUppercase: true, globeLabel: .white, globeLabelHalo: UIColor(hex: 0x4A0F14),

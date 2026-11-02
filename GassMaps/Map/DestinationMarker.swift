@@ -9,21 +9,6 @@ enum DestinationMarker {
 
     @MainActor
     static func image(for theme: MapTheme, size: CGFloat) -> UIImage {
-        // Midnight Route: la stessa icona del tasto "fissa posizione" (BluePinIcon), con gli stessi colori
-        if theme.id == "midnight" {
-            let key = "midnight-pin|\(Int(size * 10))"
-            lock.lock()
-            if let hit = cache[key] { lock.unlock(); return hit }
-            lock.unlock()
-            let renderer = ImageRenderer(content:
-                BluePinIcon(size: size * 0.82)
-                    .frame(width: size, height: size)
-            )
-            renderer.scale = 3
-            let img = renderer.uiImage ?? UIImage()
-            lock.lock(); cache[key] = img; lock.unlock()
-            return img
-        }
         return drawnImage(for: theme, size: size)
     }
 
@@ -51,8 +36,9 @@ enum DestinationMarker {
             case "neon": neonDiamond(c, s)
             case "kingdom": heraldicShield(c, s)
             case "contract": tacticalPin(c, s)
-            case "storm": balloonPin(c, s, color: theme.accent)   // stesso colore del percorso
-            case "crimson": pinkStar(c, s)
+            case "storm": balloonPin(c, s, color: theme.accent)
+            case "midnight": balloonPin(c, s, color: theme.accent)   // palloncino di Storm Isle nel ciano del percorso   // stesso colore del percorso
+            case "crimson": pinkStar(c, s, color: UIColor(hex: 0x1784FF))   // stesso blu del percorso
             default: cloverClassic(c, s, color: theme.accent)   // Street Heat: invariato
             }
         }

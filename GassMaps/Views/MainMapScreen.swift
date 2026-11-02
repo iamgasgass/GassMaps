@@ -15,7 +15,9 @@ struct MainMapScreen: View {
                     .ignoresSafeArea()
 
                 // vignettatura del tema (bordi scuri come nelle schermate di riferimento)
-                if state.theme.vignette > 0 {
+                // (solo in verticale: in orizzontale il gradiente, calcolato su larghezza e altezza invertite,
+                //  diventava un'ombra scura al centro)
+                if state.theme.vignette > 0 && !landscape {
                     RadialGradient(colors: [.clear, .black.opacity(state.theme.vignette)],
                                    center: .center, startRadius: geo.size.width * 0.42,
                                    endRadius: geo.size.height * 0.62)

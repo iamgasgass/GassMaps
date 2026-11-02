@@ -7,7 +7,27 @@ enum DestinationMarker {
     private static var cache: [String: UIImage] = [:]
     private static let lock = NSLock()
 
+    @MainActor
     static func image(for theme: MapTheme, size: CGFloat) -> UIImage {
+        // Midnight Route: la stessa icona del tasto "fissa posizione" (BluePinIcon), con gli stessi colori
+        if theme.id == "midnight" {
+            let key = "midnight-pin|\(Int(size * 10))"
+            lock.lock()
+            if let hit = cache[key] { lock.unlock(); return hit }
+            lock.unlock()
+            let renderer = ImageRenderer(content:
+                BluePinIcon(size: size * 0.82)
+                    .frame(width: size, height: size)
+            )
+            renderer.scale = 3
+            let img = renderer.uiImage ?? UIImage()
+            lock.lock(); cache[key] = img; lock.unlock()
+            return img
+        }
+        return drawnImage(for: theme, size: size)
+    }
+
+    private static func drawnImage(for theme: MapTheme, size: CGFloat) -> UIImage {
         let key = "\(theme.id)|\(Int(size * 10))"
         lock.lock(); defer { lock.unlock() }
         if let hit = cache[key] { return hit }

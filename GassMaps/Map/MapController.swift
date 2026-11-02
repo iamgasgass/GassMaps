@@ -347,6 +347,11 @@ final class MapController {
 
         let accent = state?.theme.accent ?? UIColor(hex: 0x7B2CF0)
 
+        if state?.theme.id == "crimson" {
+            installLoadingBarRoute(in: style, source: source)
+            return
+        }
+
         let casing = MLNLineStyleLayer(identifier: MapController.routeCasingID, source: source)
         casing.lineColor = NSExpression(forConstantValue: UIColor.black.withAlphaComponent(0.55))
         casing.lineWidth = NSExpression(forConstantValue: 11)
@@ -365,6 +370,34 @@ final class MapController {
         } else {
             style.addLayer(casing)
             style.addLayer(layer)
+        }
+    }
+
+    /// Percorso disegnato come la barra di caricamento della splash: binario scuro, riempimento blu
+    /// con sfumatura dall'azzurro chiaro (sopra) al blu-viola (sotto) e alone blu
+    private func installLoadingBarRoute(in style: MLNStyle, source: MLNShapeSource) {
+        func line(_ id: String, _ color: UInt32, width: Double, offset: Double = 0, blur: Double = 0, opacity: Double = 1) -> MLNLineStyleLayer {
+            let l = MLNLineStyleLayer(identifier: id, source: source)
+            l.lineColor = NSExpression(forConstantValue: UIColor(hex: color))
+            l.lineWidth = NSExpression(forConstantValue: width)
+            l.lineCap = NSExpression(forConstantValue: "round")
+            l.lineJoin = NSExpression(forConstantValue: "round")
+            if offset != 0 { l.lineOffset = NSExpression(forConstantValue: offset) }
+            if blur > 0 { l.lineBlur = NSExpression(forConstantValue: blur) }
+            if opacity < 1 { l.lineOpacity = NSExpression(forConstantValue: opacity) }
+            return l
+        }
+        let layers = [
+            line(MapController.routeCasingID + "-glow", 0x0970FF, width: 20, blur: 7, opacity: 0.55),   // alone
+            line(MapController.routeCasingID, 0x181818, width: 14),                                       // binario scuro
+            line(MapController.routeLayerID, 0x1784FF, width: 9),                                         // riempimento
+            line(MapController.routeLayerID + "-mid", 0x0970FF, width: 3.5),                              // centro più intenso
+            line(MapController.routeLayerID + "-top", 0x68BBFE, width: 2.2, offset: -3),                  // bordo alto chiaro
+            line(MapController.routeLayerID + "-bottom", 0x3564FE, width: 2.2, offset: 3)                 // bordo basso blu-viola
+        ]
+        let below = style.layer(withIdentifier: "road-oneway")
+        for l in layers {
+            if let b = below { style.insertLayer(l, below: b) } else { style.addLayer(l) }
         }
     }
 

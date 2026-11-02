@@ -162,7 +162,7 @@ private struct SplashPalette {
 
     init(_ id: String) {
         switch id {
-        case "palm": land = Color(hex: 0x5E9E48); road = Color(hex: 0x151515); building = Color(hex: 0xA2A2A2)
+        case "palm": land = Color(hex: 0x5E9E48); road = Color(hex: 0x151515); building = Color(hex: 0xF4F4F2)
         case "dust": land = Color(hex: 0xD4C09A); road = Color(hex: 0x2C2A25); building = Color(hex: 0xC3AD89)
         case "bunker": land = Color(hex: 0x061206); road = Color(hex: 0x2CCF2C); building = Color(hex: 0x0B2A0B)
         case "pixel": land = Color(hex: 0x6E9050); road = Color(hex: 0x8E8E8E); building = Color(hex: 0xA8784A)

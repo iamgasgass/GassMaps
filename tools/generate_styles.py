@@ -291,7 +291,7 @@ EXTRA = {
                   transform="none", labels=True),
     # rif. mappa di San Andreas allegata — campagna verde, città grigie, strade chiare, acqua blu-grigia
     "palm": dict(road_mode="solid", minor="#151515", major="#0d0d0d", motor="#050505",
-                 land="#5e9e48", urban="#8b8b8b", building="#a2a2a2", building_mode="flat",
+                 land="#5e9e48", urban="#8b8b8b", building="#f4f4f2", building_mode="flat",
                  water="#6e8db4", park="#8cc965", wood="#3f7d32", grass="#7bbd57", sand="#b39a73",
                  path="#c9b892", rail="#5a5a5a", label="#ffffff", halo="#000000",
                  road_label="#ffffff", road_halo="#000000", labels=True),

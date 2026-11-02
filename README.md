@@ -59,6 +59,7 @@ Si scelgono dal **globo 3D** (pulsante 🌍): ogni tema ha la sua mappa, le sue 
 ## ✨ Funzioni
 
 ### Mappa
+- **Verticale e orizzontale**: in orizzontale, come Google Maps, ricerca, schede e navigazione stanno in una colonna a sinistra e la mappa si centra nello spazio libero a destra
 - Vista 3D inclinata (per tema), nomi delle vie, sensi unici, numeri civici, sigle stradali (SS18…)
 - **Freccia della posizione** che segue la bussola da fermo e la direzione di marcia in movimento, con cono di precisione
 - **Bussola** sempre visibile sotto *Livelli*: tacche, nord in rosso e lettera N / E / S / O; tocco per tornare al nord

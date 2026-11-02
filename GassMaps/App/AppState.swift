@@ -75,6 +75,9 @@ final class AppState: ObservableObject {
     private var announced: Set<String> = []
     private var offRouteCount = 0
     private var lastReroute = Date.distantPast
+    /// da quando si è fuori percorso / contromano (per decidere il ricalcolo come Google Maps)
+    private var offRouteSince: Date?
+    private var wrongWaySince: Date?
 
     // MARK: Partenza personalizzata, tappa, orario (come Google Maps)
     @Published var searchPurpose: SearchPurpose = .destination
@@ -716,14 +719,59 @@ final class AppState: ObservableObject {
             }
         }
 
-        // fuori percorso → ricalcolo automatico
-        let limit: Double = r.mode == .walk ? 40 : 55
-        if proj.offset > limit && loc.horizontalAccuracy < 60 {
-            offRouteCount += 1
-        } else {
-            offRouteCount = 0
+        // fuori percorso → ricalcolo automatico (come Google Maps)
+        checkOffRoute(loc, route: r, proj: proj, toManeuver: toManeuver, next: next)
+    }
+
+    /// Decide se ricalcolare il percorso:
+    /// - distanza dalla linea oltre una soglia che si adatta alla precisione del GPS (30–60 m in auto, 22–45 a piedi),
+    ///   mantenuta per un paio di secondi (un singolo salto del GPS non basta);
+    /// - svolta mancata: appena superato il punto della manovra e già lontano dalla linea → ricalcolo più rapido;
+    /// - contromano: si va nella direzione opposta al percorso per qualche secondo → ricalcolo (inversione);
+    /// - da fermi si ricalcola solo se si è davvero lontani; mai due ricalcoli troppo ravvicinati.
+    private func checkOffRoute(_ loc: CLLocation, route r: RouteInfo,
+                               proj: (along: Double, offset: Double, index: Int), toManeuver: Double, next: Int) {
+        guard !isRerouting, loc.horizontalAccuracy >= 0, loc.horizontalAccuracy < 80 else { return }
+        let walking = r.mode == .walk
+        let acc = loc.horizontalAccuracy
+        let base: Double = walking ? 22 : 30
+        let limit = min(max(base, acc * 1.3 + 10), walking ? 45 : 60)
+        let speed = max(0, loc.speed)
+        let now = Date()
+
+        // direzione della strada nel punto in cui si è e confronto con la direzione di marcia
+        let here = RouteMath.point(at: proj.along, on: r.coordinates, cumulative: cumulative, hint: proj.index)
+        var headingDiff: Double = 0
+        if loc.course >= 0 && speed > (walking ? 0.8 : 2.5) {
+            var d = abs(loc.course - here.bearing).truncatingRemainder(dividingBy: 360)
+            if d > 180 { d = 360 - d }
+            headingDiff = d
         }
-        if offRouteCount >= 2 && Date().timeIntervalSince(lastReroute) > 8 {
+
+        // svolta mancata: subito dopo la manovra si è già fuori strada
+        let justPassedManeuver = next > 0 && next < r.steps.count + 1
+            && proj.along - (r.steps.indices.contains(next - 1) ? r.steps[next - 1].startDistance : 0) < 80
+        var threshold: TimeInterval = speed < 1 ? 6 : 2.5
+        if justPassedManeuver && proj.offset > limit * 0.7 && headingDiff > 35 { threshold = 1.2 }
+        if speed < 1 && proj.offset < limit * 2 { offRouteSince = nil }       // fermi e vicini: non è uscito
+
+        if proj.offset > (justPassedManeuver && headingDiff > 35 ? limit * 0.7 : limit) {
+            if offRouteSince == nil { offRouteSince = now }
+        } else {
+            offRouteSince = nil
+        }
+
+        // contromano sulla strada del percorso
+        if proj.offset < limit && headingDiff > 135 {
+            if wrongWaySince == nil { wrongWaySince = now }
+        } else {
+            wrongWaySince = nil
+        }
+
+        let cooldownOK = now.timeIntervalSince(lastReroute) > 5
+        if cooldownOK, let since = offRouteSince, now.timeIntervalSince(since) >= threshold {
+            reroute(from: loc)
+        } else if cooldownOK, let since = wrongWaySince, now.timeIntervalSince(since) >= 6 {
             reroute(from: loc)
         }
     }
@@ -733,31 +781,95 @@ final class AppState: ObservableObject {
         return f.lowercased() + s.dropFirst()
     }
 
+    /// Ricalcolo come Google Maps:
+    /// - parte da un punto qualche secondo più avanti nella direzione di marcia, così il nuovo percorso
+    ///   non chiede un'inversione immediata;
+    /// - tra le alternative sceglie quella che prosegue nella direzione in cui stai andando,
+    ///   a meno che sia molto più lenta;
+    /// - il nuovo tracciato parte dalla tua posizione (nessun buco sulla mappa);
+    /// - se la rete non risponde riprova da solo dopo qualche secondo.
     private func reroute(from loc: CLLocation) {
         guard let dest = pinnedPlace, let mode = route?.mode else { return }
         lastReroute = Date()
         offRouteCount = 0
+        offRouteSince = nil
+        wrongWaySince = nil
         isRerouting = true
-        VoiceGuide.shared.speak("Ricalcolo del percorso")
+
+        let speed = max(0, loc.speed)
+        var origin = loc.coordinate
+        if loc.course >= 0 && speed > 2 {
+            // punto 3 secondi più avanti (max 60 m) nella direzione di marcia
+            let ahead = min(60, speed * 3)
+            let br = loc.course * .pi / 180
+            origin = CLLocationCoordinate2D(latitude: origin.latitude + ahead * cos(br) / 111_320,
+                                            longitude: origin.longitude + ahead * sin(br) / (111_320 * cos(origin.latitude * .pi / 180)))
+        }
+        let course = loc.course >= 0 && speed > 2 ? loc.course : nil
+
         let done: ([RouteInfo]) -> Void = { [weak self] infos in
             guard let self = self, self.panel == .navigating else { return }
             self.isRerouting = false
-            guard let first = infos.first else { return }
-            self.routes = [first]
+            guard !infos.isEmpty else {
+                // nessuna risposta: nuovo tentativo tra 4 secondi se si è ancora fuori percorso
+                self.lastReroute = Date().addingTimeInterval(-1)
+                return
+            }
+            let chosen = AppState.bestReroute(infos, course: course)
+            // il tracciato parte dalla posizione attuale
+            var coords = chosen.coordinates
+            var shift: Double = 0
+            if let here = self.location.location?.coordinate, let first = coords.first,
+               RouteMath.meters(here, first) > 3 {
+                shift = RouteMath.meters(here, first)
+                coords.insert(here, at: 0)
+            }
+            var fixed = chosen
+            fixed.coordinates = coords
+            // le manovre restano nel punto giusto del tracciato allungato
+            fixed.steps = chosen.steps.enumerated().map { i, st in
+                var c = st
+                if i > 0 { c.startDistance += shift }
+                return c
+            }
+            self.routes = [fixed]
             self.selectedRoute = 0
-            self.cumulative = RouteMath.cumulative(first.coordinates)
+            self.cumulative = RouteMath.cumulative(coords)
             self.lastProjectionIndex = 0
             self.announced = []
-            self.map.showRoute(first.coordinates, alternatives: [], overview: false)
+            self.map.showRoute(coords, alternatives: [], overview: false)
             if let l = self.location.location { self.updateNavigation(l) }
+            // come Google Maps: subito l'indicazione successiva sul nuovo percorso
+            if let next = fixed.steps.dropFirst().first {
+                VoiceGuide.shared.speak(next.instruction)
+            }
         }
         if let s = stop {
-            DirectionsService.routesVia(from: loc.coordinate, stop: s, to: dest.coordinate, destinationItem: destinationItem,
+            DirectionsService.routesVia(from: origin, stop: s, to: dest.coordinate, destinationItem: destinationItem,
                                         mode: mode, options: routeOptions, departure: nil, completion: done)
         } else {
-            DirectionsService.routes(from: loc.coordinate, to: dest.coordinate, destinationItem: destinationItem,
-                                     mode: mode, options: routeOptions, alternatives: false, completion: done)
+            DirectionsService.routes(from: origin, to: dest.coordinate, destinationItem: destinationItem,
+                                     mode: mode, options: routeOptions, alternatives: true, completion: done)
         }
+    }
+
+    /// Tra i percorsi proposti preferisce quello che parte nella direzione di marcia (niente inversioni inutili),
+    /// se non è più lento di oltre il 20% del più veloce.
+    private static func bestReroute(_ infos: [RouteInfo], course: Double?) -> RouteInfo {
+        guard let course = course, infos.count > 1, let fastest = infos.min(by: { $0.travelTime < $1.travelTime }) else {
+            return infos[0]
+        }
+        func startBearingDiff(_ r: RouteInfo) -> Double {
+            let cum = RouteMath.cumulative(r.coordinates)
+            guard let total = cum.last, total > 1 else { return 180 }
+            let p = RouteMath.point(at: min(40, total), on: r.coordinates, cumulative: cum)
+            guard let a = r.coordinates.first else { return 180 }
+            var d = abs(MapController.bearing(from: a, to: p.coordinate) - course).truncatingRemainder(dividingBy: 360)
+            if d > 180 { d = 360 - d }
+            return d
+        }
+        let ok = infos.filter { $0.travelTime <= fastest.travelTime * 1.2 }
+        return ok.min(by: { startBearingDiff($0) < startBearingDiff($1) }) ?? fastest
     }
 
     // MARK: - Cerca lungo il percorso (benzinai, ristoranti… senza allontanarsi)

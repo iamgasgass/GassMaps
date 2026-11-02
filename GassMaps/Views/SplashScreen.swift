@@ -94,16 +94,20 @@ private struct SplashCity {
         var ys: [CGFloat] = []
         var y: CGFloat = -h / 2
         while y < h / 2 { ys.append(y); y += CGFloat.random(in: 60...100, using: &rng) }
-        // il centro (freccia utente) cade su un incrocio
-        if let i = xs.indices.min(by: { abs(xs[$0]) < abs(xs[$1]) }) { xs[i] = 0 }
-        if let j = ys.indices.min(by: { abs(ys[$0]) < abs(ys[$1]) }) { ys[j] = 0 }
+        // il centro (freccia utente) cade esattamente su un incrocio: le strade sono inclinate
+        // (verticali +40 pt dall'alto in basso, orizzontali −30 pt da sinistra a destra), quindi le due strade
+        // che passano per (0,0) partono da x = −20 e y = +15
+        let i0 = xs.indices.min(by: { abs(xs[$0]) < abs(xs[$1]) }) ?? 0
+        let j0 = ys.indices.min(by: { abs(ys[$0]) < abs(ys[$1]) }) ?? 0
+        xs[i0] = -40 * 0.5
+        ys[j0] = 30 * 0.5
 
         var roads: [Road] = []
         for (i, x) in xs.enumerated() {
-            roads.append(Road(a: CGPoint(x: x, y: -h / 2), b: CGPoint(x: x + 40, y: h / 2), major: i % 4 == 0 || x == 0))
+            roads.append(Road(a: CGPoint(x: x, y: -h / 2), b: CGPoint(x: x + 40, y: h / 2), major: i % 4 == 0 || i == i0))
         }
         for (j, y) in ys.enumerated() {
-            roads.append(Road(a: CGPoint(x: -w / 2, y: y), b: CGPoint(x: w / 2, y: y - 30), major: j % 3 == 0 || y == 0))
+            roads.append(Road(a: CGPoint(x: -w / 2, y: y), b: CGPoint(x: w / 2, y: y - 30), major: j % 3 == 0 || j == j0))
         }
         // diagonale
         roads.append(Road(a: CGPoint(x: -w / 2, y: h / 3), b: CGPoint(x: w / 2, y: -h / 3), major: true))
@@ -134,9 +138,21 @@ private struct SplashCity {
         self.pois = pois
 
         // percorso: dal basso fino al centro, lungo le strade
-        let x1 = xs.first(where: { $0 > 150 }) ?? 200
-        let y1 = ys.first(where: { $0 > 260 }) ?? 300
-        self.route = [CGPoint(x: x1, y: h / 2), CGPoint(x: x1, y: y1), CGPoint(x: 0, y: y1), CGPoint(x: 0, y: 0)]
+        // percorso lungo le strade vere (stesse inclinazioni): sale su una strada a destra, gira a sinistra
+        // su una trasversale e risale sulla strada centrale fino a fermarsi esattamente sotto la freccia
+        let iR = xs.firstIndex(where: { $0 > 150 }) ?? min(i0 + 2, xs.count - 1)
+        let jB = ys.firstIndex(where: { $0 > 260 }) ?? min(j0 + 3, ys.count - 1)
+        func vx(_ i: Int, _ y: CGFloat) -> CGFloat { xs[i] + 40 * (y + h / 2) / h }        // strada verticale i
+        func hy(_ j: Int, _ x: CGFloat) -> CGFloat { ys[j] - 30 * (x + w / 2) / w }        // strada orizzontale j
+        /// incrocio tra la verticale i e l'orizzontale j
+        func cross(_ i: Int, _ j: Int) -> CGPoint {
+            // x = xs[i] + 40(y + h/2)/h ;  y = ys[j] − 30(x + w/2)/w  → si risolve per y
+            let a = 40 / h, b = 30 / w
+            let y = (ys[j] - b * (xs[i] + a * h / 2) - b * w / 2) / (1 + a * b)
+            return CGPoint(x: vx(i, y), y: y)
+        }
+        _ = hy
+        self.route = [CGPoint(x: vx(iR, h / 2), y: h / 2), cross(iR, jB), cross(i0, jB), cross(i0, j0)]
     }
 }
 
@@ -194,7 +210,7 @@ private struct SplashMapBackground: View {
                 // percorso che si disegna fino alla posizione dell'utente
                 var route = Path()
                 route.addLines(city.route)
-                let trim = min(max((t - 0.3) / 2.0, 0), 1)
+                let trim = min(max((t - 0.2) / 1.5, 0), 1)
                 let drawn = route.trimmedPath(from: 0, to: trim)
                 c.stroke(drawn, with: .color(.black.opacity(0.5)), style: StrokeStyle(lineWidth: 13, lineCap: .round, lineJoin: .round))
                 c.stroke(drawn, with: .color(Color(theme.accent)), style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))

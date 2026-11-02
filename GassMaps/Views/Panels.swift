@@ -495,6 +495,8 @@ struct NavigationBanner: View {
 
 struct NavigationPanel: View {
     @EnvironmentObject var state: AppState
+    /// in orizzontale i pulsanti stanno sul bordo destro dello schermo (MainMapScreen), come Google Maps
+    @Environment(\.isLandscapeLayout) private var landscape
 
     var body: some View {
         VStack(spacing: 12) {
@@ -531,44 +533,10 @@ struct NavigationPanel: View {
 
                 Spacer()
 
-                GlassEffectContainer(spacing: 10) {
-                    VStack(spacing: 10) {
-                        Button { state.voiceMuted.toggle() } label: {
-                            GlassCircle(size: 46) {
-                                Image(systemName: state.voiceMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                                    .font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        Button { state.showRouteOverview() } label: {
-                            GlassCircle(size: 46) {
-                                Image(systemName: "map.fill")
-                                    .font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        // percorsi alternativi da qui alla destinazione (come Google Maps)
-                        Button { state.showNavAlternatives() } label: {
-                            GlassCircle(size: 46) {
-                                if state.isLoadingAlternatives {
-                                    ProgressView().tint(.white)
-                                } else {
-                                    Image(systemName: "arrow.triangle.branch")
-                                        .font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        Button { state.cycleTracking() } label: {
-                            GlassCircle(size: 46) {
-                                Image(systemName: state.tracking == .heading ? "safari.fill" : "location.north.line.fill")
-                                    .font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
+                if !landscape {
+                    NavigationSideButtons()
+                        .padding(.trailing, 16)
                 }
-                .padding(.trailing, 16)
             }
 
             BottomPanel(onDismiss: nil) {
@@ -1098,5 +1066,63 @@ struct CompassCalibrationSheet: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+
+/// Colonna dei pulsanti di navigazione (voce, vista dall'alto, percorsi alternativi, bussola)
+struct NavigationSideButtons: View {
+    @EnvironmentObject var state: AppState
+
+    var body: some View {
+        GlassEffectContainer(spacing: 10) {
+            VStack(spacing: 10) {
+                Button { state.voiceMuted.toggle() } label: {
+                    GlassCircle(size: 46) {
+                        Image(systemName: state.voiceMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                            .font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
+                    }
+                }
+                .buttonStyle(.plain)
+                Button { state.showRouteOverview() } label: {
+                    GlassCircle(size: 46) {
+                        Image(systemName: "map.fill")
+                            .font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
+                    }
+                }
+                .buttonStyle(.plain)
+                // percorsi alternativi da qui alla destinazione (come Google Maps)
+                Button { state.showNavAlternatives() } label: {
+                    GlassCircle(size: 46) {
+                        if state.isLoadingAlternatives {
+                            ProgressView().tint(.white)
+                        } else {
+                            Image(systemName: "arrow.triangle.branch")
+                                .font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                Button { state.cycleTracking() } label: {
+                    GlassCircle(size: 46) {
+                        Image(systemName: state.tracking == .heading ? "safari.fill" : "location.north.line.fill")
+                            .font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+/// Disposizione orizzontale (colonna dei pannelli a sinistra, pulsanti a destra)
+private struct LandscapeLayoutKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var isLandscapeLayout: Bool {
+        get { self[LandscapeLayoutKey.self] }
+        set { self[LandscapeLayoutKey.self] = newValue }
     }
 }

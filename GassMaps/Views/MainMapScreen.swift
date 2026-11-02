@@ -126,6 +126,18 @@ struct MainMapScreen: View {
                     }
                 }
 
+                // navigazione in orizzontale: pulsanti sul bordo destro, in basso, come Google Maps
+                if landscape && state.panel == .navigating {
+                    VStack {
+                        Spacer()
+                        NavigationSideButtons()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.trailing, 18)
+                    .padding(.bottom, max(geo.safeAreaInsets.bottom, 12) + 8)
+                    .transition(.opacity)
+                }
+
                 // mirino al centro per la misura della distanza
                 if state.measuring {
                     MeasureCrosshair()
@@ -153,6 +165,7 @@ struct MainMapScreen: View {
                 }
                 .ignoresSafeArea(edges: .bottom)
             }
+            .environment(\.isLandscapeLayout, landscape)
             .onChange(of: landscape) { _, _ in
                 // dopo la rotazione si riapplicano i margini della mappa per il nuovo orientamento
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {

@@ -8,6 +8,8 @@ struct MainMapScreen: View {
 
     var body: some View {
         GeometryReader { geo in
+            let landscape = geo.size.width > geo.size.height
+            let sideW = MapController.sidePanelWidth(for: geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing)
             ZStack {
                 GameMapView(state: state)
                     .ignoresSafeArea()
@@ -47,6 +49,8 @@ struct MainMapScreen: View {
                     ZStack {
                         if state.panel == .navigating {
                             NavigationBanner()
+                                .frame(width: landscape ? sideW : nil)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .transition(.move(edge: .top).combined(with: .opacity))
                         } else if state.showHeader {
                             HeaderView()
@@ -54,8 +58,12 @@ struct MainMapScreen: View {
                         } else if state.panel != .directions {
                             VStack(spacing: 10) {
                                 TopBar()
+                                    .frame(width: landscape ? sideW : nil)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 if (state.panel == .none || state.panel == .results) && !state.measuring {
                                     CategoryChips()
+                                        .frame(width: landscape ? sideW : nil)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                                 if state.showSearchArea && state.panel == .results {
                                     Button { state.searchThisArea() } label: {
@@ -90,6 +98,7 @@ struct MainMapScreen: View {
                                     }
                                     .padding(.trailing, 18)
                                 }
+                                .offset(y: landscape ? -(44 + 10 + ((state.panel == .none || state.panel == .results) && !state.measuring ? 46 : 0)) : 0)
                             }
                             .transition(.opacity)
                         }
@@ -103,11 +112,15 @@ struct MainMapScreen: View {
                     Spacer()
                     if state.measuring {
                         MeasureBar()
+                            .frame(width: landscape ? sideW : nil)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
                             .padding(.bottom, max(geo.safeAreaInsets.bottom, 12) + 8)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     } else if state.panel == .none {
                         BottomControls()
+                            .frame(maxWidth: .infinity, alignment: landscape ? .trailing : .center)
+                            .padding(.trailing, landscape ? 18 : 0)
                             .padding(.bottom, max(geo.safeAreaInsets.bottom, 12) + 8)
                             .transition(.opacity)
                     }
@@ -124,9 +137,27 @@ struct MainMapScreen: View {
                 // pannelli
                 VStack {
                     Spacer()
-                    panel
+                    if landscape {
+                        // se il pannello è più alto dello schermo diventa scorrevole
+                        ViewThatFits(in: .vertical) {
+                            panel
+                            ScrollView(.vertical, showsIndicators: false) { panel }
+                                .defaultScrollAnchor(.bottom)
+                        }
+                        .frame(width: sideW)
+                        .frame(maxHeight: geo.size.height + geo.safeAreaInsets.bottom - 4, alignment: .bottom)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        panel
+                    }
                 }
                 .ignoresSafeArea(edges: .bottom)
+            }
+            .onChange(of: landscape) { _, _ in
+                // dopo la rotazione si riapplicano i margini della mappa per il nuovo orientamento
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    state.map.orientationChanged(navigating: state.panel == .navigating)
+                }
             }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.88), value: state.panel)

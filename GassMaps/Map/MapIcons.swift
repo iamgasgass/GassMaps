@@ -118,7 +118,7 @@ enum MapIcons {
                                 glyphs: [.shop: "basket.fill", .police: "star.circle.fill"],
                                 cloverDefault: true)
 
-        case "noir", "crimson": // icone nere con contorno bianco (Crimson Ghost usa le stesse di Vice Noir)
+        case "noir", "crimson", "ghost": // icone nere con contorno bianco (Crimson Ghost e Ghost Run usano le stesse di Vice Noir)
             return ThemeIconSet(frame: .outline(halo: .white), tint: .black,
                                 glyphs: [.shop: "basket.fill", .police: "star.circle.fill"],
                                 cloverDefault: true)
@@ -285,8 +285,11 @@ enum MapIcons {
         let set = iconSet(for: theme)
         // Crimson Ghost: stemma rosa con stella; Canyon Run: stesso stemma nel colore delle sue icone
         if cat == .default && theme.id == "crimson" {
-            // stesso blu del percorso (barra di caricamento)
-            return starShield(fill: UIColor(hex: 0x1784FF), size: pointSize * 1.4)
+            return starShield(fill: UIColor(hex: 0xE46BB0), size: pointSize * 1.4)
+        }
+        if cat == .default && theme.id == "ghost" {
+            // stesso lilla dell'indicatore di destinazione di Ghost Run
+            return starShield(fill: UIColor(hex: 0x9D8DF1), size: pointSize * 1.4)
         }
         if cat == .default && theme.id == "canyon" {
             return starShield(fill: set.tint, size: pointSize * 1.4)

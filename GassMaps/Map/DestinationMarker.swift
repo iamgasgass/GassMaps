@@ -39,7 +39,6 @@ enum DestinationMarker {
             case "storm": balloonPin(c, s, color: theme.accent)
             case "midnight": balloonPin(c, s, color: theme.accent)   // palloncino di Storm Isle nel ciano del percorso   // stesso colore del percorso
             case "crimson": pinkStar(c, s)
-            case "ghost": pinkStar(c, s, color: UIColor(hex: 0x9D8DF1))   // stella lilla come nella foto
             default: cloverClassic(c, s, color: theme.accent)   // Street Heat: invariato
             }
         }

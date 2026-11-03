@@ -592,8 +592,25 @@ struct StepsSheet: View {
         NavigationStack {
             List {
                 if let r = state.route {
+                    let navigating = state.panel == .navigating
                     Section {
-                        ForEach(Array(r.steps.enumerated()), id: \.element.id) { i, step in
+                        // durante la guida: prima riga dalla tua posizione reale, poi solo le manovre ancora da fare
+                        if navigating {
+                            HStack(spacing: 14) {
+                                Image(systemName: "location.fill")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .frame(width: 30)
+                                    .foregroundStyle(Color(state.theme.accent))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("La tua posizione").font(.system(size: 16, weight: .semibold))
+                                    Text("Prosegui per \(state.units.short(state.progress.toManeuver))")
+                                        .font(.system(size: 13)).foregroundStyle(.secondary)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        ForEach(Array(r.steps.enumerated()).filter { !navigating || $0.offset >= state.progress.nextStep },
+                                id: \.element.id) { i, step in
                             HStack(spacing: 14) {
                                 Image(systemName: ManeuverIcon.symbol(for: step))
                                     .font(.system(size: 20, weight: .bold))
@@ -602,7 +619,11 @@ struct StepsSheet: View {
                                                      ? Color(state.theme.accent) : .primary)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(step.instruction).font(.system(size: 16, weight: .semibold))
-                                    if step.distance > 0 {
+                                    if navigating {
+                                        // distanza da dove sei adesso fino a questa manovra
+                                        Text("tra \(state.units.short(max(0, step.startDistance - state.progress.traveled)))")
+                                            .font(.system(size: 13)).foregroundStyle(.secondary)
+                                    } else if step.distance > 0 {
                                         Text(state.units.short(step.distance)).font(.system(size: 13)).foregroundStyle(.secondary)
                                     }
                                 }

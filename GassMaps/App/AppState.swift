@@ -591,6 +591,14 @@ final class AppState: ObservableObject {
             guard let self = self, self.panel == .navigating, self.navAlternatives.isEmpty else { return }
             self.map.startNavigation()
         }
+        // Come Google Maps le indicazioni partono dalla posizione reale: se il percorso era stato calcolato
+        // da un punto diverso (ti sei spostato, o la posizione si è aggiornata) si ricalcola subito da dove sei
+        if origin == nil, let loc = location.location, let start = r.coordinates.first,
+           loc.horizontalAccuracy >= 0, loc.horizontalAccuracy < 100,
+           RouteMath.meters(loc.coordinate, start) > max(25, loc.horizontalAccuracy) {
+            reroute(from: loc, silent: false)
+            return
+        }
         if let first = r.steps.first?.instruction {
             VoiceGuide.shared.speak(first)
         }
@@ -788,7 +796,7 @@ final class AppState: ObservableObject {
     ///   a meno che sia molto più lenta;
     /// - il nuovo tracciato parte dalla tua posizione (nessun buco sulla mappa);
     /// - se la rete non risponde riprova da solo dopo qualche secondo.
-    private func reroute(from loc: CLLocation) {
+    private func reroute(from loc: CLLocation, silent: Bool = false) {
         guard let dest = pinnedPlace, let mode = route?.mode else { return }
         lastReroute = Date()
         offRouteCount = 0
@@ -806,6 +814,7 @@ final class AppState: ObservableObject {
                                             longitude: origin.longitude + ahead * sin(br) / (111_320 * cos(origin.latitude * .pi / 180)))
         }
         let course = loc.course >= 0 && speed > 2 ? loc.course : nil
+        let wasStart = progress.traveled < 1 && announced.isEmpty
 
         let done: ([RouteInfo]) -> Void = { [weak self] infos in
             guard let self = self, self.panel == .navigating else { return }
@@ -839,9 +848,13 @@ final class AppState: ObservableObject {
             self.announced = []
             self.map.showRoute(coords, alternatives: [], overview: false)
             if let l = self.location.location { self.updateNavigation(l) }
-            // come Google Maps: subito l'indicazione successiva sul nuovo percorso
-            if let next = fixed.steps.dropFirst().first {
-                VoiceGuide.shared.speak(next.instruction)
+            // come Google Maps: subito l'indicazione dal punto in cui sei
+            if !silent {
+                if wasStart, let first = fixed.steps.first?.instruction {
+                    VoiceGuide.shared.speak(first)
+                } else if let next = fixed.steps.dropFirst().first {
+                    VoiceGuide.shared.speak(next.instruction)
+                }
             }
         }
         if let s = stop {

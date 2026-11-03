@@ -195,7 +195,7 @@ enum Textures {
         }
     }
 
-    /// Rosso a pennellate curve intrecciate (quartieri di Crimson Ghost), ripetibile senza giunte
+    /// Rosso a pennellate curve intrecciate (quartieri di Crimson Heat), ripetibile senza giunte
     private static func swirl() -> UIImage {
         let side: CGFloat = 160
         var rng = SeededGenerator(seed: 0x9A4A4F)

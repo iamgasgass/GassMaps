@@ -49,9 +49,9 @@ Si scelgono dal **globo 3D** (pulsante 🌍): ogni tema ha la sua mappa, le sue 
 | 9 | Silent Contract | mappa tattica grigia, icone quadrate nere |
 | 10 | Storm Isle | isola cartoon: prati, boschi, fiumi con schiuma, sentieri di sabbia |
 | 11 | Midnight Route | guida notturna indaco, edifici 3D blu, luoghi colorati per tipo |
-| 12 | Crimson Ghost | fondo antracite, quartieri a pennellate rosse bordati di nero, edifici 3D, strade e icone di Vice Noir |
+| 12 | Crimson Heat | fondo antracite, quartieri a pennellate rosse bordati di nero, edifici 3D, strade e icone di Vice Noir |
 | 13 | Canyon Run | notte da corse: quartieri a mimetico turchese bordati di nero, edifici 3D, icone gialle/blu/rosse |
-| 14 | Ghost Run | come Canyon Run, ma con quartieri a mimetico grigio, fondo nero, acqua grigia e le icone di Crimson Ghost |
+| 14 | Ghost Run | come Canyon Run, ma con quartieri a mimetico grigio, fondo nero, acqua grigia e le icone di Crimson Heat |
 
 > Gli stili sono ispirati ai videogiochi ma **disegnati da zero**: nessuna mappa, icona o grafica originale è inclusa.
 

@@ -215,7 +215,7 @@ enum Themes {
             haze: UIColor(hex: 0x4A5280), glow: UIColor(hex: 0x5994FF), glowCore: UIColor(hex: 0xEBF0FF), mapPitch: 55, vignette: 0),
         // come Street Heat ma in rosso, con le icone e le strade di Vice Noir
         MapTheme(
-            id: "crimson", name: "Crimson Ghost",
+            id: "crimson", name: "Crimson Heat",
             backgroundTop: Color(hex: 0x200B0D), backgroundBottom: Color(hex: 0x200B0D),
             accent: UIColor(hex: 0x1784FF), iconColor: .white, iconHalo: .black,
             polar: UIColor(hex: 0x4A4C50), buttonTint: .white,
@@ -232,7 +232,7 @@ enum Themes {
             globeFont: "AvenirNextCondensed-Bold", globeUppercase: true, globeLabel: UIColor(hex: 0xC9D6D3), globeLabelHalo: UIColor(hex: 0x0D1213),
             haze: UIColor(hex: 0x2B5560), glow: UIColor(hex: 0x4FB3AE), glowCore: UIColor(hex: 0xD7F5F2), mapPitch: 0, vignette: 0.35,
             arrowColor: UIColor(hex: 0xFDC173)),
-        // come Canyon Run ma con quartieri a mimetico grigio, fondo nero, acqua grigia e le icone di Crimson Ghost;
+        // come Canyon Run ma con quartieri a mimetico grigio, fondo nero, acqua grigia e le icone di Crimson Heat;
         // sul globo la fascia luminosa dell'orizzonte è bianca
         MapTheme(
             id: "ghost", name: "Ghost Run",

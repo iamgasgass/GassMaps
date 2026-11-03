@@ -308,7 +308,7 @@ enum DestinationMarker {
         c.strokePath()
     }
 
-    // MARK: Crimson Ghost — stella rosa a cinque punte con contorno nero spesso
+    // MARK: Crimson Heat — stella rosa a cinque punte con contorno nero spesso
 
     private static func pinkStar(_ c: CGContext, _ s: CGFloat, color: UIColor = UIColor(hex: 0xE46BB0)) {
         let m = CGPoint(x: s / 2, y: s * 0.53)
